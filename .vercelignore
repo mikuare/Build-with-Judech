@@ -1,0 +1,20 @@
+# Everything here still lives in the repository — it just is not part of the
+# website. Vercel serves this folder as the web root, so anything left in it is
+# a public URL whether or not the page links to it.
+
+# internal notes and the schema
+README.md
+supabase/
+keepalive/
+.github/
+.env.example
+
+# unreferenced leftovers (2.8 MB of them)
+Screenshot 2026-08-28 163749.png
+jd logo.png
+desktop.ini
+*.deb
+
+# Vercel strips .env itself, but say so out loud
+.env
+.env.*

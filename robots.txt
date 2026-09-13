@@ -1,0 +1,7 @@
+# The catalog is meant to be found. The dashboard is not.
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+
+Sitemap: https://REPLACE-WITH-YOUR-DOMAIN/sitemap.xml
