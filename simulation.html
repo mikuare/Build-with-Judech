@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- the page names the version of every asset, so it is always fetched fresh -->
+<meta http-equiv="cache-control" content="no-cache, must-revalidate">
 <title>EnviroSortPro — Automatic Waste Segregation Simulator</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>&#9851;</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20260914l">
 </head>
 <body>
 <div class="wrap">
@@ -1337,6 +1339,7 @@
 <svg id="walkView" viewBox="0 0 1200 820" style="display:none" tabindex="0" role="img"
      aria-label="Walking through the room: the machine, the group and the panel, from where you are standing"></svg>
 
+
 <!-- camera: walk the room, or hand it back to the defense -->
 <div class="viewbar" id="viewbar" role="group" aria-label="Camera">
   <span class="vb-lbl">Camera</span>
@@ -2296,6 +2299,6 @@
 <footer>Served locally. The simulation executes the same control flow as <span class="mono">EnviroSortPro/EnviroSortPro.ino</span> &mdash; same order, same delays, same flags.</footer>
 
 </div>
-<script src="js/app.js"></script>
+<script src="js/app.js?v=20260914l"></script>
 </body>
 </html>

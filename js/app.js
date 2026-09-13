@@ -5780,6 +5780,34 @@ function facesUs(cx, cz, h, bearingDeg){
   return a.ok && b.ok && (b.d - a.d) > -4;
 }
 function outward(cz, dist){ return cz + dist * Math.cos(FACE_OUT * Math.PI / 180); }
+/* A rectangle that lies ON a face, not in front of it.
+   Anything painted on the controller box used to be a screen-space <rect> at
+   one projected point: the box sheared with the camera while the display,
+   the cover and the boards stayed bolt upright, which reads exactly like a
+   panel floating free of the box. These four corners are projected in model
+   space instead, so the shape leans, narrows and shears with the surface it
+   is painted on — and `deg` is the screen angle of the face's own horizontal,
+   for the text that has to lie flat on it. */
+function facePanel(cx, cz, h, halfW, halfH){
+  var a = proj(cx - halfW, cz, h + halfH), b = proj(cx + halfW, cz, h + halfH),
+      c = proj(cx + halfW, cz, h - halfH), d = proj(cx - halfW, cz, h - halfH);
+  if(!(a.ok && b.ok && c.ok && d.ok)) return null;
+  return {
+    pts: [a, b, c, d].map(function(q){ return q.x.toFixed(1) + "," + q.y.toFixed(1); }).join(" "),
+    a:a, b:b, c:c, d:d,
+    deg: Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI
+  };
+}
+/* text that sits on that face, rotated to follow it */
+function faceText(cx, cz, h, deg, size, fill, body, anchor){
+  var p = proj(cx, cz, h);
+  if(!p.ok) return "";
+  return '<text x="' + p.x.toFixed(1) + '" y="' + p.y.toFixed(1) + '" transform="rotate(' +
+         deg.toFixed(2) + ' ' + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ')"' +
+         (anchor ? ' text-anchor="' + anchor + '"' : '') +
+         ' font-family="IBM Plex Mono, monospace" font-size="' + size.toFixed(1) +
+         '" fill="' + fill + '">' + body + '</text>';
+}
 function txtSize(p){
   return VIEW.mode === "persp" ? Math.max(5, Math.min(14, 62 * p.sc)) : 7.6;
 }
@@ -5995,20 +6023,19 @@ function machineInto(put){
     var fc = proj(mX, cfz, MDL.ctrlH + 150);
     if(fc.ok && facesUs(mX, mZ, MDL.ctrlH + 150, FACE_OUT) && fc.sc > 0.055){
       var k = fc.sc, full = (W.lcd1 === "Bin Full");
-      ms += '<rect x="' + (fc.x - 38*k).toFixed(1) + '" y="' + (fc.y - 30*k).toFixed(1) +
-            '" width="' + (76*k).toFixed(1) + '" height="' + (46*k).toFixed(1) +
-            '" rx="' + (3*k).toFixed(1) + '" fill="#14672F"/>';
-      ms += '<rect x="' + (fc.x - 34*k).toFixed(1) + '" y="' + (fc.y - 26*k).toFixed(1) +
-            '" width="' + (68*k).toFixed(1) + '" height="' + (38*k).toFixed(1) +
-            '" fill="' + (full ? "#2E7A4A" : "#1F7A4E") + '"/>';
+      /* bezel and glass, bolted to the face: 76 x 46 mm centred 157 mm up the
+         box, projected corner by corner so they lean with it */
+      var LH = MDL.ctrlH + 157;
+      var bez = facePanel(mX, cfz, LH, 38, 23);
+      var scr = facePanel(mX, cfz, LH, 34, 19);
+      var deg = bez ? bez.deg : 0;
+      if(bez) ms += '<polygon points="' + bez.pts + '" fill="#14672F" stroke="#0C3D22" stroke-width="' +
+                    edgeW(0.7) + '" stroke-linejoin="round"/>';
+      if(scr) ms += '<polygon points="' + scr.pts + '" fill="' + (full ? "#2E7A4A" : "#1F7A4E") + '"/>';
       var fs = Math.max(3.2, 11 * k);
-      if(fs > 4.2){
-        ms += '<text x="' + (fc.x - 31*k).toFixed(1) + '" y="' + (fc.y - 12*k).toFixed(1) +
-              '" font-family="IBM Plex Mono, monospace" font-size="' + fs.toFixed(1) +
-              '" fill="#CFF4FF">' + esc(W.lcd1) + '</text>';
-        ms += '<text x="' + (fc.x - 31*k).toFixed(1) + '" y="' + (fc.y + 4*k).toFixed(1) +
-              '" font-family="IBM Plex Mono, monospace" font-size="' + fs.toFixed(1) +
-              '" fill="#CFF4FF">' + esc(W.lcd2) + '</text>';
+      if(fs > 4.2 && scr){
+        ms += faceText(mX - 31, cfz, LH + 5,  deg, fs, "#CFF4FF", esc(W.lcd1));
+        ms += faceText(mX - 31, cfz, LH - 11, deg, fs, "#CFF4FF", esc(W.lcd2));
       }
       [0,1,2].forEach(function(n){
         var lp = proj(mX + (n-1)*20, cfz, MDL.ctrlH + 112);
@@ -6032,38 +6059,48 @@ function machineInto(put){
          same two things the scene reveals, on the same switch. */
       var gz = proj(mX - 18, cfz, MDL.ctrlH + 52);
       if(gz.ok && coverOff){
-        ms += '<rect x="'+(gz.x-30*k).toFixed(1)+'" y="'+(gz.y-17*k).toFixed(1)+
-              '" width="'+(52*k).toFixed(1)+'" height="'+(34*k).toFixed(1)+
-              '" rx="1.5" fill="#1B7B8C" stroke="#0E4E5A" stroke-width="0.8"/>';
+        var uno = facePanel(mX - 18, cfz, MDL.ctrlH + 52, 26, 17);
+        if(uno) ms += '<polygon points="' + uno.pts + '" fill="#1B7B8C" stroke="#0E4E5A" ' +
+                      'stroke-width="' + edgeW(0.8) + '" stroke-linejoin="round"/>';
         if(fs > 4.6) ms += tag(gz, "UNO R3", "#CFF4FF", "middle", 3*k);
-        var bb = proj(mX + 28, cfz, MDL.ctrlH + 52);
-        if(bb.ok){
-          ms += '<rect x="'+(bb.x-15*k).toFixed(1)+'" y="'+(bb.y-17*k).toFixed(1)+
-                '" width="'+(30*k).toFixed(1)+'" height="'+(34*k).toFixed(1)+
-                '" rx="1" fill="#E4E7E2" stroke="#A8B2B5" stroke-width="0.7"/>';
-          for(var rw = 1; rw <= 3; rw++)
-            ms += '<line x1="'+(bb.x-13*k).toFixed(1)+'" y1="'+(bb.y-17*k+rw*8.5*k).toFixed(1)+
-                  '" x2="'+(bb.x+13*k).toFixed(1)+'" y2="'+(bb.y-17*k+rw*8.5*k).toFixed(1)+
-                  '" stroke="#B8BEB8" stroke-width="0.5"/>';
+        var brd = facePanel(mX + 28, cfz, MDL.ctrlH + 52, 15, 17);
+        if(brd){
+          ms += '<polygon points="' + brd.pts + '" fill="#E4E7E2" stroke="#A8B2B5" ' +
+                'stroke-width="' + edgeW(0.7) + '" stroke-linejoin="round"/>';
+          /* the strips run across the board, on the board */
+          for(var rw = -1; rw <= 1; rw++){
+            var s0 = proj(mX + 15, cfz, MDL.ctrlH + 52 + rw * 8.5),
+                s1 = proj(mX + 41, cfz, MDL.ctrlH + 52 + rw * 8.5);
+            if(s0.ok && s1.ok)
+              ms += '<line x1="'+s0.x.toFixed(1)+'" y1="'+s0.y.toFixed(1)+
+                    '" x2="'+s1.x.toFixed(1)+'" y2="'+s1.y.toFixed(1)+
+                    '" stroke="#B8BEB8" stroke-width="'+edgeW(0.5)+'"/>';
+          }
         }
       }
       /* and the cover itself, when it is on: acrylic, with a corner highlight */
       if(!coverOff && !cutNow()){
-        var c0 = proj(mX - MDL.ctrlW/2, cfz, MDL.ctrlH + 8),
-            c1 = proj(mX + MDL.ctrlW/2, cfz, MDL.ctrlH + MDL.ctrlT - 8);
-        if(c0.ok && c1.ok){
-          var lx0 = Math.min(c0.x, c1.x), ly0 = Math.min(c0.y, c1.y);
-          var lw = Math.abs(c1.x - c0.x), lh = Math.abs(c1.y - c0.y);
-          ms += '<rect x="'+lx0.toFixed(1)+'" y="'+ly0.toFixed(1)+'" width="'+lw.toFixed(1)+
-                '" height="'+lh.toFixed(1)+'" rx="'+(3*k).toFixed(1)+
-                '" fill="#BFD9E2" opacity=".13" stroke="#8A9496" stroke-width="'+edgeW(1.1)+'"/>' +
-                '<path d="M'+(lx0+lw*0.06).toFixed(1)+' '+(ly0+lh*0.06).toFixed(1)+
-                ' L'+(lx0+lw*0.44).toFixed(1)+' '+(ly0+lh*0.06).toFixed(1)+
-                ' L'+(lx0+lw*0.12).toFixed(1)+' '+(ly0+lh*0.40).toFixed(1)+
-                ' Z" fill="#fff" opacity=".10"/>';
-          [[0.07,0.06],[0.93,0.06],[0.07,0.94],[0.93,0.94]].forEach(function(q2){
-            ms += '<circle cx="'+(lx0+lw*q2[0]).toFixed(1)+'" cy="'+(ly0+lh*q2[1]).toFixed(1)+
-                  '" r="'+Math.max(0.7, 2.2*k).toFixed(1)+'" fill="#8A9496"/>';
+        /* the acrylic is a sheet on the front of the box, so it is the face's
+           own quad — not a screen rectangle drawn across two of its corners,
+           which stayed square while the box turned underneath it */
+        var cov = facePanel(mX, cfz, MDL.ctrlH + MDL.ctrlT/2, MDL.ctrlW/2, MDL.ctrlT/2 - 8);
+        if(cov){
+          ms += '<polygon points="'+cov.pts+'" fill="#BFD9E2" opacity=".13" stroke="#8A9496" ' +
+                'stroke-width="'+edgeW(1.1)+'" stroke-linejoin="round"/>';
+          /* the sheen, struck across the top-left corner of the sheet itself */
+          var g0 = proj(mX - MDL.ctrlW/2 + 6, cfz, MDL.ctrlH + MDL.ctrlT - 16),
+              g1 = proj(mX - 4,               cfz, MDL.ctrlH + MDL.ctrlT - 16),
+              g2 = proj(mX - MDL.ctrlW/2 + 6, cfz, MDL.ctrlH + MDL.ctrlT - 78);
+          if(g0.ok && g1.ok && g2.ok)
+            ms += '<path d="M'+g0.x.toFixed(1)+' '+g0.y.toFixed(1)+
+                  ' L'+g1.x.toFixed(1)+' '+g1.y.toFixed(1)+
+                  ' L'+g2.x.toFixed(1)+' '+g2.y.toFixed(1)+' Z" fill="#fff" opacity=".10"/>';
+          /* four fixing screws, each at its own place on the sheet */
+          [[-1,1],[1,1],[-1,-1],[1,-1]].forEach(function(q2){
+            var sp = proj(mX + q2[0] * (MDL.ctrlW/2 - 7), cfz,
+                          MDL.ctrlH + MDL.ctrlT/2 + q2[1] * (MDL.ctrlT/2 - 15));
+            if(sp.ok) ms += '<circle cx="'+sp.x.toFixed(1)+'" cy="'+sp.y.toFixed(1)+
+                  '" r="'+Math.max(0.7, 2.2*sp.sc).toFixed(1)+'" fill="#8A9496"/>';
           });
         }
       }
@@ -7468,47 +7505,6 @@ function walkPlan(){
        'font-size="11" fill="#5A6B6E">PLAN &middot; you are here</text></g>';
   return o;
 }
-/* The instrument panel, in the corner. The real one is a 76 mm display on a box
-   a metre and a half away — honestly drawn, and honestly unreadable at that
-   size. So the same four things are repeated here big enough to check from
-   across a room: what the LCD is printing, which of D2 / D13 / A3 is lit,
-   whether D12 is sounding, and where the plate, the gate and the beam are. */
-function walkHud(){
-  var x = 22, y = 22, w = 336, h = 196, full = (W.lcd1 === "Bin Full");
-  var o = '<g><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+
-          '" rx="10" fill="#0A1214" opacity=".93" stroke="#2C3A3C" stroke-width="1.4"/>' +
-          '<text x="'+(x+14)+'" y="'+(y+22)+'" font-family="IBM Plex Mono, monospace" font-size="11" ' +
-          'letter-spacing="1.6" fill="#5A6B6E">ENVIROSORTPRO</text>';
-  o += '<rect x="'+(x+14)+'" y="'+(y+32)+'" width="'+(w-28)+'" height="58" rx="4" fill="#14672F"/>' +
-       '<rect x="'+(x+20)+'" y="'+(y+37)+'" width="'+(w-40)+'" height="48" rx="2" fill="'+(full?"#2E7A4A":"#1F7A4E")+'"/>' +
-       '<text x="'+(x+27)+'" y="'+(y+56)+'" font-family="IBM Plex Mono, monospace" font-size="15" letter-spacing="0.5" fill="#CFF4FF">'+esc(W.lcd1)+'</text>' +
-       '<text x="'+(x+27)+'" y="'+(y+76)+'" font-family="IBM Plex Mono, monospace" font-size="15" letter-spacing="0.5" fill="#CFF4FF">'+esc(W.lcd2)+'</text>';
-  ["D2","D13","A3"].forEach(function(pin, i){
-    var lx = x + 34 + i * 66;
-    o += '<circle cx="'+lx+'" cy="'+(y+112)+'" r="9" fill="'+(W.leds[i] ? BINS[i].col : "#2C3234")+
-         '" stroke="#4A5254" stroke-width="2"/>' +
-         '<text x="'+lx+'" y="'+(y+134)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="#93A0A2">'+pin+'</text>';
-  });
-  o += '<circle cx="'+(x+250)+'" cy="'+(y+112)+'" r="11" fill="'+(W.buzzer ? "#F2685E" : "#101416")+
-       '" stroke="#4A5254" stroke-width="2"/>' +
-       (W.buzzer ? '<circle cx="'+(x+250)+'" cy="'+(y+112)+'" r="18" fill="none" stroke="#F2685E" stroke-width="1.6" opacity=".55"/>' : '') +
-       '<text x="'+(x+250)+'" y="'+(y+134)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="#93A0A2">D12</text>';
-  var fb = frontBin();
-  var l2 = "gate " + (W.gateVal < 90 ? "OPEN" : "shut") + "  \u00b7  plate " + Math.round(W.R) +
-           "\u00b0  \u00b7  " + Math.round(W.distance) + " cm";
-  var l3 = fb < 0 ? "no bin under the hole (mid-swing)"
-         : binAway(fb) ? "the " + BINS[fb].key + " bin is off the plate"
-         : "into the " + BINS[fb].key + " bin  \u00b7  " + W.level[fb] + "% full";
-  var mode = walk.focus !== "walk" ? "FIXED 3D \u00b7 " + walk.focus.toUpperCase()
-           : (walk.sit ? "SEATED" : walk.fly ? "FLYING at " + Math.round(walk.alt) + " mm" : "on the floor") +
-             "  \u00b7  " + (walk.third ? "behind him" : "his eyes");
-  o += '<text x="'+(x+w-14)+'" y="'+(y+22)+'" text-anchor="end" font-family="IBM Plex Mono, monospace" ' +
-       'font-size="10" letter-spacing="0.8" fill="'+(walk.fly || walk.sit ? "#7FE3D4" : "#5A6B6E")+'">'+esc(mode)+'</text>';
-  o += '<text x="'+(x+14)+'" y="'+(y+160)+'" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="'+
-       (W.gateVal < 90 ? "#F2685E" : "#8FA0A4")+'">'+esc(l2)+'</text>' +
-       '<text x="'+(x+14)+'" y="'+(y+180)+'" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#8FA0A4">'+esc(l3)+'</text>';
-  return o + '</g>';
-}
 /* The close inspection card keeps the sensor names and jobs readable while
    the model shows their physical placement. It is deliberately short: this
    view should explain the path at a glance, not become another report page. */
@@ -7681,7 +7677,7 @@ function drawWalk(){
       ? prototypeBackdrop() + collect(false) + (labelsOn ? prototypeLabels() : "")
       : collect(true) + walkPlan() + walkStudy();
   }
-  body += walkSensorCard() + walkHud();
+  body += walkSensorCard();
   if(body !== walkSig){ walkSig = body; $("walkView").innerHTML = body; }
   var t = walk.bore ? "looking straight down the input hole &middot; the bore, sectioned"
         : "x " + Math.round(walk.x) + " mm &middot; z " + Math.round(walk.z) +
@@ -7718,7 +7714,9 @@ function syncProtoNav(){
   document.querySelectorAll("[data-proto-focus]").forEach(function(b){
     b.setAttribute("aria-pressed", String(b.getAttribute("data-proto-focus") === f));
   });
-  var v = walk.on ? PROTO_FOCUS[f] : {title:"2D defense scene", copy:"Select any view to return to the live 3D prototype."};
+  /* 2D is where the page opens now, so this is a starting point, not a retreat */
+  var v = walk.on ? PROTO_FOCUS[f] : {title:"2D working scene",
+    copy:"Drop waste into the hopper and watch the sensors, the plate and the gate decide. Pick a view above to walk the 3D prototype."};
   $("protoViewTitle").textContent = v.title;
   $("protoViewCopy").textContent = v.copy;
 }
@@ -7911,12 +7909,12 @@ buildSamples(); buildMeters();
 paintDispMode();                       /* DISP_MODE is declared below the card */
 document.getElementById("cpShared").setAttribute("d", BIN_PATH);
 resetServosAndLCD(); W.lcdInits = 1;
-/* Open on the strongest prototype view. The original illustrated defense scene
-   is still one click away, but visitors no longer have to discover that a full
-   perspective walkthrough was hidden behind it. */
-var initial3D = location.hash ? location.hash.slice(1) : "overview";
-if(!PROTO_FOCUS[initial3D]) initial3D = "overview";
-setWalk(true);
-setProtoFocus(initial3D, true);
+/* Open on the 2D scene. It is the one you can actually test: drop a piece of
+   waste in and watch the sensors, the plate and the gate decide what to do with
+   it. The 3D walkthrough is one button away, and a #hash still opens straight
+   into a named 3D view for anyone linking to one. */
+var initial3D = location.hash ? location.hash.slice(1) : "";
+if(PROTO_FOCUS[initial3D]) setProtoFocus(initial3D, true);
+else setWalk(false);
 requestAnimationFrame(frame);
 })();
