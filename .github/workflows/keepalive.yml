@@ -1,0 +1,64 @@
+# Keeps the JUDECH Supabase project awake on the Free plan.
+#
+# Supabase pauses a Free-plan project that sees no database activity for a
+# week. This writes one heartbeat row a day through the public REST API — a
+# real write, which is what the pausing rule counts — and fails loudly if the
+# database does not answer, so a broken keepalive shows up as a red run rather
+# than a paused project a week later.
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL       https://<project-ref>.supabase.co
+#   SUPABASE_ANON_KEY  the anon / publishable key — the same public pair that
+#                      ships in js/config.js. Row Level Security is what guards
+#                      the data; heartbeat() can only insert a timestamp.
+#   The service-role key is NOT needed and must never be added here.
+
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: "17 2 * * *"        # daily at 02:17 UTC = 10:17 in Manila
+  workflow_dispatch:            # and on demand: Actions → this workflow → Run workflow
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-heartbeat
+  cancel-in-progress: false
+
+jobs:
+  heartbeat:
+    name: Write one heartbeat row
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Check the secrets are set
+        run: |
+          set -euo pipefail
+          missing=0
+          [ -n "${SUPABASE_URL:-}" ]      || { echo "::error::Repository secret SUPABASE_URL is not set"; missing=1; }
+          [ -n "${SUPABASE_ANON_KEY:-}" ] || { echo "::error::Repository secret SUPABASE_ANON_KEY is not set"; missing=1; }
+          [ "$missing" -eq 0 ]
+
+      - name: POST /rest/v1/rpc/heartbeat
+        run: |
+          set -euo pipefail
+          url="${SUPABASE_URL%/}/rest/v1/rpc/heartbeat"
+          # --fail-with-body: a 4xx/5xx fails the step AND prints what Supabase said
+          body=$(curl --silent --show-error --fail-with-body \
+                   --max-time 30 --retry 2 --retry-delay 5 \
+                   -X POST "$url" \
+                   -H "apikey: ${SUPABASE_ANON_KEY}" \
+                   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+                   -H "Content-Type: application/json" \
+                   -d '{"p_source":"github-actions"}')
+          echo "Supabase answered: $body"
+          # the function echoes the source it stored; anything else means the
+          # row is not what we think it is, so fail rather than pretend
+          echo "$body" | grep -q '"source": *"github-actions"' \
+            || { echo "::error::Heartbeat response did not confirm source=github-actions"; exit 1; }
+          echo "::notice::Heartbeat recorded from github-actions"

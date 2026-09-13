@@ -17,3 +17,12 @@ dist/
 
 # stray downloads
 *.deb
+
+# supabase cli state — project ref and pooler host, not for the repository
+supabase/.temp/
+
+# anything that ever looks like a private key or a database password
+*.pem
+*.key
+*service_role*
+*service-role*
