@@ -2138,6 +2138,8 @@
           '<b>Attach the receipt</b><span>PNG or JPG — tap to choose, or drop it here</span>' +
         '</label>' +
         '<div id="proofBox"></div>' +
+        '<span class="drop-note">Not on this device right now? Send the reference without it ' +
+          '&mdash; you can add the screenshot straight after, from the same card.</span>' +
       '</div>' +
     '</div>';
   }
@@ -2195,16 +2197,18 @@
           '<span class="ico">' + svg(ICON.clock) + '</span>' +
           '<span><b>Waiting for ' + BRAND + ' to check this</b>' +
           (B.enabled
-            ? '<p>I have your reference and your receipt. I look at these myself; the moment I ' +
-              'approve it this page unlocks — it checks by itself while it is open.</p>'
+            ? '<p>I have your reference' + (rec.proof || rec.receiptPath ? ' and your receipt' : '') +
+              '. I look at these myself; the moment I approve it this page unlocks — it checks ' +
+              'by itself while it is open.</p>'
             : '<p>Your payment details are saved on this device. Send them to me and I will ' +
               'reply with your approval code — then the terms and the files open.</p>') +
           '</span>' +
         '</div>' +
         paySummary(rec) +
+        receiptBox(rec) +
         '<div class="pay-actions">' + contactButton('Send it to ' + BRAND) +
           '<button class="btn btn-sm" id="payCopy">Copy the details</button>' +
-          '<button class="btn btn-sm btn-ghost" id="payProofDl">Download the receipt</button>' +
+          (rec.proof ? '<button class="btn btn-sm btn-ghost" id="payProofDl">Download the receipt</button>' : '') +
           (B.enabled ? '' : '<button class="btn btn-sm btn-ghost" id="payRedo">Fix the details</button>') +
         '</div>' +
         (B.enabled ? '' :
@@ -2224,6 +2228,7 @@
           ' Check the details and send it again, or message me and we will sort it out.</p></span>' +
         '</div>' +
         paySummary(rec) +
+        receiptBox(rec) +
         '<div class="pay-actions">' + contactButton('Message ' + BRAND) + '</div>';
     } else {
       mode = 'approved';
@@ -2268,6 +2273,7 @@
         if (e.key === 'Enter') { e.preventDefault(); payActionClick(); }
       });
     }
+    if (mode === 'pending' || mode === 'rejected') wireReceiptBox(rec);
     if (mode === 'pending') {
       wirePending(rec);
       if (B.enabled) payPoll = setInterval(function () { refreshStatus(payFor, true); }, 12000);
@@ -2284,6 +2290,89 @@
     return names.length ? names.join(', ') : 'Selected components';
   }
 
+  /* Attaching the receipt after the fact. The same card the buyer is already
+     looking at, so there is nowhere else to go and nothing to remember. */
+  function receiptBox(rec) {
+    if (!B.enabled) return '';
+    var has = !!(rec.proof || rec.receiptPath);
+    return '<div class="receipt-box" data-has="' + has + '" id="receiptBox">' +
+      (has
+        ? '<div class="receipt-have">' + svg(ICON.tick) +
+            '<span><b>Receipt attached</b>' +
+            (rec.receiptAt ? '<em>added ' + esc(new Date(rec.receiptAt).toLocaleString()) + '</em>' : '') +
+            '</span>' +
+            (rec.proof ? '<img src="' + rec.proof + '" alt="Your receipt">' : '') +
+          '</div>'
+        : '<div class="receipt-none">' + svg(ICON.up) +
+            '<span><b>No receipt yet</b>' +
+            '<em>I can check a payment faster with the screenshot. Add it whenever you have it ' +
+            '&mdash; this card is waiting.</em></span>' +
+          '</div>') +
+      '<label class="btn btn-sm ' + (has ? 'btn-ghost' : 'btn-primary') + ' receipt-pick">' +
+        (has ? 'Replace the receipt' : 'Attach the receipt now') +
+        '<input type="file" id="receiptFile" accept="image/*">' +
+      '</label>' +
+      '<span class="msg" id="receiptMsg"></span>' +
+    '</div>';
+  }
+
+  function wireReceiptBox(rec) {
+    var input = $('#receiptFile');
+    if (!input) return;
+    input.addEventListener('change', function () {
+      var f = input.files && input.files[0];
+      input.value = '';
+      if (!f) return;
+      var msg = $('#receiptMsg');
+      msg.dataset.err = 'false';
+      if (!/^image\//.test(f.type || '')) { msg.dataset.err = 'true'; msg.textContent = 'That is not an image.'; return; }
+      msg.textContent = 'Reading the image…';
+      shrinkImage(f, function (dataUrl, err) {
+        if (err) { msg.dataset.err = 'true'; msg.textContent = err; return; }
+        if (!rec.token) {                       /* local mode: keep it on the device */
+          rec.proof = dataUrl;
+          rec.receiptAt = new Date().toISOString();
+          setPay(payFor, rec);
+          paintPayment();
+          return;
+        }
+        msg.textContent = 'Sending it to ' + BRAND + '…';
+        B.attachReceipt(rec.token, dataUrl).then(function (row) {
+          rec.proof = dataUrl;
+          rec.receiptPath = row && row.receipt_path;
+          rec.receiptAt = (row && row.receipt_added_at) || new Date().toISOString();
+          setPay(payFor, rec);
+          paintPayment();
+          $('#payMsg').dataset.err = 'false';
+          $('#payMsg').textContent = 'Receipt attached — I will see it with your reference.';
+        }).catch(function (e) {
+          msg.dataset.err = 'true';
+          msg.textContent = e.message;
+        });
+      });
+    });
+  }
+
+  /* one downscale-and-encode used by both the form and the after-the-fact box */
+  function shrinkImage(file, done) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, 1000 / Math.max(img.width, img.height));
+        var c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        done(c.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = function () { done(null, 'That image could not be read.'); };
+      img.src = reader.result;
+    };
+    reader.onerror = function () { done(null, 'That file could not be read.'); };
+    reader.readAsDataURL(file);
+  }
+
   function paySummary(rec) {
     return '<div class="pay-summary">' +
       '<div><dt>Project</dt><dd>' + esc(rec.project) + '</dd></div>' +
@@ -2298,7 +2387,9 @@
         ? '<div><dt>Receipt</dt><dd><img src="' + rec.proof + '" alt="Receipt"></dd></div>'
         : rec.proofDropped
           ? '<div><dt>Receipt</dt><dd>too large to keep here — send it to me directly</dd></div>'
-          : '') +
+          : rec.receiptPath
+            ? '<div><dt>Receipt</dt><dd>attached and sent</dd></div>'
+            : '<div><dt>Receipt</dt><dd>not attached yet</dd></div>') +
       '</div>';
   }
 
@@ -2415,7 +2506,10 @@
     if (ref.length < 4) { $('#payRef').focus(); return payFail('The reference number is too short.'); }
     if (!amount) { $('#payAmount').focus(); return payFail('How much did you send?'); }
     if (!date) { $('#payDate').focus(); return payFail('When did you pay?'); }
-    if (!proofData) { return payFail('Please attach a screenshot of the receipt.'); }
+    /* the receipt is not compulsory here — someone who has paid but has no
+       screenshot to hand can send the reference now and add the image after,
+       from the very same card. A payment with no proof at all just waits
+       longer, and the pending card says so. */
 
     var cover = payCoverage(p);
     var scope = cover.scope, itemIds = cover.ids;
@@ -2447,10 +2541,12 @@
       return;
     }
 
-    busy(true, 'Uploading the receipt…');
-    var shot = proofData;
-    B.uploadReceipt(shot).then(function (path) {
+    var shot = proofData;                    /* may be nothing: the receipt can follow */
+    busy(true, shot ? 'Uploading the receipt…' : 'Sending it to ' + BRAND + '…');
+    (shot ? B.uploadReceipt(shot) : Promise.resolve(null)).then(function (path) {
       busy(true, 'Sending it to ' + BRAND + '…');
+      base.receiptPath = path;
+      if (path) base.receiptAt = new Date().toISOString();
       return B.submitPayment({
         projectId: p.id, name: name, method: method, reference: ref,
         amount: amount, paidOn: date, receiptPath: path, contact: contact,

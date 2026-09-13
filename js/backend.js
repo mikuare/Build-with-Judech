@@ -131,6 +131,18 @@
     return client.rpc('project_share', { p_token: token }).then(unwrap).then(first);
   }
 
+  /* The receipt can follow the reference number: same claim token, same payment,
+     any time before it is approved. */
+  function attachReceipt(token, dataUrl) {
+    need();
+    return upload('receipts', dataUrl).then(function (path) {
+      return client.rpc('attach_receipt', {
+        p_claim_token: token,
+        p_receipt_path: path
+      }).then(unwrap).then(first);
+    });
+  }
+
   function redeemCode(code, name) {
     need();
     return client.rpc('redeem_access_code', { p_code: code, p_buyer_name: name || null })
@@ -539,6 +551,7 @@
     submitPayment: submitPayment,
     paymentStatus: paymentStatus,
     packageAccess: packageAccess,
+    attachReceipt: attachReceipt,
     packageAccessAll: packageAccessAll,
     projectShare: projectShare,
     redeemCode: redeemCode,

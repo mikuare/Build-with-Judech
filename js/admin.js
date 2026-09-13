@@ -667,12 +667,22 @@
       $('#inboxEmpty').hidden = rows.length > 0;
       paintPackageAccess(rows);
       rows.forEach(function (r) {
-        if (r.receipt_path) {
-          B.signedUrl('receipts', r.receipt_path, 3600).then(function (url) {
-            var t = list.querySelector('[data-thumb="' + r.id + '"]');
-            if (t && url) t.innerHTML = '<a href="' + url + '" target="_blank" rel="noopener"><img src="' + url + '" alt="Receipt"></a>';
-          }).catch(function () {});
-        }
+        if (!r.receipt_path) return;
+        B.signedUrl('receipts', r.receipt_path, 3600).then(function (url) {
+          var t = list.querySelector('[data-thumb="' + r.id + '"]');
+          if (!t || !url) return;
+          t.innerHTML = '<button type="button" class="thumb-open" data-shot="' + esc(url) + '" ' +
+            'data-shot-name="' + esc(r.buyer_name + ' — ' + r.reference) + '" ' +
+            'title="Open the receipt full size">' +
+            '<img src="' + esc(url) + '" alt="Receipt from ' + esc(r.buyer_name) + '">' +
+            '<span class="thumb-zoom">View</span></button>';
+          t.querySelector('[data-shot]').addEventListener('click', function (e) {
+            openShot(e.currentTarget.dataset.shot, e.currentTarget.dataset.shotName);
+          });
+        }).catch(function () {
+          var t = list.querySelector('[data-thumb="' + r.id + '"]');
+          if (t) t.innerHTML = '<span class="thumb-none">Receipt link expired<em>refresh the page</em></span>';
+        });
       });
       $$('#inboxList [data-approve]').forEach(function (b) {
         b.addEventListener('click', function () { decide(b.dataset.approve, 'approve'); });
@@ -686,7 +696,11 @@
   function paymentRow(r) {
     var pending = r.status === 'pending';
     return '<div class="row" data-status="' + r.status + '" data-id="' + r.id + '">' +
-      '<div class="thumb" data-thumb="' + r.id + '">' + (r.receipt_path ? 'loading receipt…' : 'no receipt') + '</div>' +
+      '<div class="thumb receipt-thumb" data-thumb="' + r.id + '" data-has="' +
+        (r.receipt_path ? 'true' : 'false') + '">' +
+        (r.receipt_path ? '<span class="thumb-wait">loading receipt…</span>'
+                        : '<span class="thumb-none">No receipt<em>waiting for the buyer</em></span>') +
+      '</div>' +
       '<div class="row-main">' +
         '<h4>' + esc(r.buyer_name) + ' <span class="pill-s" data-s="' + r.status + '">' + r.status + '</span>' +
           (r.terms_signed ? '<span class="pill-s" data-s="approved">terms signed</span>' : '') + '</h4>' +
@@ -697,6 +711,11 @@
             : 'the whole package') + '</dd></div>' +
           '<div><dt>Paid through</dt><dd>' + esc(r.method) + '</dd></div>' +
           '<div><dt>Reference</dt><dd>' + esc(r.reference) + '</dd></div>' +
+          '<div><dt>Receipt</dt><dd>' + (r.receipt_path
+            ? (r.receipt_came_later
+                ? 'sent after &mdash; ' + when(r.receipt_added_at)
+                : 'with the payment')
+            : '<b class="want-receipt">not attached</b>') + '</dd></div>' +
           '<div><dt>Amount</dt><dd>' + money(r.amount, r.currency) + '</dd></div>' +
           '<div><dt>Date paid</dt><dd>' + day(r.paid_on) + '</dd></div>' +
           '<div><dt>Submitted</dt><dd>' + when(r.submitted_at) + '</dd></div>' +
@@ -810,6 +829,32 @@
       $$('.pkg-access[data-access="' + paymentId + '"] button').forEach(function (b) { b.disabled = false; });
     });
   }
+
+  /* A receipt is the whole reason to trust a reference number, so it opens at
+     the size it was taken rather than as a 130px thumbnail. */
+  function openShot(url, name) {
+    $('#shotFull').src = url;
+    $('#shotFull').alt = 'Receipt — ' + (name || '');
+    $('#shotTitle').textContent = name || 'Receipt';
+    $('#shotOpen').href = url;
+    $('#shotSave').href = url;
+    $('#shotSave').setAttribute('download',
+      'receipt-' + String(name || 'payment').replace(/[^A-Za-z0-9]+/g, '-').slice(0, 50) + '.jpg');
+    $('#shotOverlay').dataset.open = 'true';
+    document.body.classList.add('modal-open');
+  }
+  function closeShot() {
+    $('#shotOverlay').dataset.open = 'false';
+    $('#shotFull').removeAttribute('src');
+    if (!$('.overlay[data-open="true"]')) document.body.classList.remove('modal-open');
+  }
+  $$('[data-close-shot]').forEach(function (el) { el.addEventListener('click', closeShot); });
+  $('#shotOverlay').addEventListener('mousedown', function (e) {
+    if (e.target === $('#shotOverlay') || e.target.id === 'shotFull') closeShot();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && $('#shotOverlay').dataset.open === 'true') closeShot();
+  });
 
   function decide(id, action) {
     var noteEl = $('[data-note="' + id + '"]');

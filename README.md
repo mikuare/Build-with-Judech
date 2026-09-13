@@ -598,6 +598,31 @@ if you have not.
 The `project-files` bucket is **public to read** — the same as the diagrams and README the
 site already serves from disk — and admin-only to write.
 
+### The receipt can arrive after the reference
+
+Someone pays on GCash, comes back with the reference number, and does not yet have the
+screenshot to hand. The form used to refuse to move — so they abandoned it, or invented a
+reference. Neither helps.
+
+**The receipt is now optional at submission and attachable afterwards.** The form says so
+(*"Not on this device right now? Send the reference without it — you can add the screenshot
+straight after, from the same card"*), and the pending card carries the way to do it: an
+amber **No receipt yet** panel with **Attach the receipt now**, or, once there is one, a
+thumbnail with **Replace the receipt**. It works on a rejected payment too, since a clearer
+photo is usually what was missing. The image is downscaled to 1000&nbsp;px in the browser
+before it goes up, exactly as at submission.
+
+Behind it, `attach_receipt(claim_token, path)`: the buyer already holds the token, so no new
+identity is involved. It refuses an approved payment — that check is finished, and letting
+the image change underneath an approval would only muddy the record.
+
+**In the dashboard** the receipt is a button rather than a decoration: the thumbnail opens
+the image full size over a dimmed screen, with **Open in a tab** and **Download**. A payment
+with no receipt shows an amber dashed **No receipt — waiting for the buyer** panel instead of
+going quiet, and the row's details say whether the receipt came *with the payment* or *sent
+after*, with the time it landed — worth knowing when you are deciding whether to chase
+someone.
+
 ### Paying for one component instead of the whole package
 
 A package item can carry **its own price**, set next to it in the project editor. When it

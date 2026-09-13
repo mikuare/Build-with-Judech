@@ -19,7 +19,7 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/landing.css?v=20260914f">
+<link rel="stylesheet" href="css/landing.css?v=20260914j">
 </head>
 <body>
 
@@ -284,10 +284,19 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
   <button class="chat-tip-x" id="chatTipClose" type="button" aria-label="Hide this tip">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
   </button>
-  <p><b>You can message JUDECH here.</b> Ask about any project, a price, or a deadline
-    &mdash; and the reply comes back in this same chat, so watch this button rather than
-    your inbox.</p>
-  <button class="chat-tip-never" id="chatTipNever" type="button">Do not show this again</button>
+  <div class="chat-tip-row">
+    <span class="chat-tip-wave" aria-hidden="true"><span>&#128075;</span></span>
+    <div class="chat-tip-copy">
+      <b class="chat-tip-title">Hi there!</b>
+      <p>Got a question about a project, a price or a deadline? Message me right here
+        &mdash; the reply lands in this same chat, not in your inbox.</p>
+    </div>
+  </div>
+  <div class="chat-tip-foot">
+    <span class="chat-tip-go">Open the chat
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
+    <button class="chat-tip-never" id="chatTipNever" type="button">Don't show again</button>
+  </div>
 </div>
 
 <!-- ===================== the message dock =====================
@@ -867,10 +876,10 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
 <script src="js/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="js/theme.js?v=20260914f"></script>
+<script src="js/theme.js?v=20260914j"></script>
 <script src="js/config.js"></script>
 <script src="js/backend.js"></script>
-<script src="js/pdf.js?v=20260914f"></script>
-<script src="js/landing.js?v=20260914f"></script>
+<script src="js/pdf.js?v=20260914j"></script>
+<script src="js/landing.js?v=20260914j"></script>
 </body>
 </html>

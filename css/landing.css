@@ -1048,26 +1048,42 @@ body{background:var(--band-a)}
 .pane-a{background:var(--band-a)}
 .pane-b{background:var(--band-b); border-block:1.5px solid var(--band-edge)}
 
-/* on a white pane the cards need their own tone to sit on */
+/* On a white pane the cards need their own tone to sit on; on a green pane the
+   white cards do the lifting.
+
+   Every :not() below is load-bearing. A pane rule is `.pane-x .thing` — one
+   class more than nothing, and exactly as specific as `.thing[state]`. Being
+   written later in the file, it would quietly win and repaint anything that
+   carries its own background because of what it IS: the chosen filter, the
+   ownership-transfer card, the "what to send me" card. The filter was the
+   loud one — its label is white for the accent behind it, so losing that
+   background left white text on white paper. */
 .pane-a .how-card,
 .pane-a .cap,
 .pane-a .project,
-.pane-a .rights-card,
-.pane-a .contact-card{background:var(--panel-2)}
+.pane-a .rights-card:not([data-track="custom"]),
+.pane-a .contact-card:not(.ask){background:var(--panel-2)}
 .pane-a .project[data-status="soon"]{background:var(--sunk)}
 .pane-a .tag,
 .pane-a .cap li{background:var(--panel); border-color:var(--line)}
-.pane-a .filter{background:var(--panel)}
+.pane-a .filter:not([aria-pressed="true"]){background:var(--panel)}
 .pane-a .rights-card[data-track="custom"] .badge{background:var(--panel-2)}
 
-/* on a green pane the white cards do the lifting */
 .pane-b .how-card,
 .pane-b .cap,
 .pane-b .project,
-.pane-b .rights-card,
-.pane-b .contact-card,
-.pane-b .filter{background:var(--panel)}
+.pane-b .rights-card:not([data-track="custom"]),
+.pane-b .contact-card:not(.ask),
+.pane-b .filter:not([aria-pressed="true"]){background:var(--panel)}
 .pane-b .project[data-status="soon"]{background:var(--panel-2)}
+
+/* and the chosen filter, said once more with enough weight that no pane rule
+   added later can take its background without taking its colour too */
+.filter[aria-pressed="true"],
+.pane-a .filter[aria-pressed="true"],
+.pane-b .filter[aria-pressed="true"]{background:var(--brand-grad); border-color:transparent;
+  color:var(--on-accent); box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 24%,transparent)}
+.filter[aria-pressed="true"] .count{opacity:.85; color:inherit}
 
 /* the hero sits on the first white pane, so its wash needs to stay faint */
 .hero.pane-a::after{opacity:.35}
@@ -1598,34 +1614,65 @@ section[id], header[id]{scroll-margin-top:calc(var(--header-h) + 18px)}
 
 /* ===========================================================================
    The chat nudge
-   A speech bubble off the floating button, with a tail pointing back at it, so
-   it is obvious what is talking. It says its piece once and retires — the whole
-   point is the sentence about where the reply lands, not the decoration.
+   A greeting, not a notice: a hand that actually waves, a warm ground, and one
+   sentence that says where the reply lands. It says hello once and retires —
+   the wave earns attention, the sentence spends it.
    =========================================================================== */
-.chat-tip{position:fixed; right:22px; bottom:82px; z-index:36; width:min(304px,calc(100vw - 44px));
-  padding:15px 16px 13px; cursor:pointer; text-align:left;
-  background:var(--panel); border:1.5px solid var(--line); border-radius:18px;
-  box-shadow:0 22px 46px -18px rgba(0,0,0,.42), var(--shadow);
-  opacity:0; visibility:hidden; transform:translateY(12px) scale(.96);
+.chat-tip{position:fixed; right:22px; bottom:82px; z-index:36; width:min(330px,calc(100vw - 44px));
+  padding:16px 16px 13px; cursor:pointer; text-align:left; color:var(--ink);
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb,var(--accent) 16%,var(--panel)) 0, transparent 62%),
+    radial-gradient(90% 80% at 100% 100%, color-mix(in srgb,var(--sun) 12%,var(--panel)) 0, transparent 58%),
+    var(--panel);
+  border:1.5px solid color-mix(in srgb,var(--accent) 30%,var(--line)); border-radius:20px;
+  box-shadow:0 26px 52px -20px color-mix(in srgb,var(--accent) 35%,rgba(0,0,0,.45)), var(--shadow);
+  opacity:0; visibility:hidden; transform:translateY(14px) scale(.94);
   transform-origin:100% 100%;
-  transition:opacity .26s ease, transform .34s cubic-bezier(.2,.9,.25,1), visibility .34s}
+  transition:opacity .28s ease, transform .46s cubic-bezier(.2,1.25,.35,1), visibility .46s}
 .chat-tip[data-open="true"]{opacity:1; visibility:visible; transform:none}
 .chat-tip:hover{border-color:var(--accent)}
-/* the tail, pointing down at the button it belongs to */
+/* the tail, pointing down at the button it belongs to — same ground as the
+   bottom-right corner it grows from */
 .chat-tip::after{content:""; position:absolute; right:26px; bottom:-9px; width:16px; height:16px;
-  background:var(--panel); border-right:1.5px solid var(--line);
-  border-bottom:1.5px solid var(--line); border-bottom-right-radius:4px;
-  transform:rotate(45deg)}
+  background:color-mix(in srgb,var(--sun) 10%,var(--panel));
+  border-right:1.5px solid color-mix(in srgb,var(--accent) 30%,var(--line));
+  border-bottom:1.5px solid color-mix(in srgb,var(--accent) 30%,var(--line));
+  border-bottom-right-radius:4px; transform:rotate(45deg)}
 .chat-tip:hover::after{border-color:var(--accent)}
-.chat-tip p{font-size:13.5px; line-height:1.55; color:var(--ink-2); padding-right:14px}
-.chat-tip p b{color:var(--ink); font-family:"Nunito",sans-serif; font-weight:800; font-size:14px}
-.chat-tip-x{position:absolute; top:9px; right:9px; width:26px; height:26px; display:grid;
+
+.chat-tip-row{display:flex; gap:13px; align-items:flex-start; padding-right:18px}
+.chat-tip-wave{width:46px; height:46px; flex:none; display:grid; place-items:center;
+  border-radius:15px; background:var(--brand-grad);
+  box-shadow:0 8px 18px -6px color-mix(in srgb,var(--accent) 55%,transparent)}
+.chat-tip-wave > span{display:block; font-size:24px; line-height:1;
+  transform-origin:72% 78%}                       /* the wrist */
+/* the wave starts when the bubble is seen, not when the page loads */
+.chat-tip[data-open="true"] .chat-tip-wave > span{animation:wave-hello 2.6s ease-in-out .35s 2}
+@keyframes wave-hello{
+  0%,60%,100%{transform:rotate(0)}
+  8%{transform:rotate(16deg)}  16%{transform:rotate(-9deg)}
+  24%{transform:rotate(14deg)} 32%{transform:rotate(-5deg)}
+  40%{transform:rotate(9deg)}  48%{transform:rotate(0)}
+}
+.chat-tip-copy{min-width:0}
+.chat-tip-title{display:block; font-family:"Nunito","Inter",sans-serif; font-weight:800;
+  font-size:17px; letter-spacing:-.01em; line-height:1.2; margin-bottom:4px}
+.chat-tip-copy p{font-size:13.5px; line-height:1.55; color:var(--ink-2)}
+
+.chat-tip-foot{display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin-top:12px; padding-top:11px; border-top:1.5px dashed color-mix(in srgb,var(--accent) 22%,var(--line))}
+.chat-tip-go{display:inline-flex; align-items:center; gap:6px; font-family:"Nunito",sans-serif;
+  font-weight:800; font-size:13.5px; color:var(--accent)}
+.chat-tip-go svg{width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.4;
+  stroke-linecap:round; stroke-linejoin:round; transition:transform .18s}
+.chat-tip:hover .chat-tip-go svg{transform:translateX(3px)}
+.chat-tip-x{position:absolute; top:10px; right:10px; width:26px; height:26px; display:grid;
   place-items:center; padding:0; border:0; border-radius:50%; background:none; color:var(--ink-3)}
-.chat-tip-x:hover{background:var(--panel-2); color:var(--ink)}
+.chat-tip-x:hover{background:color-mix(in srgb,var(--ink) 8%,transparent); color:var(--ink)}
 .chat-tip-x svg{width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2.2;
   stroke-linecap:round}
-.chat-tip-never{margin-top:10px; padding:0; border:0; background:none; font-size:12px;
-  font-weight:700; color:var(--ink-3); text-decoration:underline; text-underline-offset:3px}
+.chat-tip-never{padding:0; border:0; background:none; font-size:12px; font-weight:600;
+  color:var(--ink-3); text-decoration:underline; text-underline-offset:3px; white-space:nowrap}
 .chat-tip-never:hover{color:var(--bad)}
 
 /* switching it back on, at the foot of the chat it points to */
@@ -1635,11 +1682,13 @@ section[id], header[id]{scroll-margin-top:calc(var(--header-h) + 18px)}
 .chat-pref:hover{color:var(--ink-2)}
 
 @media (max-width:560px){
-  .chat-tip{right:14px; bottom:74px; width:min(300px,calc(100vw - 28px))}
+  .chat-tip{right:14px; bottom:74px; width:min(330px,calc(100vw - 28px))}
   .chat-tip::after{right:20px}
 }
 @media (prefers-reduced-motion:reduce){
   .chat-tip{transition:opacity .01s, visibility .01s; transform:none}
+  .chat-tip-wave > span{animation:none}
+  .chat-tip:hover .chat-tip-go svg{transform:none}
 }
 
 
@@ -1649,3 +1698,27 @@ section[id], header[id]{scroll-margin-top:calc(var(--header-h) + 18px)}
   padding:12px 14px}
 .msg-blocked b{display:block; color:var(--bad); font-family:"Nunito",sans-serif; font-size:14px;
   margin-bottom:3px}
+
+
+/* ---------- the receipt, attached whenever it turns up ----------
+   Lives on the pending card, so a buyer who sent the reference without a
+   screenshot has the way to add one exactly where they are already looking. */
+.drop-note{display:block; margin-top:8px; font-size:12.5px; color:var(--ink-3)}
+.receipt-box{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px;
+  padding:13px 15px; border-radius:var(--radius-sm); border:1.5px solid var(--line);
+  background:var(--panel-2)}
+.receipt-box[data-has="false"]{border-style:dashed;
+  border-color:color-mix(in srgb,var(--sun) 45%,var(--line)); background:var(--sun-soft)}
+.receipt-have, .receipt-none{display:flex; align-items:center; gap:11px; flex:1; min-width:200px}
+.receipt-have svg, .receipt-none svg{width:20px; height:20px; flex:none; fill:none;
+  stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round}
+.receipt-have svg{stroke:var(--accent)}
+.receipt-none svg{stroke:var(--sun)}
+.receipt-have b, .receipt-none b{display:block; font-family:"Nunito",sans-serif; font-size:14px}
+.receipt-have em, .receipt-none em{display:block; font-style:normal; font-size:12.5px;
+  color:var(--ink-2); line-height:1.5; margin-top:2px}
+.receipt-have img{width:46px; height:46px; flex:none; margin-left:auto; border-radius:9px;
+  object-fit:cover; border:1.5px solid var(--line)}
+.receipt-pick{position:relative; overflow:hidden; flex:none}
+.receipt-pick input{position:absolute; inset:0; opacity:0; cursor:pointer}
+#receiptMsg{flex-basis:100%; font-size:12.5px}
