@@ -1876,6 +1876,15 @@
     return m ? { x: clamp(Number(m[1])), y: clamp(Number(m[2])) } : { x: 50, y: 50 };
   }
 
+  /* what the buyer will see offered for download, named from the address */
+  function attachedName(href) {
+    var clean = String(href || '').split('#')[0].split('?')[0];
+    if (!clean) return 'Nothing attached yet — the item will show a note instead of a file.';
+    var name = decodeURIComponent(clean.split('/').pop() || '').replace(/^[0-9a-f]{8}-/i, '');
+    if (!name) return 'Links to a page rather than a file.';
+    return /\.[a-z0-9]{1,5}$/i.test(name) ? 'Attached: ' + name : 'Links to: ' + name;
+  }
+
   function releaseHint(mode) {
     return mode === 'manual'
       ? 'Stays shut after the payment and the terms. You open it for each buyer from the Payments tab.'
@@ -1981,7 +1990,10 @@
             '<div class="package-attachment-row"><input type="text" data-package-href value="' + esc(href) + '" ' +
               'placeholder="Upload a file, or paste an https:// or site URL">' +
               '<label class="btn btn-sm up">Upload attachment<input type="file" data-package-upload></label></div>' +
-            '<span class="hint">Documents, ZIP files, images, installers and other project files are supported.</span></div>' +
+            '<span class="hint">PDF, Word, text, spreadsheets, slides, ZIP, images, sketches, installers ' +
+              '&mdash; up to 64&nbsp;MB. A buyer who opens this item gets a <b>Download it</b> button ' +
+              'for the file, not just a view of it.</span>' +
+            '<p class="attach-now" data-attach-name>' + esc(attachedName(href)) + '</p></div>' +
           '<div><label class="lbl">Price on its own</label>' +
             '<input type="number" min="0" step="0.01" data-package-price value="' + esc(price) + '" ' +
               'placeholder="blank = package only">' +
@@ -2233,9 +2245,15 @@
       paintShareItems();
     });
     $('#pPackageList').addEventListener('input', function (e) {
-      if (!e.target.matches('[data-package-name]')) return;
-      e.target.closest('[data-package-row]').querySelector('[data-package-heading]').textContent =
-        e.target.value.trim() || 'New package item';
+      var row = e.target.closest('[data-package-row]');
+      if (!row) return;
+      if (e.target.matches('[data-package-name]')) {
+        row.querySelector('[data-package-heading]').textContent =
+          e.target.value.trim() || 'New package item';
+      }
+      if (e.target.matches('[data-package-href]')) {
+        row.querySelector('[data-attach-name]').textContent = attachedName(e.target.value);
+      }
     });
     $('#pPackageList').addEventListener('change', function (e) {
       var row = e.target.closest('[data-package-row]');
@@ -2258,6 +2276,7 @@
         say('#projMsg', 'Uploading ' + f.name + '…');
         B.uploadProjectFile(f).then(function (res) {
           row.querySelector('[data-package-href]').value = res.url;
+          row.querySelector('[data-attach-name]').textContent = attachedName(res.url);
           say('#projMsg', f.name + ' attached — save the project to publish it.', 'ok');
         }).catch(function (err) { say('#projMsg', err.message, 'err'); });
         input.value = '';

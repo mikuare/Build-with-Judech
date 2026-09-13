@@ -702,3 +702,8 @@ pre{margin:12px 0 0; padding:14px 16px; background:var(--sunk); border-radius:12
   height:42px; font-size:21px; color:#F2F6F4; background:rgba(255,255,255,.12);
   border-color:rgba(255,255,255,.2)}
 .shot-overlay .modal-x:hover{background:rgba(255,255,255,.22); border-color:#F2F6F4}
+
+
+/* what is attached to a package item, named in plain words */
+.attach-now{margin-top:7px; font-size:12.5px; font-weight:600; color:var(--accent)}
+.attach-now:empty{display:none}

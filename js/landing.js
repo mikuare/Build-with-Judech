@@ -100,6 +100,7 @@
     card:  '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>',
     zoom:  '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/><path d="M8.5 11h5M11 8.5v5"/>',
+    down:  '<path d="M12 5v11"/><path d="M8 12l4 4 4-4"/><path d="M4 19h16"/>',
     up:    '<path d="M12 16V5"/><path d="M8 9l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>'
   };
   /* the power mark: one arc, one stroke, and it still reads at 16px where a
@@ -2970,6 +2971,68 @@
     });
   }
 
+  /* ---------- attachments ----------
+     A package item that points at a file should hand the file over, not put it
+     on screen and leave the buyer to work out how to keep it. Supabase serves
+     a public object inline unless the URL asks otherwise, so ?download=<name>
+     is appended: that is what sets Content-Disposition on their side. */
+  var FILE_KIND = {
+    pdf:"PDF document", txt:"Text file", md:"Markdown", rtf:"Rich text",
+    doc:"Word document", docx:"Word document", odt:"Text document",
+    xls:"Spreadsheet", xlsx:"Spreadsheet", csv:"Spreadsheet", ods:"Spreadsheet",
+    ppt:"Slides", pptx:"Slides", odp:"Slides",
+    zip:"Zip archive", rar:"RAR archive", "7z":"7-Zip archive", tar:"Tar archive", gz:"Compressed",
+    ino:"Arduino sketch", cpp:"C++ source", c:"C source", h:"Header file", py:"Python source",
+    js:"JavaScript", json:"JSON data", sql:"SQL script", sh:"Shell script",
+    png:"Image", jpg:"Image", jpeg:"Image", webp:"Image", gif:"Image", svg:"Vector image",
+    mp4:"Video", webm:"Video", mov:"Video", apk:"Android installer", exe:"Windows installer",
+    fig:"Figma file", psd:"Photoshop file", ai:"Illustrator file", dwg:"CAD drawing"
+  };
+  var PAGE_EXT = { html:1, htm:1, php:1, aspx:1 };
+
+  function fileInfo(href) {
+    var clean = String(href || '').split('#')[0].split('?')[0];
+    var name = decodeURIComponent(clean.split('/').pop() || '');
+    var ext = (name.split('.').pop() || '').toLowerCase();
+    var storage = /\/storage\/v1\/object\/public\//.test(clean);
+    /* the uploader prefixes a short id — the buyer does not need to see it */
+    var pretty = name.replace(/^[0-9a-f]{8}-/i, '');
+    return {
+      name: pretty || 'file',
+      ext: ext,
+      kind: FILE_KIND[ext] || (ext ? ext.toUpperCase() + ' file' : 'File'),
+      storage: storage,
+      isFile: !!ext && !PAGE_EXT[ext] && (storage || !!FILE_KIND[ext])
+    };
+  }
+
+  /* the same address, but asking for it as a download */
+  function downloadHref(href, name) {
+    if (!/\/storage\/v1\/object\/public\//.test(String(href || ''))) return href;
+    return href + (href.indexOf('?') > -1 ? '&' : '?') + 'download=' + encodeURIComponent(name || '');
+  }
+
+  function openFile(p, item, link) {
+    var f = fileInfo(link.href);
+    openInfo({
+      title: esc(item ? item.name : f.name),
+      sub: p.name + ' &mdash; ' + esc(f.kind),
+      html: '<div class="file-card">' +
+          '<span class="file-ext">' + esc(f.ext ? f.ext.toUpperCase() : 'FILE') + '</span>' +
+          '<span class="file-what"><b>' + esc(f.name) + '</b>' +
+            '<em>' + esc(f.kind) + '</em></span>' +
+        '</div>' +
+        (item && item.description ? '<p style="margin-top:14px">' + esc(item.description) + '</p>' : '') +
+        '<p style="margin-top:16px; display:flex; gap:9px; flex-wrap:wrap">' +
+          '<a class="btn btn-sm btn-primary" id="fileGet" href="' + esc(downloadHref(link.href, f.name)) +
+            '" download="' + esc(f.name) + '">' + svg(ICON.down) + 'Download it</a>' +
+          '<a class="btn btn-sm" id="fileSee" href="' + esc(link.href) + '" target="_blank" rel="noopener">' +
+            'Open in a tab</a>' +
+        '</p>',
+      msg: 'Yours to keep — save it somewhere you will find it again.'
+    });
+  }
+
   function runItem(p, key) {
     var item = packageItemsFor(p).filter(function (candidate) { return candidate.id === key; })[0];
     var type = item ? item.type : key;
@@ -2978,6 +3041,8 @@
     if (!link && type !== key) link = (p.links || {})[type];
     if (typeof link === 'string') link = { href: link };
     if (link) {
+      /* a page or a live demo still just opens; a file is handed over */
+      if (!link.sameTab && fileInfo(link.href).isFile) { openFile(p, item, link); return; }
       if (link.sameTab) window.location.href = link.href;
       else window.open(link.href, '_blank', 'noopener');
       return;
@@ -2987,7 +3052,11 @@
         title: p.name + ' &mdash; source code',
         sub: 'Open a file to read it, or right-click &rarr; Save link as&hellip; to keep a copy.',
         html: table(['File', 'What it is', ''], (p.files || []).map(function (f) {
-          return [f[0], f[1], '<a href="' + f[2] + '" target="_blank" rel="noopener">open</a>'];
+          var info = fileInfo(f[2]);
+          return [f[0], f[1],
+            '<a href="' + esc(downloadHref(f[2], info.name)) + '" download="' + esc(info.name) +
+              '">download</a> &middot; ' +
+            '<a href="' + esc(f[2]) + '" target="_blank" rel="noopener">open</a>'];
         })) + (p.libraries
           ? '<h3>Libraries</h3><p>' + p.libraries + ' Their own licences stay in effect (terms, section 11).</p>'
           : ''),

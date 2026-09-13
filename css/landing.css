@@ -1722,3 +1722,20 @@ section[id], header[id]{scroll-margin-top:calc(var(--header-h) + 18px)}
 .receipt-pick{position:relative; overflow:hidden; flex:none}
 .receipt-pick input{position:absolute; inset:0; opacity:0; cursor:pointer}
 #receiptMsg{flex-basis:100%; font-size:12.5px}
+
+
+/* ---------- an attachment, handed over ----------
+   A package item that points at a file opens this rather than dumping the file
+   into a tab: what it is, and a button that actually saves it. */
+.file-card{display:flex; align-items:center; gap:14px; padding:15px 16px;
+  background:var(--panel-2); border:1.5px solid var(--line); border-radius:var(--radius-sm)}
+.file-ext{width:54px; height:62px; flex:none; display:grid; place-items:center; border-radius:9px;
+  background:var(--brand-grad); color:var(--on-accent); font-family:"Nunito",sans-serif;
+  font-weight:800; font-size:12.5px; letter-spacing:.02em;
+  box-shadow:0 8px 18px -8px color-mix(in srgb,var(--accent) 55%,transparent)}
+.file-what{min-width:0}
+.file-what b{display:block; font-family:"Nunito",sans-serif; font-size:16px; line-height:1.3;
+  overflow-wrap:anywhere}
+.file-what em{display:block; font-style:normal; font-size:13px; color:var(--ink-3); margin-top:3px}
+#fileGet svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.2;
+  stroke-linecap:round; stroke-linejoin:round}

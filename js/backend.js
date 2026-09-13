@@ -486,7 +486,7 @@
   function uploadProjectFile(file, name, limit) {
     need();
     if (!file) return Promise.reject(new Error('Choose a file to upload.'));
-    var cap = limit || 25 * 1024 * 1024;
+    var cap = limit || 64 * 1024 * 1024;      /* what the bucket itself allows */
     if (file.size > cap) {
       return Promise.reject(new Error('That file is ' + Math.ceil(file.size / 1048576) +
         ' MB — the limit here is ' + Math.round(cap / 1048576) + ' MB.'));
