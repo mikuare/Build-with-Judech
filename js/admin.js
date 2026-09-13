@@ -1876,6 +1876,50 @@
     return m ? { x: clamp(Number(m[1])), y: clamp(Number(m[2])) } : { x: 50, y: 50 };
   }
 
+  /* One package item can carry several files, each with its own label and its
+     own line of description. Stored inside package_items, so no schema change:
+     the item keeps its single `href` for a page or a demo, and `files` is the
+     list of things to download. */
+  function itemFiles(item) {
+    return (Array.isArray(item && item.files) ? item.files : []).map(function (f) {
+      if (typeof f === 'string') f = { url: f };
+      return {
+        url: String((f && f.url) || '').trim(),
+        label: String((f && f.label) || ''),
+        note: String((f && f.note) || '')
+      };
+    }).filter(function (f) { return f.url; });
+  }
+
+  function fileLabelFrom(url) {
+    var clean = String(url || '').split('#')[0].split('?')[0];
+    return decodeURIComponent(clean.split('/').pop() || '').replace(/^[0-9a-f]{8}-/i, '') || 'File';
+  }
+  function fileExt(url) {
+    var n = fileLabelFrom(url), e = (n.split('.').pop() || '').toLowerCase();
+    return e && e.length <= 5 ? e.toUpperCase() : 'FILE';
+  }
+
+  function pkgFileRow(f) {
+    f = f || { url: '', label: '', note: '' };
+    return '<div class="pkg-file" data-pkg-file>' +
+      '<span class="pkg-file-ext">' + esc(fileExt(f.url)) + '</span>' +
+      '<div class="pkg-file-fields">' +
+        '<input type="text" data-pkg-file-label value="' + esc(f.label) + '" ' +
+          'placeholder="What this file is called for the buyer">' +
+        '<input type="text" data-pkg-file-note value="' + esc(f.note) + '" ' +
+          'placeholder="One line: what it contains, how to use it (optional)">' +
+        '<input type="url" data-pkg-file-url value="' + esc(f.url) + '" ' +
+          'placeholder="https://… the file address">' +
+      '</div>' +
+      '<div class="pkg-file-tools">' +
+        '<button class="btn btn-sm btn-ghost" type="button" data-pkg-file-up aria-label="Move up">&uarr;</button>' +
+        '<button class="btn btn-sm btn-ghost" type="button" data-pkg-file-down aria-label="Move down">&darr;</button>' +
+        '<button class="btn btn-sm btn-ghost" type="button" data-pkg-file-remove>Remove</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   /* what the buyer will see offered for download, named from the address */
   function attachedName(href) {
     var clean = String(href || '').split('#')[0].split('?')[0];
@@ -1986,13 +2030,24 @@
             '<input type="text" data-package-name value="' + esc(name) + '" placeholder="What users will receive"></div>' +
           '<div class="wide"><label class="lbl">Description</label>' +
             '<textarea data-package-description placeholder="Explain what this item contains.">' + esc(description) + '</textarea></div>' +
-          '<div class="wide"><label class="lbl">Attachment or destination</label>' +
+          '<div class="wide"><label class="lbl">Files in this item</label>' +
+            '<div class="pkg-file-list" data-pkg-files>' +
+              itemFiles(item).map(pkgFileRow).join('') +
+            '</div>' +
+            '<div class="proj-row-tools">' +
+              '<label class="btn btn-sm up">Add files<input type="file" multiple data-pkg-file-add></label>' +
+              '<button class="btn btn-sm btn-ghost" type="button" data-pkg-file-blank>Paste a link instead</button>' +
+            '</div>' +
+            '<span class="hint">As many as the item needs &mdash; PDF, Word, text, spreadsheets, ' +
+              'slides, ZIP, images, sketches, installers, up to 64&nbsp;MB each. Each one takes its ' +
+              'own name and a line of description, and the buyer opens the item to a list they can ' +
+              '<b>view or download</b> file by file.</span></div>' +
+          '<div class="wide"><label class="lbl">Or a destination instead of files</label>' +
             '<div class="package-attachment-row"><input type="text" data-package-href value="' + esc(href) + '" ' +
-              'placeholder="Upload a file, or paste an https:// or site URL">' +
-              '<label class="btn btn-sm up">Upload attachment<input type="file" data-package-upload></label></div>' +
-            '<span class="hint">PDF, Word, text, spreadsheets, slides, ZIP, images, sketches, installers ' +
-              '&mdash; up to 64&nbsp;MB. A buyer who opens this item gets a <b>Download it</b> button ' +
-              'for the file, not just a view of it.</span>' +
+              'placeholder="https://… a live demo, a page, a video">' +
+              '<label class="btn btn-sm up">Upload one<input type="file" data-package-upload></label></div>' +
+            '<span class="hint">Used only when the item has no files above &mdash; for something that ' +
+              'opens rather than downloads, like the simulator or a live demo.</span>' +
             '<p class="attach-now" data-attach-name>' + esc(attachedName(href)) + '</p></div>' +
           '<div><label class="lbl">Price on its own</label>' +
             '<input type="number" min="0" step="0.01" data-package-price value="' + esc(price) + '" ' +
@@ -2254,6 +2309,12 @@
       if (e.target.matches('[data-package-href]')) {
         row.querySelector('[data-attach-name]').textContent = attachedName(e.target.value);
       }
+      if (e.target.matches('[data-pkg-file-url]')) {
+        var fr = e.target.closest('[data-pkg-file]');
+        fr.querySelector('.pkg-file-ext').textContent = fileExt(e.target.value);
+        var lab = fr.querySelector('[data-pkg-file-label]');
+        if (!lab.value.trim()) lab.value = fileLabelFrom(e.target.value);
+      }
     });
     $('#pPackageList').addEventListener('change', function (e) {
       var row = e.target.closest('[data-package-row]');
@@ -2270,6 +2331,29 @@
           .dataset.release = e.target.value;
         row.querySelector('[data-release-hint]').textContent = releaseHint(e.target.value);
       }
+      if (e.target.matches('[data-pkg-file-add]')) {
+        var picker = e.target, list = row.querySelector('[data-pkg-files]');
+        var chosen = Array.prototype.slice.call(picker.files || []);
+        picker.value = '';
+        if (!chosen.length) return;
+        var done = 0;
+        say('#projMsg', 'Uploading ' + chosen.length + ' file' + (chosen.length === 1 ? '' : 's') + '…');
+        chosen.reduce(function (chain, f) {
+          return chain.then(function () {
+            return B.uploadProjectFile(f).then(function (res) {
+              list.insertAdjacentHTML('beforeend',
+                pkgFileRow({ url: res.url, label: f.name, note: '' }));
+              done++;
+              say('#projMsg', 'Uploaded ' + done + ' of ' + chosen.length + '…');
+            });
+          });
+        }, Promise.resolve())
+          .then(function () {
+            say('#projMsg', done + ' attached — name them, then save the project.', 'ok');
+          })
+          .catch(function (err) { say('#projMsg', err.message, 'err'); });
+        return;
+      }
       if (e.target.matches('[data-package-upload]')) {
         var input = e.target, f = input.files && input.files[0];
         if (!f) return;
@@ -2285,6 +2369,23 @@
     $('#pPackageList').addEventListener('click', function (e) {
       var row = e.target.closest('[data-package-row]');
       if (!row) return;
+
+      /* the files inside one package item */
+      var fileRow = e.target.closest('[data-pkg-file]');
+      if (e.target.closest('[data-pkg-file-remove]') && fileRow) { fileRow.remove(); return; }
+      if (e.target.closest('[data-pkg-file-up]') && fileRow && fileRow.previousElementSibling) {
+        fileRow.parentNode.insertBefore(fileRow, fileRow.previousElementSibling); return;
+      }
+      if (e.target.closest('[data-pkg-file-down]') && fileRow && fileRow.nextElementSibling) {
+        fileRow.parentNode.insertBefore(fileRow.nextElementSibling, fileRow); return;
+      }
+      if (e.target.closest('[data-pkg-file-blank]')) {
+        var list = row.querySelector('[data-pkg-files]');
+        list.insertAdjacentHTML('beforeend', pkgFileRow());
+        list.lastElementChild.querySelector('[data-pkg-file-label]').focus();
+        return;
+      }
+
       if (e.target.closest('[data-remove-package]')) row.remove();
       if (e.target.closest('[data-package-up]') && row.previousElementSibling) {
         row.parentNode.insertBefore(row, row.previousElementSibling);
@@ -2489,10 +2590,20 @@
       var href = row.querySelector('[data-package-href]').value.trim();
       var sameTab = row.querySelector('[data-package-same-tab]').checked;
       if (href) links[id] = { href: href, sameTab: sameTab };
+      var files = $$('[data-pkg-file]', row).map(function (fr) {
+        var url = fr.querySelector('[data-pkg-file-url]').value.trim();
+        if (!url) return null;
+        return {
+          url: url,
+          label: fr.querySelector('[data-pkg-file-label]').value.trim() || fileLabelFrom(url),
+          note: fr.querySelector('[data-pkg-file-note]').value.trim()
+        };
+      }).filter(Boolean);
       return {
         id: id,
         type: row.querySelector('[data-package-type]').value,
         name: name,
+        files: files,
         description: row.querySelector('[data-package-description]').value.trim(),
         icon: row.querySelector('[data-package-icon]').value,
         href: href,

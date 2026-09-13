@@ -516,7 +516,15 @@
         href: String(item.href || oldLink.href || ''),
         sameTab: item.sameTab == null ? !!oldLink.sameTab : !!item.sameTab,
         release: item.release === 'manual' ? 'manual' : 'auto',
-        price: item.price == null || item.price === '' ? null : Number(item.price)
+        price: item.price == null || item.price === '' ? null : Number(item.price),
+        files: (Array.isArray(item.files) ? item.files : []).map(function (f) {
+          if (typeof f === 'string') f = { url: f };
+          return {
+            url: String((f && f.url) || '').trim(),
+            label: String((f && f.label) || ''),
+            note: String((f && f.note) || '')
+          };
+        }).filter(function (f) { return f.url; })
       };
     });
   }
@@ -2861,9 +2869,11 @@
           : 'Opens once the payment is approved') + '</span></div>';
       html += '<div class="pkg-grid">' + packageItems.map(function (item, i) {
         var st = states[i], price = itemPrice(p, item);
+        var many = (item.files || []).length;
         return '<button class="pkg-item" data-item="' + esc(item.id) + '" data-unlocked="' +
           (st === 'open') + '" data-held="' + (st === 'held') + '" data-state="' + st + '">' +
-          '<span class="pkg-icon">' + svg(item.icon) + '</span>' +
+          '<span class="pkg-icon">' + svg(item.icon) +
+            (many > 1 ? '<span class="pkg-count">' + many + '</span>' : '') + '</span>' +
           '<span><b>' + esc(item.name) +
             (st !== 'open' && price != null
               ? '<span class="pkg-price">' + esc(fmtMoney(price, p.currency)) + '</span>' : '') +
@@ -3033,6 +3043,35 @@
     });
   }
 
+  /* Several files under one item, each named and explained, each with its own
+     way out: view it, or keep it. */
+  function openFileList(p, item, files) {
+    var rows = files.map(function (f) {
+      var info = fileInfo(f.url);
+      var name = f.label || info.name;
+      return '<li class="file-row">' +
+        '<span class="file-ext">' + esc(info.ext ? info.ext.toUpperCase() : 'FILE') + '</span>' +
+        '<span class="file-what"><b>' + esc(name) + '</b>' +
+          '<em>' + esc(f.note || info.kind) + '</em></span>' +
+        '<span class="file-do">' +
+          '<a class="btn btn-sm btn-primary" href="' + esc(downloadHref(f.url, info.name)) +
+            '" download="' + esc(info.name) + '">' + svg(ICON.down) + 'Download</a>' +
+          '<a class="btn btn-sm" href="' + esc(f.url) + '" target="_blank" rel="noopener">View</a>' +
+        '</span>' +
+      '</li>';
+    }).join('');
+
+    openInfo({
+      title: esc(item.name),
+      sub: p.name + ' &mdash; ' + files.length + ' file' + (files.length === 1 ? '' : 's'),
+      html: (item.description ? '<p>' + esc(item.description) + '</p>' : '') +
+        '<ul class="file-list">' + rows + '</ul>',
+      msg: files.length === 1
+        ? 'Yours to keep — save it somewhere you will find it again.'
+        : 'All of these are yours to keep. Download them one at a time.'
+    });
+  }
+
   function runItem(p, key) {
     var item = packageItemsFor(p).filter(function (candidate) { return candidate.id === key; })[0];
     var type = item ? item.type : key;
@@ -3040,8 +3079,11 @@
     var link = item && item.href ? { href: item.href, sameTab: item.sameTab } : (p.links || {})[key];
     if (!link && type !== key) link = (p.links || {})[type];
     if (typeof link === 'string') link = { href: link };
+    /* files first: an item that carries them opens its list, whatever else it has */
+    if (item && item.files && item.files.length) { openFileList(p, item, item.files); return; }
+
     if (link) {
-      /* a page or a live demo still just opens; a file is handed over */
+      /* a page or a live demo still just opens; a lone file is handed over */
       if (!link.sameTab && fileInfo(link.href).isFile) { openFile(p, item, link); return; }
       if (link.sameTab) window.location.href = link.href;
       else window.open(link.href, '_blank', 'noopener');
