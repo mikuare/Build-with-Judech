@@ -1,0 +1,332 @@
+/* ===========================================================================
+   EnviroSortPro  -  AUTOMATIC WASTE SEGREGATION
+   Arduino UNO R3
+
+   HOW IT WORKS
+     1. User drops waste into the hole.  Servo 1 (the "tap") is closed, so the
+        waste is HELD at the hole while the sensors look at it.
+     2. Three sensors read it:
+           Inductive  -> metal only              (highest priority)
+           Capacitive -> plastic  (also trips on metal, so metal is checked 1st)
+           IR         -> bio / presence
+     3. LCD names the waste, the matching LED lights, buzzer beeps.
+     4. Servo 2 (270 deg) turns the chute disc under the hopper so it points
+        at the correct bin:   BIO 0 deg | PLASTIC 135 deg | METAL 270 deg
+        Calibrate these three angles on your own build - they are whatever
+        angle actually aims the chute at each bin.
+     5. Servo 1 opens -> waste slides down the chute into that bin -> tap
+        closes again.
+     6. The one HC-SR04 rides on the same rotating arm as the chute, so it
+        looks into whichever bin is being aimed at.  Short distance = that
+        bin is FULL -> repeating buzzer + that bin's LED blinks until the
+        bin is emptied and the button is pressed.
+     7. Chute returns home, LCD goes back to idle.
+
+   WIRING NOTE
+     The capacitive / inductive sensors run on the 14.8V pack.  They are NPN
+     normally-open, so their output pulls to GND when they detect something.
+     Pins use INPUT_PULLUP -> HIGH = nothing, LOW = detected.
+     Sensor GND and Arduino GND MUST be joined.
+   ======================================================================== */
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <Servo.h>
+
+/* ---------------- PIN MAP (matches the circuit diagram) ---------------- */
+const uint8_t PIN_LED_PLASTIC = 2;    // yellow LED
+const uint8_t PIN_CAP         = 3;    // capacitive proximity  (plastic)
+const uint8_t PIN_IND         = 4;    // inductive proximity   (metal)
+const uint8_t PIN_SERVO_TAP   = 5;    // servo 1 - holds waste at the hole
+const uint8_t PIN_SERVO_TURN  = 6;    // servo 2 - rotates the chute disc
+const uint8_t PIN_IR          = 7;    // IR sensor             (bio)
+const uint8_t PIN_TRIG        = 8;    // HC-SR04 trig
+const uint8_t PIN_ECHO        = 9;    // HC-SR04 echo
+const uint8_t PIN_BUTTON      = 10;   // start / reset button
+const uint8_t PIN_BUZZER      = 12;
+const uint8_t PIN_LED_METAL   = 13;   // red LED
+const uint8_t PIN_LED_BIO     = A3;   // green LED
+                                      // LCD: SDA=A4  SCL=A5
+
+/* ---------------- TUNING ---------------- */
+#define SENSOR_ACTIVE   LOW    // NPN NO sensors read LOW when they detect
+#define IR_ACTIVE       LOW    // FC-51 IR module reads LOW when it sees waste
+
+const uint8_t  SCAN_SAMPLES   = 12;   // reads taken while the waste is held
+const uint16_t SCAN_GAP_MS    = 25;   // gap between reads
+const uint8_t  HIT_THRESHOLD  = 4;    // reads needed to trust a sensor
+
+const uint16_t SETTLE_MS      = 400;  // let the waste come to rest first
+const uint16_t ANNOUNCE_MS    = 900;  // time the LCD shows the result
+const uint16_t ROTATE_MS      = 1200; // time for the chute to swing round
+const uint16_t DROP_MS        = 900;  // tap held open
+const uint16_t HOME_MS        = 1200; // time to swing back home
+
+const uint8_t  BIN_EMPTY_CM   = 50;   // distance to the bottom of an empty bin
+const uint8_t  BIN_FULL_CM    = 20;   // <= this means the bin is full
+
+/* ---------------- SERVO ANGLES ----------------
+   These are 270-degree servos.  The Servo library only speaks 0..180, so a
+   physical angle is written as  angle * 180 / 270  =  angle * 2 / 3.       */
+const uint8_t TAP_CLOSED_DEG  = 0;    // physical degrees
+const uint8_t TAP_OPEN_DEG    = 90;
+const uint16_t TURN_DEG[3]    = { 0, 135, 270 };   // bio, plastic, metal (calibrate)
+const uint8_t TURN_HOME_DEG   = 0;
+
+/* ---------------- WASTE TYPES ---------------- */
+enum Waste { W_NONE = -1, W_BIO = 0, W_PLASTIC = 1, W_METAL = 2 };
+const char* const BIN_NAME[3] = { "BIO WASTE", "PLASTIC", "METAL" };
+const uint8_t     BIN_LED[3]  = { PIN_LED_BIO, PIN_LED_PLASTIC, PIN_LED_METAL };
+
+/* ---------------- STATE MACHINE ---------------- */
+enum State { ST_IDLE, ST_SETTLE, ST_SCAN, ST_ANNOUNCE, ST_ROTATE,
+             ST_DROP, ST_LEVEL, ST_HOME, ST_FULL, ST_REJECT };
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);   // try 0x3F if the screen stays blank
+Servo tapServo, turnServo;
+
+State    state       = ST_IDLE;
+Waste    current     = W_NONE;
+uint32_t stateEnter  = 0;
+uint8_t  binLevel[3] = { 0, 0, 0 };   // % full, from the ultrasonic
+bool     binFull[3]  = { false, false, false };
+uint8_t  hits[3]     = { 0, 0, 0 };
+uint8_t  sampleCount = 0;
+uint32_t lastSample  = 0;
+uint32_t blinkTimer  = 0;
+bool     blinkOn     = false;
+
+/* ===================== HELPERS ===================== */
+
+// Write a physical angle to a 270-degree servo.
+void writeDeg270(Servo &s, uint16_t physicalDeg) {
+  if (physicalDeg > 270) physicalDeg = 270;
+  s.write((uint8_t)((uint32_t)physicalDeg * 180UL / 270UL));
+}
+
+void goState(State s) { state = s; stateEnter = millis(); }
+uint32_t elapsed()    { return millis() - stateEnter; }
+
+void allLedsOff() {
+  digitalWrite(PIN_LED_BIO, LOW);
+  digitalWrite(PIN_LED_PLASTIC, LOW);
+  digitalWrite(PIN_LED_METAL, LOW);
+}
+
+void lcdShow(const char* l1, const char* l2) {
+  lcd.clear();
+  lcd.setCursor(0, 0); lcd.print(l1);
+  lcd.setCursor(0, 1); lcd.print(l2);
+}
+
+void beep(uint16_t ms, uint16_t freq = 2000) {
+  tone(PIN_BUZZER, freq, ms);
+}
+
+// One HC-SR04 reading in centimetres.  Returns BIN_EMPTY_CM on timeout.
+uint16_t readDistanceCm() {
+  digitalWrite(PIN_TRIG, LOW);  delayMicroseconds(4);
+  digitalWrite(PIN_TRIG, HIGH); delayMicroseconds(10);
+  digitalWrite(PIN_TRIG, LOW);
+  uint32_t dur = pulseIn(PIN_ECHO, HIGH, 25000UL);   // ~4 m ceiling
+  if (dur == 0) return BIN_EMPTY_CM;
+  uint16_t cm = dur / 58;
+  return (cm > BIN_EMPTY_CM) ? BIN_EMPTY_CM : cm;
+}
+
+bool sensorMetal()   { return digitalRead(PIN_IND) == SENSOR_ACTIVE; }
+bool sensorPlastic() { return digitalRead(PIN_CAP) == SENSOR_ACTIVE; }
+bool sensorBio()     { return digitalRead(PIN_IR)  == IR_ACTIVE;     }
+bool buttonPressed() { return digitalRead(PIN_BUTTON) == LOW;        }
+
+// Anything sitting at the hole at all?
+bool wastePresent() { return sensorMetal() || sensorPlastic() || sensorBio(); }
+
+void showIdle() {
+  lcdShow("Automatic Waste", "  Segregation");
+}
+
+/* ===================== SETUP ===================== */
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(PIN_LED_PLASTIC, OUTPUT);
+  pinMode(PIN_LED_METAL,   OUTPUT);
+  pinMode(PIN_LED_BIO,     OUTPUT);
+  pinMode(PIN_BUZZER,      OUTPUT);
+  pinMode(PIN_TRIG,        OUTPUT);
+  pinMode(PIN_ECHO,        INPUT);
+
+  pinMode(PIN_CAP,    INPUT_PULLUP);
+  pinMode(PIN_IND,    INPUT_PULLUP);
+  pinMode(PIN_IR,     INPUT_PULLUP);
+  pinMode(PIN_BUTTON, INPUT_PULLUP);
+
+  tapServo.attach(PIN_SERVO_TAP);
+  turnServo.attach(PIN_SERVO_TURN);
+  writeDeg270(tapServo,  TAP_CLOSED_DEG);   // tap starts closed = holding
+  writeDeg270(turnServo, TURN_HOME_DEG);
+
+  lcd.init();
+  lcd.backlight();
+  lcdShow("  EnviroSortPro", " Starting up...");
+  beep(120); delay(1400);
+
+  allLedsOff();
+  showIdle();
+  goState(ST_IDLE);
+}
+
+/* ===================== MAIN LOOP ===================== */
+void loop() {
+
+  switch (state) {
+
+    /* --- waiting for waste at the hole --- */
+    case ST_IDLE:
+      if (wastePresent() || buttonPressed()) {
+        lcdShow("Waste detected", "Holding...");
+        beep(80);
+        goState(ST_SETTLE);
+      }
+      break;
+
+    /* --- tap holds it still for a moment --- */
+    case ST_SETTLE:
+      if (elapsed() >= SETTLE_MS) {
+        hits[0] = hits[1] = hits[2] = 0;
+        sampleCount = 0;
+        lastSample  = 0;
+        lcdShow("Scanning waste", "Please wait");
+        goState(ST_SCAN);
+      }
+      break;
+
+    /* --- take several reads so one glitch cannot decide --- */
+    case ST_SCAN:
+      if (millis() - lastSample >= SCAN_GAP_MS) {
+        lastSample = millis();
+        if (sensorMetal())   hits[W_METAL]++;
+        if (sensorPlastic()) hits[W_PLASTIC]++;
+        if (sensorBio())     hits[W_BIO]++;
+        sampleCount++;
+      }
+      if (sampleCount >= SCAN_SAMPLES) {
+        // Priority matters: the capacitive sensor also trips on metal,
+        // so metal must be ruled out before plastic is accepted.
+        if      (hits[W_METAL]   >= HIT_THRESHOLD) current = W_METAL;
+        else if (hits[W_PLASTIC] >= HIT_THRESHOLD) current = W_PLASTIC;
+        else if (hits[W_BIO]     >= HIT_THRESHOLD) current = W_BIO;
+        else                                       current = W_NONE;
+
+        if (current == W_NONE) { lcdShow("Unknown waste", "Please remove"); beep(600, 400); goState(ST_REJECT); }
+        else                   goState(ST_ANNOUNCE);
+      }
+      break;
+
+    /* --- name it, light the LED, beep --- */
+    case ST_ANNOUNCE:
+      if (elapsed() < 30) {
+        if (binFull[current]) {
+          lcdShow("Bin is FULL!", BIN_NAME[current]);
+          goState(ST_FULL);
+          break;
+        }
+        allLedsOff();
+        digitalWrite(BIN_LED[current], HIGH);
+        lcd.clear();
+        lcd.setCursor(0, 0); lcd.print("Detected:");
+        lcd.setCursor(0, 1); lcd.print(BIN_NAME[current]);
+        beep(150);
+      }
+      if (elapsed() >= ANNOUNCE_MS) {
+        lcd.clear();
+        lcd.setCursor(0, 0); lcd.print("Moving bin...");
+        lcd.setCursor(0, 1); lcd.print(BIN_NAME[current]);
+        writeDeg270(turnServo, TURN_DEG[current]);
+        goState(ST_ROTATE);
+      }
+      break;
+
+    /* --- chute swings round to face the right bin --- */
+    case ST_ROTATE:
+      if (elapsed() >= ROTATE_MS) {
+        lcdShow("Dropping waste", "");
+        writeDeg270(tapServo, TAP_OPEN_DEG);    // tap opens, waste falls
+        beep(200, 1500);
+        goState(ST_DROP);
+      }
+      break;
+
+    /* --- tap open, waste falls, then close --- */
+    case ST_DROP:
+      if (elapsed() >= DROP_MS) {
+        writeDeg270(tapServo, TAP_CLOSED_DEG);
+        goState(ST_LEVEL);
+      }
+      break;
+
+    /* --- the ultrasonic on the arm reads the bin just filled --- */
+    case ST_LEVEL:
+      if (elapsed() >= 400) {
+        uint16_t cm = readDistanceCm();
+        int lvl = map(cm, BIN_EMPTY_CM, BIN_FULL_CM, 0, 100);
+        binLevel[current] = constrain(lvl, 0, 100);
+        binFull[current]  = (cm <= BIN_FULL_CM);
+
+        Serial.print(BIN_NAME[current]); Serial.print(" -> ");
+        Serial.print(cm); Serial.print(" cm  (");
+        Serial.print(binLevel[current]); Serial.println("%)");
+
+        char l2[17];
+        snprintf(l2, sizeof(l2), "%s %d%%", BIN_NAME[current], binLevel[current]);
+
+        if (binFull[current]) { lcdShow("BIN FULL!", l2); goState(ST_FULL); }
+        else                  { lcdShow("Sorted OK", l2); goState(ST_HOME); }
+      }
+      break;
+
+    /* --- back to home position --- */
+    case ST_HOME:
+      if (elapsed() >= 700) writeDeg270(turnServo, TURN_HOME_DEG);
+      if (elapsed() >= 700 + HOME_MS) {
+        allLedsOff();
+        showIdle();
+        current = W_NONE;
+        goState(ST_IDLE);
+      }
+      break;
+
+    /* --- bin full: blink + buzz until the button is pressed --- */
+    case ST_FULL:
+      if (millis() - blinkTimer >= 350) {
+        blinkTimer = millis();
+        blinkOn = !blinkOn;
+        digitalWrite(BIN_LED[current], blinkOn);
+        if (blinkOn) beep(250, 900);
+      }
+      if (buttonPressed()) {                 // operator emptied the bin
+        binFull[current]  = false;
+        binLevel[current] = 0;
+        noTone(PIN_BUZZER);
+        allLedsOff();
+        lcdShow("Bin emptied", BIN_NAME[current]);
+        delay(900);
+        writeDeg270(turnServo, TURN_HOME_DEG);
+        showIdle();
+        current = W_NONE;
+        goState(ST_IDLE);
+      }
+      break;
+
+    /* --- nothing recognised: wait until the hole is clear --- */
+    case ST_REJECT:
+      if (!wastePresent() || buttonPressed()) {
+        allLedsOff();
+        showIdle();
+        current = W_NONE;
+        goState(ST_IDLE);
+      }
+      break;
+  }
+}

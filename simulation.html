@@ -1,0 +1,2301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EnviroSortPro — Automatic Waste Segregation Simulator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>&#9851;</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brandline">
+    <span class="mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#05201C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 19h10M5 8l3-5 3 5M19 8l-3-5"/><path d="M4 12h16l-1.5 8h-13z"/>
+      </svg>
+    </span>
+    <div>
+      <span class="eyebrow">Arduino Uno R3 &middot; runs your EnviroSortPro.ino</span>
+      <h1>EnviroSortPro</h1>
+      <div class="sub">Rotating-bin waste segregation &mdash; pick a piece of waste from the tray and drop it in the bucket.</div>
+    </div>
+  </div>
+  <div class="hdr-tools">
+    <a class="btn" href="index.html">&larr; Back to projects</a>
+    <button class="btn" id="coverBtn" aria-pressed="false">Cover: on</button>
+    <button class="btn" id="insertBtn">How it goes in: correct technique</button>
+    <button class="btn" id="soundBtn" aria-pressed="true">Buzzer: on</button>
+    <button class="btn" id="speedBtn">Speed 1&times;</button>
+    <button class="btn" id="btnD10">Button D10</button>
+    <button class="btn" id="linerBtn" aria-pressed="true">Bins: liner bags</button>
+    <button class="btn" id="powerBtn" aria-pressed="false">Power: AC adapter</button>
+    <button class="btn" id="protoBtn" aria-pressed="false">Prototype wiring: off</button>
+    <button class="btn" id="sideBtn" aria-pressed="false">Side views: off</button>
+    <button class="btn" id="presentBtn" aria-pressed="false">Presentation: off</button>
+    <button class="btn" id="interviewBtn" aria-pressed="false">Panel interview: off</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+</header>
+
+<section class="card scene" id="sceneCard">
+<div class="prototype-nav" id="prototypeNav" aria-label="3D prototype views">
+  <div class="prototype-nav-copy">
+    <span class="prototype-kicker">Live 3D prototype</span>
+    <strong id="protoViewTitle">Fixed overview</strong>
+    <span id="protoViewCopy">See the complete machine, its input opening, controller, gate, sensors and rotating bins.</span>
+  </div>
+  <div class="prototype-nav-actions" role="group" aria-label="Choose a prototype view">
+    <button type="button" class="proto-view" data-proto-focus="overview" aria-pressed="true">Overview</button>
+    <button type="button" class="proto-view" data-proto-focus="hole" aria-pressed="false">Input hole</button>
+    <button type="button" class="proto-view" data-proto-focus="sensors" aria-pressed="false">Sensor cutaway</button>
+    <button type="button" class="proto-view" data-proto-focus="sorter" aria-pressed="false">Gate &amp; bins</button>
+    <button type="button" class="proto-view" data-proto-focus="walk" aria-pressed="false">Free walk</button>
+  </div>
+</div>
+<svg id="scene" viewBox="0 0 1200 820" role="img" aria-label="Simulation of the EnviroSortPro machine with a rotating bin platform">
+<defs>
+  <clipPath id="beltClip"><rect x="40" y="466" width="320" height="16"/></clipPath>
+  <linearGradient id="wallG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#EAEFE6"/><stop offset=".55" stop-color="#DDE5DA"/><stop offset="1" stop-color="#CFD9CC"/>
+  </linearGradient>
+  <linearGradient id="tarpG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#12203A"/><stop offset=".55" stop-color="#1E3050"/><stop offset="1" stop-color="#2A4166"/>
+  </linearGradient>
+  <linearGradient id="boardG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#33553F"/><stop offset=".5" stop-color="#2A4835"/><stop offset="1" stop-color="#223B2C"/>
+  </linearGradient>
+  <linearGradient id="deskG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#C6A472"/><stop offset="1" stop-color="#9E7C4A"/>
+  </linearGradient>
+  <linearGradient id="floorG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#9FB5B4"/><stop offset=".35" stop-color="#BACBC6"/><stop offset="1" stop-color="#CBD9D2"/>
+  </linearGradient>
+  <linearGradient id="hopG" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#B84E12"/><stop offset=".18" stop-color="#E8752A"/>
+    <stop offset=".42" stop-color="#FCA85C"/><stop offset=".66" stop-color="#EE7C28"/>
+    <stop offset=".84" stop-color="#C4570F"/><stop offset="1" stop-color="#8E3C0A"/>
+  </linearGradient>
+  <linearGradient id="binG" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#101416"/><stop offset=".2" stop-color="#2C3436"/>
+    <stop offset=".45" stop-color="#414A4C"/><stop offset=".72" stop-color="#252C2E"/><stop offset="1" stop-color="#0C1011"/>
+  </linearGradient>
+  <linearGradient id="pipeG" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#0A0C0D"/><stop offset=".3" stop-color="#33393B"/>
+    <stop offset=".55" stop-color="#4A5254"/><stop offset="1" stop-color="#0D1112"/>
+  </linearGradient>
+  <linearGradient id="steelG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8C979A"/><stop offset=".3" stop-color="#E2E8E9"/>
+    <stop offset=".6" stop-color="#A8B2B5"/><stop offset="1" stop-color="#6E787B"/>
+  </linearGradient>
+  <linearGradient id="platG" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#8E2E4C"/><stop offset=".28" stop-color="#DE6E8D"/>
+    <stop offset=".58" stop-color="#C9536F"/><stop offset="1" stop-color="#7C2946"/>
+  </linearGradient>
+  <linearGradient id="cardG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#D6B27C"/><stop offset="1" stop-color="#B78F58"/>
+  </linearGradient>
+  <linearGradient id="lcdG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2A44E0"/><stop offset=".5" stop-color="#1C31C6"/><stop offset="1" stop-color="#152AA8"/>
+  </linearGradient>
+  <radialGradient id="vig" cx=".5" cy=".45" r=".78">
+    <stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".42"/>
+  </radialGradient>
+  <radialGradient id="spec"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <filter id="blurS"><feGaussianBlur stdDeviation="10"/></filter>
+  <filter id="blurXS"><feGaussianBlur stdDeviation="4"/></filter>
+  <filter id="glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <clipPath id="hopClip"><path d="M 572 88 Q 604 224 642 290 A 58 16 0 0 0 758 290 Q 796 224 828 88 Z"/></clipPath>
+  <clipPath id="binClip"><path id="cpShared" d=""/></clipPath>
+</defs>
+
+<!-- ====== the room: a college laboratory used for the defense ====== -->
+<rect x="0" y="0" width="1200" height="306" fill="url(#wallG)"/>
+
+<!-- surface-mounted fluorescents -->
+<g id="lights">
+  <rect x="520" y="6" width="240" height="17" rx="3" fill="#E4EAE2" stroke="#AFBCAD" stroke-width="1.2"/>
+  <rect x="527" y="10" width="226" height="9" rx="2" fill="#FFFDEC"/>
+  <rect x="880" y="6" width="240" height="17" rx="3" fill="#E4EAE2" stroke="#AFBCAD" stroke-width="1.2"/>
+  <rect x="887" y="10" width="226" height="9" rx="2" fill="#FFFDEC"/>
+</g>
+
+<!-- notice board, far left -->
+<g id="notice">
+  <rect x="4" y="44" width="86" height="96" rx="3" fill="#8E6C36" stroke="#6E4E24" stroke-width="2"/>
+  <rect x="10" y="50" width="74" height="84" fill="#C9B896"/>
+  <g fill="#F2F2EE" stroke="#B8AE94" stroke-width=".8">
+    <rect x="16" y="56" width="26" height="20" transform="rotate(-4 29 66)"/>
+    <rect x="50" y="60" width="26" height="18" transform="rotate(3 63 69)"/>
+    <rect x="18" y="86" width="30" height="22" transform="rotate(2 33 97)"/>
+    <rect x="54" y="92" width="24" height="30" transform="rotate(-3 66 107)"/>
+  </g>
+  <g fill="#B8452E"><circle cx="29" cy="57" r="1.8"/><circle cx="63" cy="61" r="1.8"/><circle cx="33" cy="87" r="1.8"/><circle cx="66" cy="93" r="1.8"/></g>
+</g>
+
+<!-- chalkboard, right wall -->
+<g id="chalkboard">
+  <rect x="866" y="52" width="326" height="182" rx="4" fill="#8E6C36" stroke="#6E4E24" stroke-width="3"/>
+  <rect x="876" y="62" width="306" height="150" fill="url(#boardG)"/>
+  <g stroke="#E8F0E8" fill="none" opacity=".5">
+    <path d="M894 84 H1010" stroke-width="2.2"/>
+    <path d="M894 100 H1140 M894 112 H1092 M894 124 H1120" stroke-width="1.2"/>
+    <path d="M894 146 h34 v26 h-34 z M944 146 h34 v26 h-34 z M994 146 h34 v26 h-34 z" stroke-width="1.4"/>
+    <path d="M928 159 H944 M978 159 H994" stroke-width="1.2"/>
+    <path d="M894 190 H1044 M894 200 H986" stroke-width="1.2"/>
+    <path d="M1070 146 a26 26 0 1 0 .1 0" stroke-width="1.4"/>
+    <path d="M1070 146 V172 M1070 172 L1090 182" stroke-width="1.2"/>
+  </g>
+  <text x="894" y="80" font-family="IBM Plex Mono, monospace" font-size="13" letter-spacing="2" fill="#E8F0E8" opacity=".62">WASTE SEGREGATION</text>
+  <rect x="866" y="216" width="326" height="12" rx="2" fill="#A8834A" stroke="#6E4E24" stroke-width="1.5"/>
+  <rect x="900" y="211" width="26" height="6" rx="3" fill="#F2F2EE"/>
+  <rect x="934" y="211" width="18" height="6" rx="3" fill="#F2F2EE" opacity=".8"/>
+  <rect x="1120" y="209" width="34" height="9" rx="2" fill="#3E4A54"/>
+</g>
+
+<!-- wall clock -->
+<g id="clock">
+  <circle cx="822" cy="92" r="23" fill="#F4F6F2" stroke="#5B6467" stroke-width="3"/>
+  <circle cx="822" cy="92" r="1.8" fill="#20272A"/>
+  <path id="clockH" d="M822 92 V79" stroke="#20272A" stroke-width="2.6" stroke-linecap="round"/>
+  <path id="clockM" d="M822 92 V73" stroke="#20272A" stroke-width="2" stroke-linecap="round"/>
+  <g stroke="#8A9496" stroke-width="1.5"><path d="M822 72 V76"/><path d="M842 92 H838"/><path d="M822 112 V108"/><path d="M802 92 H806"/></g>
+</g>
+
+<!-- chair rail and wainscot -->
+<rect x="0" y="232" width="1200" height="74" fill="#C6D0C4"/>
+<rect x="0" y="227" width="1200" height="7" fill="#A2AFA0"/>
+<rect x="0" y="296" width="1200" height="10" fill="#8C9A8A"/>
+
+<!-- floor, receding to a vanishing point -->
+<path d="M0 306 H1200 V820 H0 Z" fill="url(#floorG)"/>
+<g stroke="#93A8A4" stroke-width="1.2" opacity=".28" fill="none">
+  <path d="M0 322 H1200"/><path d="M0 348 H1200"/><path d="M0 386 H1200"/><path d="M0 440 H1200"/>
+  <path d="M0 512 H1200"/><path d="M0 608 H1200"/><path d="M0 726 H1200"/>
+  <path d="M-400 820 L600 306"/><path d="M-100 820 L600 306"/><path d="M200 820 L600 306"/>
+  <path d="M440 820 L600 306"/><path d="M760 820 L600 306"/><path d="M1000 820 L600 306"/>
+  <path d="M1300 820 L600 306"/><path d="M1600 820 L600 306"/>
+</g>
+<rect x="0" y="300" width="1200" height="14" fill="#000" opacity=".1"/>
+
+<!-- filing cabinet, far left -->
+<g id="cabinet">
+  <rect x="8" y="160" width="80" height="146" rx="3" fill="#9AA6A4" stroke="#6E7C7A" stroke-width="2"/>
+  <g fill="#8A9694" stroke="#6E7C7A" stroke-width="1.2">
+    <rect x="14" y="168" width="68" height="42" rx="2"/><rect x="14" y="214" width="68" height="42" rx="2"/>
+    <rect x="14" y="260" width="68" height="40" rx="2"/>
+  </g>
+  <g fill="#5B6467"><rect x="38" y="186" width="20" height="4" rx="2"/><rect x="38" y="232" width="20" height="4" rx="2"/><rect x="38" y="277" width="20" height="4" rx="2"/></g>
+  <rect x="16" y="150" width="64" height="11" rx="2" fill="#B8452E"/>
+</g>
+
+<!-- computer workstation, left of the machine -->
+<g id="pc1">
+  <rect x="496" y="252" width="108" height="8" rx="2" fill="url(#deskG)" stroke="#7E5B2C" stroke-width="1.2"/>
+  <rect x="504" y="260" width="7" height="46" fill="#8E6C36"/><rect x="589" y="260" width="7" height="46" fill="#8E6C36"/>
+  <rect x="522" y="212" width="56" height="36" rx="3" fill="#3A4448" stroke="#20272A" stroke-width="1.5"/>
+  <rect x="527" y="217" width="46" height="26" fill="#2E6FA8"/>
+  <rect x="527" y="217" width="46" height="8" fill="#fff" opacity=".12"/>
+  <rect x="544" y="248" width="12" height="5" fill="#3A4448"/><rect x="536" y="252" width="28" height="4" rx="2" fill="#3A4448"/>
+  <rect x="516" y="262" width="40" height="5" rx="2" fill="#C6CDCB"/>
+  <rect x="562" y="262" width="12" height="6" rx="3" fill="#C6CDCB"/>
+  <rect x="580" y="262" width="18" height="42" rx="2" fill="#3A4448" stroke="#20272A" stroke-width="1.2"/>
+  <circle cx="589" cy="270" r="2.4" fill="#4BC969"/>
+</g>
+
+<!-- computer bench, right wall -->
+<g id="pc2">
+  <rect x="892" y="256" width="290" height="9" rx="2" fill="url(#deskG)" stroke="#7E5B2C" stroke-width="1.2"/>
+  <rect x="900" y="265" width="8" height="41" fill="#8E6C36"/><rect x="1166" y="265" width="8" height="41" fill="#8E6C36"/>
+  <rect x="1030" y="265" width="6" height="41" fill="#8E6C36"/>
+  <g>
+    <rect x="916" y="214" width="60" height="38" rx="3" fill="#3A4448" stroke="#20272A" stroke-width="1.5"/>
+    <rect x="921" y="219" width="50" height="28" fill="#1E3A5C"/>
+    <rect x="921" y="219" width="50" height="9" fill="#fff" opacity=".1"/>
+    <rect x="940" y="252" width="12" height="5" fill="#3A4448"/>
+    <rect x="922" y="267" width="44" height="5" rx="2" fill="#C6CDCB"/>
+  </g>
+  <g>
+    <rect x="1060" y="214" width="60" height="38" rx="3" fill="#3A4448" stroke="#20272A" stroke-width="1.5"/>
+    <rect x="1065" y="219" width="50" height="28" fill="#1E3A5C"/>
+    <rect x="1065" y="219" width="50" height="9" fill="#fff" opacity=".1"/>
+    <rect x="1084" y="252" width="12" height="5" fill="#3A4448"/>
+    <rect x="1066" y="267" width="44" height="5" rx="2" fill="#C6CDCB"/>
+  </g>
+  <rect x="990" y="266" width="20" height="40" rx="2" fill="#3A4448" stroke="#20272A" stroke-width="1.2"/>
+  <circle cx="1000" cy="274" r="2.4" fill="#4BC969"/>
+  <rect x="1130" y="266" width="20" height="40" rx="2" fill="#3A4448" stroke="#20272A" stroke-width="1.2"/>
+  <circle cx="1140" cy="274" r="2.4" fill="#4BC969"/>
+</g>
+
+<!-- ====== defense tarpaulin behind the panel ====== -->
+<g id="tarp">
+  <rect x="92" y="10" width="390" height="202" rx="3" fill="url(#tarpG)" stroke="#0A1220" stroke-width="2"/>
+  <rect x="100" y="18" width="374" height="186" rx="2" fill="none" stroke="#4E6E9E" stroke-width="1.2" opacity=".6"/>
+  <rect x="106" y="22" width="82" height="82" rx="4" fill="#05070C" stroke="#31465F" stroke-width="1.2"/>
+  <image href="img/jd-logo.png" x="108" y="24" width="78" height="78" preserveAspectRatio="xMidYMid meet"/>
+  <text x="204" y="46" font-family="Chakra Petch, sans-serif" font-size="23" font-weight="700" letter-spacing="1" fill="#7FE3D4">EnviroSortPro</text>
+  <text x="204" y="68" font-family="IBM Plex Mono, monospace" font-size="12.5" letter-spacing="1" fill="#CFE0EE">Automatic Waste Segregation</text>
+  <text x="204" y="88" font-family="IBM Plex Mono, monospace" font-size="11" letter-spacing="1.4" fill="#8FAEC4">JUDECH &#183; PROJECT DEFENSE</text>
+  <path d="M204 96 H466" stroke="#4E6E9E" stroke-width="1" opacity=".55"/>
+  <g fill="#8A9496"><circle cx="102" cy="20" r="3.2"/><circle cx="472" cy="20" r="3.2"/><circle cx="102" cy="202" r="3.2"/><circle cx="472" cy="202" r="3.2"/></g>
+</g>
+
+<!-- ====== the defense panel: three people, watching and scoring ====== -->
+<g id="panel" opacity=".97">
+  <!-- panelist 1: glasses -->
+  <g id="pan0">
+  <g id="pan0Legs">
+    <rect x="137" y="242" width="4" height="64" fill="#3A3028" opacity=".75"/>
+    <rect x="189" y="242" width="4" height="64" fill="#3A3028" opacity=".75"/>
+    <ellipse cx="165" cy="307" rx="34" ry="6" fill="#000" opacity=".2" filter="url(#blurXS)"/>
+    <rect x="150" y="238" width="11" height="60" rx="3" fill="#2F3947"/>
+    <rect x="169" y="238" width="11" height="60" rx="3" fill="#2F3947"/>
+    <rect x="144" y="295" width="20" height="10" rx="4.5" fill="#241E1A"/>
+    <rect x="144" y="301" width="20" height="4" rx="2" fill="#15110F"/>
+    <rect x="168" y="296" width="20" height="10" rx="4.5" fill="#241E1A"/>
+    <rect x="168" y="302" width="20" height="4" rx="2" fill="#15110F"/>
+  </g>
+    <path d="M131 198 C135 164 149 150 165 148 C181 150 195 164 199 198 Z" fill="#4A5568"/>
+    <path d="M158 153 L165 163 L172 153 Z" fill="#E8E4DA"/>
+    <g id="pan0Head">
+      <circle cx="165" cy="124" r="19" fill="#E9B98F" stroke="#B77F52" stroke-width="1.5"/>
+      <path d="M146 120 A19 19 0 0 1 184 120 L184 112 Q165 96 146 112 Z" fill="#2A2320"/>
+      <path d="M152 116 q5 -2 9 0 M169 116 q5 -2 9 0" fill="none" stroke="#2A2320" stroke-width="1.4"/>
+      <ellipse id="pan0EyeL" cx="157" cy="123" rx="1.9" ry="2.2" fill="#201812"/>
+      <ellipse id="pan0EyeR" cx="173" cy="123" rx="1.9" ry="2.2" fill="#201812"/>
+      <rect x="151" y="119" width="11" height="8.5" rx="2.5" fill="none" stroke="#2A2320" stroke-width="1.5"/>
+      <rect x="168" y="119" width="11" height="8.5" rx="2.5" fill="none" stroke="#2A2320" stroke-width="1.5"/>
+      <path d="M162 122 L168 122" stroke="#2A2320" stroke-width="1.5"/>
+      <ellipse id="pan0Mouth" cx="165" cy="136" rx="3.4" ry="0.6" fill="#8A4A38"/>
+      <path id="pan0Smile" d="M157.4 134 Q165 142.6 172.6 134" fill="none" stroke="#7A3E2E" stroke-width="1.8" stroke-linecap="round" opacity="0"/>
+    </g>
+  </g>
+
+  <!-- panelist 2: long hair -->
+  <g id="pan1">
+  <g id="pan1Legs">
+    <rect x="253" y="242" width="4" height="64" fill="#3A3028" opacity=".75"/>
+    <rect x="305" y="242" width="4" height="64" fill="#3A3028" opacity=".75"/>
+    <ellipse cx="281" cy="307" rx="34" ry="6" fill="#000" opacity=".2" filter="url(#blurXS)"/>
+    <rect x="266" y="238" width="11" height="60" rx="3" fill="#46414F"/>
+    <rect x="285" y="238" width="11" height="60" rx="3" fill="#46414F"/>
+    <rect x="260" y="295" width="20" height="10" rx="4.5" fill="#241E1A"/>
+    <rect x="260" y="301" width="20" height="4" rx="2" fill="#15110F"/>
+    <rect x="284" y="296" width="20" height="10" rx="4.5" fill="#241E1A"/>
+    <rect x="284" y="302" width="20" height="4" rx="2" fill="#15110F"/>
+  </g>
+    <ellipse cx="281" cy="128" rx="22" ry="27" fill="#3A2A16"/>
+    <path d="M247 198 C251 164 265 150 281 148 C297 150 311 164 315 198 Z" fill="#6B4E3D"/>
+    <g id="pan1Head">
+      <circle cx="281" cy="124" r="19" fill="#C98E62" stroke="#96633C" stroke-width="1.5"/>
+      <path d="M262 120 Q281 98 300 120 Q292 108 281 107 Q270 108 262 120 Z" fill="#3A2A16"/>
+      <path d="M262 122 Q257 146 261 160 L268 158 Q264 140 266 124 Z" fill="#3A2A16"/>
+      <path d="M300 122 Q305 146 301 160 L294 158 Q298 140 296 124 Z" fill="#3A2A16"/>
+      <path d="M270 117 q5 -2 9 0 M285 117 q5 -2 9 0" fill="none" stroke="#3A2A16" stroke-width="1.4"/>
+      <ellipse id="pan1EyeL" cx="275" cy="124" rx="1.9" ry="2.2" fill="#201812"/>
+      <ellipse id="pan1EyeR" cx="288" cy="124" rx="1.9" ry="2.2" fill="#201812"/>
+      <ellipse id="pan1Mouth" cx="281" cy="136" rx="3.4" ry="0.6" fill="#8A4A38"/>
+      <path id="pan1Smile" d="M273.4 134 Q281 142.6 288.6 134" fill="none" stroke="#7A3E2E" stroke-width="1.8" stroke-linecap="round" opacity="0"/>
+    </g>
+  </g>
+
+  <!-- panelist 3: beard -->
+  <g id="pan2">
+  <g id="pan2Legs">
+    <rect x="369" y="242" width="4" height="64" fill="#3A3028" opacity=".75"/>
+    <rect x="421" y="242" width="4" height="64" fill="#3A3028" opacity=".75"/>
+    <ellipse cx="397" cy="307" rx="34" ry="6" fill="#000" opacity=".2" filter="url(#blurXS)"/>
+    <rect x="382" y="238" width="11" height="60" rx="3" fill="#2B3F49"/>
+    <rect x="401" y="238" width="11" height="60" rx="3" fill="#2B3F49"/>
+    <rect x="376" y="295" width="20" height="10" rx="4.5" fill="#241E1A"/>
+    <rect x="376" y="301" width="20" height="4" rx="2" fill="#15110F"/>
+    <rect x="400" y="296" width="20" height="10" rx="4.5" fill="#241E1A"/>
+    <rect x="400" y="302" width="20" height="4" rx="2" fill="#15110F"/>
+  </g>
+    <path d="M363 198 C367 164 381 150 397 148 C413 150 427 164 431 198 Z" fill="#3D5A66"/>
+    <g id="pan2Head">
+      <circle cx="397" cy="124" r="19" fill="#8C5A3C" stroke="#5E3A22" stroke-width="1.5"/>
+      <path d="M378 118 A19 19 0 0 1 416 118 L416 110 Q397 96 378 110 Z" fill="#241A12"/>
+      <path d="M385 115 q5 -2 9 0 M400 115 q5 -2 9 0" fill="none" stroke="#241A12" stroke-width="1.4"/>
+      <ellipse id="pan2EyeL" cx="391" cy="122" rx="1.9" ry="2.2" fill="#201812"/>
+      <ellipse id="pan2EyeR" cx="404" cy="122" rx="1.9" ry="2.2" fill="#201812"/>
+      <path d="M382 130 Q384 146 397 148 Q410 146 412 130 Q408 142 397 143 Q386 142 382 130 Z" fill="#241A12"/>
+      <ellipse id="pan2Mouth" cx="397" cy="134" rx="3.1" ry="0.6" fill="#6E3628"/>
+      <path id="pan2Smile" d="M390 132.4 Q397 140.4 404 132.4" fill="none" stroke="#B9765C" stroke-width="1.9" stroke-linecap="round" opacity="0"/>
+    </g>
+  </g>
+
+  <!-- the table they sit behind -->
+  <polygon points="106,198 456,198 472,222 90,222" fill="#C9A063" stroke="#8E6C36" stroke-width="2"/>
+  <rect x="90" y="222" width="382" height="20" fill="#8E6C36" stroke="#6E4E24" stroke-width="1.5"/>
+  <rect x="104" y="242" width="10" height="64" rx="2" fill="#8E6C36" stroke="#6E4E24" stroke-width="1.2"/>
+  <rect x="442" y="242" width="10" height="64" rx="2" fill="#8E6C36" stroke="#6E4E24" stroke-width="1.2"/>
+  <ellipse cx="109" cy="307" rx="16" ry="4" fill="#000" opacity=".2" filter="url(#blurXS)"/>
+  <ellipse cx="447" cy="307" rx="16" ry="4" fill="#000" opacity=".2" filter="url(#blurXS)"/>
+
+  <!-- score sheets: the ink fills in as they write -->
+  <g transform="rotate(-5 156 213)">
+    <rect x="138" y="202" width="36" height="22" rx="1" fill="#F2F2EE" stroke="#C6C6BC"/>
+    <path d="M143 208 H167 M143 212 H163" stroke="#9A9A90" stroke-width="1.1"/>
+    <path id="pan0Ink" d="M143 217 q3 -3 6 0 t6 0 t6 0 t5 0" fill="none" stroke="#1B3C8C" stroke-width="1.2" stroke-dasharray="34" stroke-dashoffset="34"/>
+  </g>
+  <g transform="rotate(4 268 215)">
+    <rect x="250" y="204" width="36" height="22" rx="1" fill="#F2F2EE" stroke="#C6C6BC"/>
+    <path d="M255 210 H279 M255 214 H275" stroke="#9A9A90" stroke-width="1.1"/>
+    <path id="pan1Ink" d="M255 219 q3 -3 6 0 t6 0 t6 0 t5 0" fill="none" stroke="#1B3C8C" stroke-width="1.2" stroke-dasharray="34" stroke-dashoffset="34"/>
+  </g>
+  <g transform="rotate(-3 379 214)">
+    <rect x="360" y="202" width="38" height="24" rx="1" fill="#F2F2EE" stroke="#C6C6BC"/>
+    <path d="M365 209 H391 M365 213 H387" stroke="#9A9A90" stroke-width="1.1"/>
+    <path id="pan2Ink" d="M365 218 q3 -3 6 0 t6 0 t6 0 t6 0" fill="none" stroke="#1B3C8C" stroke-width="1.2" stroke-dasharray="36" stroke-dashoffset="36"/>
+  </g>
+
+  <rect x="316" y="206" width="42" height="26" rx="3" fill="#101416" stroke="#39413F"/>
+  <rect x="320" y="209" width="34" height="20" fill="#1E2A38"/>
+  <rect x="432" y="194" width="13" height="17" rx="2" fill="#B8452E"/>
+  <path d="M445 198 q7 4 0 9" stroke="#B8452E" stroke-width="2.5" fill="none"/>
+
+  <!-- writing arms, on top of the table -->
+  <g id="pan0Arm">
+    <path d="M180 190 L160 209" stroke="#4A5568" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="158" cy="211" r="5" fill="#E9B98F" stroke="#B77F52" stroke-width="1.2"/>
+    <rect x="159" y="196" width="2.6" height="16" rx="1.3" fill="#1B3C8C" transform="rotate(18 160 204)"/>
+  </g>
+  <g id="pan1Arm">
+    <path d="M296 190 L272 211" stroke="#6B4E3D" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="270" cy="213" r="5" fill="#C98E62" stroke="#96633C" stroke-width="1.2"/>
+    <rect x="271" y="198" width="2.6" height="16" rx="1.3" fill="#1B3C8C" transform="rotate(18 272 206)"/>
+  </g>
+  <g id="pan2Arm">
+    <path d="M412 190 L383 210" stroke="#3D5A66" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="381" cy="212" r="5" fill="#8C5A3C" stroke="#5E3A22" stroke-width="1.2"/>
+    <rect x="382" y="197" width="2.6" height="16" rx="1.3" fill="#1B3C8C" transform="rotate(18 383 205)"/>
+  </g>
+
+
+  <!-- clapping arms: hidden until the panel applauds, when the writing arm is
+       swapped out for these. Each arm swings about its own shoulder, so the
+       hands meet in front of the chest instead of sliding sideways. The darker
+       under-stroke is what keeps a sleeve readable against the same-coloured
+       body underneath it.                                                   -->
+  <g id="pan0Clap" opacity="0">
+    <g id="pan0ClapL">
+      <path d="M148 190 L161 168" stroke="#37404E" stroke-width="10.6" stroke-linecap="round"/>
+      <path d="M148 190 L161 168" stroke="#4A5568" stroke-width="8.4" stroke-linecap="round"/>
+      <ellipse cx="161" cy="165" rx="4.8" ry="6.6" fill="#E9B98F" stroke="#B77F52" stroke-width="1.2" transform="rotate(-15 161 165)"/>
+    </g>
+    <g id="pan0ClapR">
+      <path d="M182 190 L169 168" stroke="#37404E" stroke-width="10.6" stroke-linecap="round"/>
+      <path d="M182 190 L169 168" stroke="#4A5568" stroke-width="8.4" stroke-linecap="round"/>
+      <ellipse cx="169" cy="165" rx="4.8" ry="6.6" fill="#E9B98F" stroke="#B77F52" stroke-width="1.2" transform="rotate(15 169 165)"/>
+    </g>
+    <g id="pan0Fx" opacity="0">
+      <path d="M154 164 l-4 -1.6 M176 164 l4 -1.6 M157 156 l-2.6 -3 M173 156 l2.6 -3" stroke="#FFF0CE" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="pan1Clap" opacity="0">
+    <g id="pan1ClapL">
+      <path d="M264 190 L277 168" stroke="#523B2D" stroke-width="10.6" stroke-linecap="round"/>
+      <path d="M264 190 L277 168" stroke="#6B4E3D" stroke-width="8.4" stroke-linecap="round"/>
+      <ellipse cx="277" cy="165" rx="4.8" ry="6.6" fill="#C98E62" stroke="#96633C" stroke-width="1.2" transform="rotate(-15 277 165)"/>
+    </g>
+    <g id="pan1ClapR">
+      <path d="M298 190 L285 168" stroke="#523B2D" stroke-width="10.6" stroke-linecap="round"/>
+      <path d="M298 190 L285 168" stroke="#6B4E3D" stroke-width="8.4" stroke-linecap="round"/>
+      <ellipse cx="285" cy="165" rx="4.8" ry="6.6" fill="#C98E62" stroke="#96633C" stroke-width="1.2" transform="rotate(15 285 165)"/>
+    </g>
+    <g id="pan1Fx" opacity="0">
+      <path d="M270 164 l-4 -1.6 M292 164 l4 -1.6 M273 156 l-2.6 -3 M289 156 l2.6 -3" stroke="#FFF0CE" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="pan2Clap" opacity="0">
+    <g id="pan2ClapL">
+      <path d="M380 190 L393 168" stroke="#2E454F" stroke-width="10.6" stroke-linecap="round"/>
+      <path d="M380 190 L393 168" stroke="#3D5A66" stroke-width="8.4" stroke-linecap="round"/>
+      <ellipse cx="393" cy="165" rx="4.8" ry="6.6" fill="#8C5A3C" stroke="#5E3A22" stroke-width="1.2" transform="rotate(-15 393 165)"/>
+    </g>
+    <g id="pan2ClapR">
+      <path d="M414 190 L401 168" stroke="#2E454F" stroke-width="10.6" stroke-linecap="round"/>
+      <path d="M414 190 L401 168" stroke="#3D5A66" stroke-width="8.4" stroke-linecap="round"/>
+      <ellipse cx="401" cy="165" rx="4.8" ry="6.6" fill="#8C5A3C" stroke="#5E3A22" stroke-width="1.2" transform="rotate(15 401 165)"/>
+    </g>
+    <g id="pan2Fx" opacity="0">
+      <path d="M386 164 l-4 -1.6 M408 164 l4 -1.6 M389 156 l-2.6 -3 M405 156 l2.6 -3" stroke="#FFF0CE" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- thought bubbles -->
+  <g id="pan0Bub" opacity="0">
+    <circle cx="187" cy="110" r="2.2" fill="#F7F5EE" stroke="#C9C2B0"/>
+    <circle cx="195" cy="104" r="3.2" fill="#F7F5EE" stroke="#C9C2B0"/>
+    <ellipse cx="216" cy="94" rx="14" ry="9" fill="#F7F5EE" stroke="#C9C2B0"/>
+    <circle id="pan0D0" cx="209" cy="94" r="1.7" fill="#7A7466"/>
+    <circle id="pan0D1" cx="216" cy="94" r="1.7" fill="#7A7466"/>
+    <circle id="pan0D2" cx="223" cy="94" r="1.7" fill="#7A7466"/>
+  </g>
+  <g id="pan1Bub" opacity="0">
+    <circle cx="303" cy="110" r="2.2" fill="#F7F5EE" stroke="#C9C2B0"/>
+    <circle cx="311" cy="104" r="3.2" fill="#F7F5EE" stroke="#C9C2B0"/>
+    <ellipse cx="332" cy="94" rx="14" ry="9" fill="#F7F5EE" stroke="#C9C2B0"/>
+    <circle id="pan1D0" cx="325" cy="94" r="1.7" fill="#7A7466"/>
+    <circle id="pan1D1" cx="332" cy="94" r="1.7" fill="#7A7466"/>
+    <circle id="pan1D2" cx="339" cy="94" r="1.7" fill="#7A7466"/>
+  </g>
+  <g id="pan2Bub" opacity="0">
+    <circle cx="419" cy="110" r="2.2" fill="#F7F5EE" stroke="#C9C2B0"/>
+    <circle cx="427" cy="104" r="3.2" fill="#F7F5EE" stroke="#C9C2B0"/>
+    <ellipse cx="448" cy="94" rx="14" ry="9" fill="#F7F5EE" stroke="#C9C2B0"/>
+    <circle id="pan2D0" cx="441" cy="94" r="1.7" fill="#7A7466"/>
+    <circle id="pan2D1" cx="448" cy="94" r="1.7" fill="#7A7466"/>
+    <circle id="pan2D2" cx="455" cy="94" r="1.7" fill="#7A7466"/>
+  </g>
+</g>
+
+<!-- mast: stands on its own foot and ties into the edge of the fixed base plate,
+     so the hopper and the bin platform are one rigid structure -->
+<g id="pvc">
+  <rect x="452" y="118" width="42" height="586" rx="4" fill="url(#pipeG)"/>
+  <rect x="446" y="112" width="54" height="26" rx="5" fill="#171C1E"/>
+  <rect x="494" y="128" width="126" height="30" rx="6" fill="url(#pipeG)"/>
+  <rect x="596" y="150" width="24" height="52" rx="4" fill="#171C1E"/>
+  <rect x="446" y="352" width="54" height="28" rx="5" fill="#171C1E"/>
+  <!-- foot pad + tie beam bolted to the base plate corner -->
+  <rect x="432" y="696" width="82" height="14" rx="4" fill="#8E6C36" stroke="#6E4E24" stroke-width="2"/>
+  <rect x="440" y="688" width="66" height="12" rx="3" fill="#171C1E"/>
+  <rect x="470" y="690" width="96" height="12" rx="3" fill="#C9A063" stroke="#7E5B2C" stroke-width="2"/>
+  <circle cx="482" cy="696" r="3" fill="#5B6467"/><circle cx="552" cy="696" r="3" fill="#5B6467"/>
+</g>
+
+
+
+<!-- ====== SOLAR PANEL — on its A-frame stand on the floor, right of the machine ====== -->
+<g id="solarG" transform="translate(-508,52)">
+  <ellipse cx="960" cy="764" rx="52" ry="7" fill="#000" opacity=".22" filter="url(#blurXS)"/>
+  <!-- stand -->
+  <path d="M930 760 L948 668 M990 760 L972 668 M938 730 H982" stroke="#5B6467" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- the panel, tilted toward the room lights -->
+  <g transform="rotate(-14 960 700)">
+    <rect x="906" y="660" width="108" height="80" rx="3" fill="#0B1A33" stroke="#9AA6A4" stroke-width="3"/>
+    <g fill="#16346A" stroke="#0B1A33" stroke-width="1.2">
+      <rect x="911" y="665" width="22" height="22"/><rect x="936" y="665" width="22" height="22"/><rect x="961" y="665" width="22" height="22"/><rect x="986" y="665" width="22" height="22"/>
+      <rect x="911" y="690" width="22" height="22"/><rect x="936" y="690" width="22" height="22"/><rect x="961" y="690" width="22" height="22"/><rect x="986" y="690" width="22" height="22"/>
+      <rect x="911" y="715" width="22" height="22"/><rect x="936" y="715" width="22" height="22"/><rect x="961" y="715" width="22" height="22"/><rect x="986" y="715" width="22" height="22"/>
+    </g>
+    <path id="solarGlint" d="M910 736 L1010 664" stroke="#fff" stroke-width="10" opacity=".18" stroke-linecap="round"/>
+    <text x="960" y="748" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="6.5" fill="#9FB6B2">18 V · 20 W</text>
+  </g>
+  <!-- junction box + the lead going down to the floor -->
+  <rect x="1004" y="708" width="10" height="8" rx="1.5" fill="#2A3033"/>
+  <path d="M1009 716 C 1012 726 1004 732 992 736" stroke="#20262B" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+</g>
+
+<!-- ====== CONTROL BOX on the post — Arduino Uno + I2C LCD, covered ====== -->
+<g id="ctrl">
+  <!-- sensor trunk loom coming down the post from the top arm -->
+  <path d="M486 162 L486 360" stroke="#20262B" stroke-width="9" fill="none"/>
+  <g stroke="#39413F" stroke-width="2">
+    <path d="M480 190 L492 186"/><path d="M480 230 L492 226"/>
+    <path d="M480 270 L492 266"/><path d="M480 310 L492 306"/><path d="M480 344 L492 340"/>
+  </g>
+  <!-- ====== POWER MODULE — strapped to the mast above the control box ======
+     One place every source arrives and one lead leaves for the Uno: a 3-way
+     selector (AC / BATT / SOLAR), an LM2596 buck set to 5.0 V for the board,
+     a second buck at 5 V for the servo rail, and a 4S Li-ion charge controller
+     with its BMS for the pack. Nothing downstream of the bucks ever exceeds
+     5 V — the 14.8 V pack and the 18 V panel stop right here. Click to switch. -->
+<g id="powerMod">
+  <rect x="440" y="196" width="66" height="96" rx="6" fill="#1C2124" stroke="#39413F" stroke-width="2"/>
+  <rect x="444" y="203" width="58" height="12" rx="3" fill="#0D1416"/>
+  <text x="473" y="212" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="6.8" letter-spacing="1" fill="#7FE3D4">POWER</text>
+  <!-- selector: only on the rig that carries all three sources -->
+  <g id="pwrSel">
+    <g id="pwrSwitch" class="pick" tabindex="0" role="button" aria-label="Switch the power source">
+      <circle class="pickhalo" cx="458" cy="232" r="17" fill="#5FE3CF" opacity="0"/>
+      <circle cx="458" cy="232" r="11" fill="#2A3033" stroke="#4A5254" stroke-width="1.5"/>
+      <g id="pwrKnob"><path d="M458 232 L458 223" stroke="#F2F7F6" stroke-width="2.6" stroke-linecap="round"/></g>
+    </g>
+    <g font-family="IBM Plex Mono, monospace" font-size="5.6" fill="#93A0A2">
+      <circle id="pwrLedAc"    cx="478" cy="220" r="2.2" fill="#3A4448"/><text x="483" y="222">AC</text>
+      <circle id="pwrLedBatt"  cx="478" cy="232" r="2.2" fill="#3A4448"/><text x="483" y="234">BATT</text>
+      <circle id="pwrLedSolar" cx="478" cy="244" r="2.2" fill="#3A4448"/><text x="483" y="246">SOLAR</text>
+    </g>
+  </g>
+  <!-- what a single-source build shows instead of the selector -->
+  <g id="pwrFixed" style="display:none">
+    <rect x="446" y="220" width="54" height="24" rx="4" fill="#0D1416" stroke="#39413F" stroke-width="1.2"/>
+    <text id="pwrFixedT" x="473" y="230" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="6.4" fill="#7FE3D4">BATTERY</text>
+    <text id="pwrFixedS" x="473" y="239" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="5.4" fill="#93A0A2">no other source</text>
+  </g>
+  <!-- LM2596 buck, blue, with its trim pot -->
+  <rect id="pwrBuck" x="444" y="252" width="26" height="16" rx="2" fill="#1B4C86" stroke="#123561" stroke-width="1"/>
+  <circle cx="450" cy="260" r="3.2" fill="#2A3033"/><rect x="456" y="255" width="10" height="10" rx="1" fill="#39413F"/>
+  <text x="457" y="276" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="5" fill="#93A0A2">5.0V</text>
+  <!-- 4S charge controller + BMS, green, with CHG and FULL LEDs — only on a
+       build that has something to charge from -->
+  <g id="pwrChgBlk">
+    <rect x="474" y="252" width="28" height="16" rx="2" fill="#1E4C2C" stroke="#0F2A18" stroke-width="1"/>
+    <circle id="pwrChg"  cx="480" cy="260" r="2.2" fill="#3A4448"/>
+    <circle id="pwrFull" cx="488" cy="260" r="2.2" fill="#3A4448"/>
+    <rect x="493" y="256" width="6" height="8" rx="1" fill="#39413F"/>
+    <text x="488" y="276" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="5" fill="#93A0A2">4S CHG</text>
+  </g>
+  <!-- the output: one LED, one lead down into the box -->
+  <circle id="pwrOutLed" cx="452" cy="284" r="2.4" fill="#3A4448"/>
+  <text x="458" y="286" font-family="IBM Plex Mono, monospace" font-size="5.6" fill="#93A0A2">UNO 5V · SERVO 5V</text>
+  <!-- straps round the post -->
+  <rect x="436" y="197" width="74" height="4" rx="2" fill="#39413F"/>
+  <rect x="436" y="289" width="74" height="4" rx="2" fill="#39413F"/>
+  <!-- leads: pack + solar come up out of the pipe, the output goes down into the box -->
+  <path d="M466 292 L466 352" stroke="#20262B" stroke-width="3.4" fill="none"/>
+  <path id="pwrOut" d="M470 292 C 470 320 468 340 468 362" stroke="#C42B22" stroke-width="2.4" fill="none" opacity=".9"/>
+</g>
+  <!-- plywood back board strapped to the post -->
+  <rect x="402" y="362" width="168" height="166" rx="8" fill="#C9A063" stroke="#7E5B2C" stroke-width="2.5"/>
+  <rect x="410" y="370" width="152" height="150" rx="5" fill="#1C2124"/>
+  <!-- LCD -->
+  <rect x="418" y="374" width="136" height="58" rx="4" fill="#14672F"/>
+  <rect x="424" y="379" width="124" height="48" rx="2" fill="url(#lcdG)"/>
+  <rect x="424" y="379" width="124" height="9" fill="#fff" opacity=".07"/>
+  <text id="lcdA" x="430" y="397" font-family="IBM Plex Mono, monospace" font-size="12" letter-spacing="0.4" fill="#CFF4FF">Automatic Waste</text>
+  <text id="lcdB" x="430" y="416" font-family="IBM Plex Mono, monospace" font-size="12" letter-spacing="0.4" fill="#CFF4FF">Segregation</text>
+  <!-- LEDs + buzzer -->
+  <circle id="mLedPla" cx="430" cy="444" r="7" fill="#2C3234" stroke="#4A5254" stroke-width="2"/>
+  <circle id="mLedMet" cx="452" cy="444" r="7" fill="#2C3234" stroke="#4A5254" stroke-width="2"/>
+  <circle id="mLedBio" cx="474" cy="444" r="7" fill="#2C3234" stroke="#4A5254" stroke-width="2"/>
+  <text x="452" y="461" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8" letter-spacing=".4" fill="#93A0A2">D2·D13·A3</text>
+  <g id="buzzWaves" opacity="0" pointer-events="none">
+    <circle id="buzzW1" cx="534" cy="444" r="12" fill="none" stroke="#5FE3CF" stroke-width="2"/>
+    <circle id="buzzW2" cx="534" cy="444" r="12" fill="none" stroke="#5FE3CF" stroke-width="2"/>
+  </g>
+  <g id="buzzUnit" class="pick" tabindex="0" role="button" aria-pressed="false" aria-label="Mute the buzzer">
+    <circle class="pickhalo" cx="534" cy="444" r="17" fill="#5FE3CF" opacity="0"/>
+    <circle id="mBuzz" cx="534" cy="444" r="11" fill="#101416" stroke="#4A5254" stroke-width="2"/>
+    <circle cx="534" cy="444" r="3" fill="#5B6467"/>
+    <path id="buzzMute" d="M526 436 L542 452" stroke="#F2685E" stroke-width="2.6" stroke-linecap="round" opacity="0"/>
+  </g>
+  <text x="534" y="461" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8" fill="#93A0A2">D12</text>
+
+  <!-- what the cover hides: the Uno, a mini breadboard and the jumpers -->
+  <g id="guts" opacity="0">
+    <rect x="414" y="466" width="92" height="52" rx="3" fill="#1B7B8C" stroke="#0E4E5A" stroke-width="1.5"/>
+    <rect x="420" y="466" width="80" height="5" fill="#141A1C"/>
+    <rect x="420" y="513" width="52" height="5" fill="#141A1C"/>
+    <rect x="408" y="474" width="8" height="13" rx="1.5" fill="#A8B2B5"/>
+    <rect x="408" y="500" width="8" height="10" rx="1.5" fill="#15181A"/>
+    <rect x="446" y="484" width="34" height="14" rx="1.5" fill="#20272A"/>
+    <circle cx="497" cy="478" r="2" fill="#4BC969"/>
+    <text x="460" y="507" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="6.5" fill="#CFF4FF">UNO R3</text>
+    <rect x="512" y="466" width="46" height="52" rx="2" fill="#E4E7E2" stroke="#A8B2B5" stroke-width="1.2"/>
+    <rect x="514" y="469" width="42" height="3" fill="#C42B22" opacity=".8"/>
+    <rect x="514" y="512" width="42" height="3" fill="#2E56C8" opacity=".8"/>
+    <g stroke="#B8BEB8" stroke-width=".6">
+      <path d="M514 478 H556 M514 484 H556 M514 490 H556 M514 496 H556 M514 502 H556"/>
+    </g>
+    <g fill="none" stroke-width="1.6" stroke-linecap="round">
+      <path d="M506 472 H512" stroke="#C42B22"/><path d="M506 514 H512" stroke="#15181A"/>
+      <path d="M498 466 C 500 452 512 446 522 448" stroke="#E8A33D"/>
+      <path d="M486 466 C 488 452 500 444 512 444" stroke="#3FA96B"/>
+      <path d="M430 466 C 428 456 428 450 430 452" stroke="#E8A33D"/>
+      <path d="M452 466 C 450 456 450 450 452 452" stroke="#C42B22"/>
+      <path d="M474 466 C 472 456 472 450 474 452" stroke="#3FA96B"/>
+      <path d="M414 490 C 402 490 396 470 404 440" stroke="#2E56C8"/>
+    </g>
+  </g>
+
+  <!-- clear acrylic cover with corner screws — click/tap it to open and see
+       the Uno, the breadboard and the sensor wiring running into the box -->
+  <g id="coverG" class="pick" tabindex="0" role="button" aria-pressed="false" aria-label="Open the acrylic cover">
+    <rect class="pickhalo" x="402" y="362" width="168" height="166" rx="9" fill="#5FE3CF" opacity="0"/>
+    <rect x="406" y="366" width="160" height="158" rx="7" fill="#BFD9E2" opacity=".10"/>
+    <rect x="406" y="366" width="160" height="158" rx="7" fill="none" stroke="#8A9496" stroke-width="1.5"/>
+    <path d="M414 372 L462 372 L430 404 Z" fill="#fff" opacity=".08"/>
+    <circle cx="414" cy="374" r="3" fill="#5B6467"/><circle cx="558" cy="374" r="3" fill="#5B6467"/>
+    <circle cx="414" cy="516" r="3" fill="#5B6467"/><circle cx="558" cy="516" r="3" fill="#5B6467"/>
+  </g>
+  <!-- cable grommets -->
+  <circle cx="486" cy="364" r="6" fill="#101416" stroke="#39413F" stroke-width="2"/>
+  <circle cx="568" cy="390" r="6" fill="#101416" stroke="#39413F" stroke-width="2"/>
+  <!-- loom leaving the box, down the mast to the floor, behind the support box -->
+  <path d="M470 528 C 476 600 482 650 484 692 C 520 700 556 702 596 704" stroke="#20262B" stroke-width="8" fill="none"/>
+</g>
+
+<!-- ====== TURNTABLE ASSEMBLY, bottom to top ======
+     1. a rectangular plywood support box standing on the floor
+     2. a FIXED rectangular base plate screwed down onto it, running left all
+        the way to the mast that carries the Arduino box, the buzzer and the
+        input hole, and bolted to it — one rigid frame, not two
+     3. three castors standing on that plate
+     4. the ROTATING triangular plate carrying the three bins, riding on them
+     The castors take the bending load off the servo shaft, so a full bin
+     swinging past cannot see-saw or wobble the top plate.                    -->
+<ellipse cx="700" cy="776" rx="222" ry="26" fill="#000" opacity=".24" filter="url(#blurS)"/>
+
+<!-- solar lead: from the panel stand along the floor to the mast foot, where it
+     enters the pipe. Drawn before the boxes so they hide it where they overlap. -->
+<path id="solarCable" d="M484 788 C 478 774 470 740 470 706" stroke="#20262B" stroke-width="3.6" fill="none" stroke-linecap="round" opacity=".55"/>
+<!-- pack lead: out of the compartment top, across the base plate into the pipe -->
+<path id="packCable" d="M700 644 C 690 620 560 612 500 604 C 476 600 468 640 466 704" stroke="#20262B" stroke-width="3.6" fill="none" stroke-linecap="round" opacity=".55"/>
+
+<g id="supportBox">
+  <polygon points="590,644 810,644 810,700 590,700" fill="#D2A96A"/>
+  <polygon points="810,644 832,634 832,690 810,700" fill="#A8834A"/>
+
+  <!-- 2 pcs battery holder, 4 pcs 3.7 V Li-ion (18650) each — sits behind the
+       door, clear of the always-mounted D10 button, only visible once it's
+       opened -->
+  <g id="supportBatt">
+    <rect x="664" y="708" width="66" height="50" rx="4" fill="#1A1F22" stroke="#0E1416" stroke-width="1.5"/>
+    <g fill="#3F6FA8">
+      <rect x="669" y="713" width="56" height="9" rx="4"/>
+      <rect x="669" y="724" width="56" height="9" rx="4"/>
+      <rect x="669" y="735" width="56" height="9" rx="4"/>
+      <rect x="669" y="746" width="56" height="9" rx="4"/>
+    </g>
+    <text x="697" y="766" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="#CFF4FF">PACK A</text>
+    <rect x="736" y="708" width="66" height="50" rx="4" fill="#1A1F22" stroke="#0E1416" stroke-width="1.5"/>
+    <g fill="#3F6FA8">
+      <rect x="741" y="713" width="56" height="9" rx="4"/>
+      <rect x="741" y="724" width="56" height="9" rx="4"/>
+      <rect x="741" y="735" width="56" height="9" rx="4"/>
+      <rect x="741" y="746" width="56" height="9" rx="4"/>
+    </g>
+    <text x="769" y="766" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="#CFF4FF">PACK B</text>
+  </g>
+  <!-- the two packs' leads, plus the D10 button's own 2-wire lead into the harness -->
+  <g id="supportWiring" fill="none" stroke-linecap="round">
+    <path d="M690 708 V700" stroke="#C42B22" stroke-width="2.6"/>
+    <path d="M704 708 V700" stroke="#15181A" stroke-width="2.6"/>
+    <path d="M762 708 V700" stroke="#C42B22" stroke-width="2.6"/>
+    <path d="M776 708 V700" stroke="#15181A" stroke-width="2.6"/>
+    <path d="M629 760 C 629 770 640 774 654 772" stroke="#20262B" stroke-width="2.6"/>
+  </g>
+
+  <!-- door: wood front panel, click/tap it to open the compartment -->
+  <g id="supportDoor" class="pick" tabindex="0" role="button" aria-pressed="false" aria-label="Open the battery compartment door">
+    <rect class="pickhalo" x="588" y="698" width="224" height="74" rx="4" fill="#5FE3CF" opacity="0"/>
+    <rect x="590" y="700" width="220" height="70" fill="#B78F58" stroke="#7E5B2C" stroke-width="2"/>
+    <path d="M590 722 H810 M590 746 H810" stroke="#9C773F" stroke-width="1.5" opacity=".65"/>
+    <circle cx="602" cy="710" r="3" fill="#7E5B2C"/><circle cx="798" cy="710" r="3" fill="#7E5B2C"/>
+    <circle cx="602" cy="760" r="3" fill="#7E5B2C"/><circle cx="798" cy="760" r="3" fill="#7E5B2C"/>
+    <rect x="664" y="710" width="72" height="52" rx="4" fill="#2A3033"/>
+    <rect x="664" y="716" width="72" height="9" fill="#3E464A"/>
+  </g>
+  <polygon points="810,700 832,690 832,760 810,770" fill="#8E6C36" stroke="#6E4E24" stroke-width="1.5"/>
+</g>
+
+<!-- button, mounted on the face of the support box -->
+<g id="btnBoard" class="pick" tabindex="0" role="button" aria-label="Press the D10 button">
+  <rect x="600" y="712" width="58" height="48" rx="4" fill="#1E4C2C"/>
+  <circle class="pickhalo" cx="629" cy="732" r="24" fill="#5FE3CF" opacity="0"/>
+  <circle cx="629" cy="732" r="16" fill="#2B3134"/>
+  <ellipse id="btnShade" cx="629" cy="737" rx="13.5" ry="4.5" fill="#0B0E10" opacity="0.18"/>
+  <circle id="btnCap" cx="629" cy="729" r="13" fill="#E8C433" stroke="#A8890F" stroke-width="2"/>
+  <circle id="btnRing" cx="629" cy="731" r="13" fill="none" stroke="#F4E58C" stroke-width="3" opacity="0" pointer-events="none"/>
+  <text x="629" y="754" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="#93A0A2">D10</text>
+</g>
+<circle id="btnBoardHalo" cx="629" cy="732" r="24" fill="none" stroke="#7FE3D4" stroke-width="3.5" opacity="0" pointer-events="none"/>
+
+<g id="basePlate">
+  <rect x="494" y="688" width="351.5" height="14" fill="#8E6C36"/>
+  <rect x="494" y="562" width="351.5" height="126" fill="#C9A063" stroke="#7E5B2C" stroke-width="2.5"/>
+  <path d="M494 604 H845.5 M494 646 H845.5" stroke="#A8834A" stroke-width="1.5" opacity=".55"/>
+  <!-- bolted to the mast down the left edge, and to the sensor post on the right -->
+  <circle cx="506" cy="580" r="3" fill="#7E5B2C"/><circle cx="506" cy="670" r="3" fill="#7E5B2C"/>
+  <circle cx="833" cy="580" r="3" fill="#7E5B2C"/><circle cx="833" cy="670" r="3" fill="#7E5B2C"/>
+  <path d="M838 692 L858 696" stroke="#7E5B2C" stroke-width="1.5"/>
+</g>
+
+<g id="rollers">
+  <rect x="692" y="564" width="16" height="12" rx="2" fill="#3E464A"/>
+  <circle cx="700" cy="581" r="9" fill="#20272A" stroke="#5B6467" stroke-width="2"/><circle cx="700" cy="581" r="3" fill="#8A9496"/>
+  <rect x="789" y="648" width="16" height="12" rx="2" fill="#3E464A"/>
+  <circle cx="797" cy="665" r="9" fill="#20272A" stroke="#5B6467" stroke-width="2"/><circle cx="797" cy="665" r="3" fill="#8A9496"/>
+  <rect x="595" y="648" width="16" height="12" rx="2" fill="#3E464A"/>
+  <circle cx="603" cy="665" r="9" fill="#20272A" stroke="#5B6467" stroke-width="2"/><circle cx="603" cy="665" r="3" fill="#8A9496"/>
+  <path d="M552 666 L586 665" stroke="#7E5B2C" stroke-width="1.5"/>
+</g>
+
+<g id="railBack"></g>
+<g id="plate"></g>
+<g id="binsG"></g>
+<g id="railFront"></g>
+
+<g id="pedestalLbl" class="lbl">
+  <rect x="504" y="776" width="392" height="40" rx="6" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="516" y="792" font-family="IBM Plex Mono, monospace" font-size="11" fill="#EDF3F2">SERVO D5 · tap_servo · turns the top plate only</text>
+  <text x="516" y="808" font-family="IBM Plex Mono, monospace" font-size="11" fill="#7FE3D4" id="rotDeg">write(90) → 135° phys</text>
+</g>
+
+<!-- ============ HOPPER HEAD — scaled 0.72 about the tap, to suit the bins ============ -->
+<g class="headScale" transform="translate(196,96.6) scale(0.72)">
+<g id="hopper">
+  <path d="M 572 88 Q 604 224 642 290 A 58 16 0 0 0 758 290 Q 796 224 828 88 Z" fill="url(#hopG)"/>
+  <g clip-path="url(#hopClip)">
+    <rect x="560" y="246" width="290" height="50" fill="#12161A"/>
+    <rect x="560" y="242" width="290" height="6" fill="#000" opacity=".35"/>
+    <ellipse cx="622" cy="176" rx="26" ry="108" fill="url(#spec)" opacity=".55"/>
+    <rect x="560" y="82" width="290" height="10" fill="#000" opacity=".25"/>
+  </g>
+  <ellipse cx="700" cy="88" rx="128" ry="33" fill="#5A2606"/>
+  <ellipse cx="700" cy="94" rx="116" ry="28" fill="#2A1004"/>
+  <ellipse cx="700" cy="88" rx="128" ry="33" fill="none" stroke="#F09A4E" stroke-width="7"/>
+  <ellipse cx="700" cy="88" rx="128" ry="33" fill="none" stroke="#8E3C0A" stroke-width="2"/>
+  <!-- clamp band gripping the bucket, hung from the mast's drop bracket -->
+  <rect x="590" y="134" width="220" height="21" rx="8" fill="url(#steelG)"/>
+  <rect x="590" y="134" width="220" height="7" rx="3" fill="#fff" opacity=".25"/>
+  <rect x="576" y="130" width="18" height="29" rx="3" fill="#171C1E"/>
+</g>
+</g>
+
+<g class="headScale" transform="translate(196,96.6) scale(0.72)">
+<g id="throat">
+  <rect x="642" y="286" width="116" height="52" fill="#191E20"/>
+  <rect x="642" y="286" width="116" height="52" fill="url(#pipeG)" opacity=".55"/>
+  <ellipse cx="700" cy="338" rx="58" ry="15" fill="#0D1112"/>
+</g>
+
+<!-- STAGE 1 — the two proximity sensors, bolted to the wooden blocks at the same
+     height, facing each other across the throat with a deliberate gap -->
+<line id="proxBeam" x1="636" y1="257" x2="764" y2="257" stroke="#5FE3CF" stroke-width="3" stroke-dasharray="6 6" opacity="0"/>
+<g id="sCap">
+  <rect x="570" y="228" width="60" height="56" rx="3" fill="#C9A063" stroke="#8E6C36" stroke-width="2"/>
+  <path d="M570 240 H630 M570 254 H630 M570 268 H630" stroke="#A8834A" stroke-width="1.5" opacity=".7"/>
+  <rect x="472" y="244" width="156" height="26" rx="6" fill="#C9922F"/>
+  <rect x="472" y="244" width="156" height="9" rx="4" fill="#fff" opacity=".22"/>
+  <rect x="612" y="247" width="22" height="20" rx="3" fill="url(#steelG)"/>
+  <circle id="sCapTip" cx="638" cy="257" r="10" fill="#3A4244" stroke="#9AA5A8" stroke-width="2.5"/>
+</g>
+<g id="sInd">
+  <rect x="770" y="228" width="60" height="56" rx="3" fill="#C9A063" stroke="#8E6C36" stroke-width="2"/>
+  <path d="M770 240 H830 M770 254 H830 M770 268 H830" stroke="#A8834A" stroke-width="1.5" opacity=".7"/>
+  <rect x="772" y="244" width="156" height="26" rx="6" fill="#C9922F"/>
+  <rect x="772" y="244" width="156" height="9" rx="4" fill="#fff" opacity=".22"/>
+  <rect x="766" y="247" width="22" height="20" rx="3" fill="url(#steelG)"/>
+  <circle id="sIndTip" cx="762" cy="257" r="10" fill="#3A4244" stroke="#9AA5A8" stroke-width="2.5"/>
+</g>
+
+<!-- STAGE 2 — IR at the very bottom of the hole, aimed across the tap face -->
+<line id="irBeam" x1="754" y1="322" x2="700" y2="326" stroke="#5FE3CF" stroke-width="3" stroke-dasharray="5 5" opacity="0"/>
+<g id="sIr">
+  <rect x="766" y="302" width="62" height="30" rx="3" fill="#12662F" stroke="#0A3D1B" stroke-width="1.5"/>
+  <rect x="814" y="306" width="11" height="22" rx="2" fill="#0C4A22"/>
+  <circle cx="761" cy="311" r="5.5" fill="#241416" stroke="#9AA5A8" stroke-width="1.5"/>
+  <circle id="sIrTip" cx="761" cy="325" r="5.5" fill="#3A4244" stroke="#9AA5A8" stroke-width="1.5"/>
+</g>
+
+<!-- gate servo (D6, tap_servo1) -->
+<g id="servoGate">
+  <rect x="572" y="318" width="58" height="50" rx="4" fill="#2A3033"/>
+  <rect x="572" y="324" width="58" height="9" fill="#3E464A"/>
+</g>
+<g id="tapG" transform="rotate(0 636 342)">
+  <path d="M634 336 L764 332 L764 348 L634 352 Z" fill="url(#steelG)"/>
+  <rect x="634" y="336" width="130" height="5" fill="#fff" opacity=".3"/>
+</g>
+<circle cx="636" cy="342" r="8" fill="#5B6467" stroke="#20272A" stroke-width="2"/>
+
+</g>
+<ellipse id="scanRing" cx="700" cy="322" rx="66" ry="20" fill="none" stroke="#5FE3CF" stroke-width="3" opacity="0"/>
+
+<!-- the waste itself: drawn over the chute so you can see it and click it -->
+<g id="itemG" opacity="0" pointer-events="none" style="cursor:pointer"></g>
+<g id="clickHint" class="lbl" opacity="0" pointer-events="none">
+  <circle cx="0" cy="0" r="27" fill="none" stroke="#F2685E" stroke-width="2" stroke-dasharray="5 5"/>
+  <g transform="translate(19,15)">
+    <path d="M0 0 L0 15 L4 11.5 L7 18 L10 16.5 L7 10.5 L12 10 Z" fill="#F2F7F6" stroke="#1C1012" stroke-width="1.6" stroke-linejoin="round"/>
+  </g>
+  <rect x="-42" y="-48" width="84" height="19" rx="5" fill="#1C1012" stroke="#F2685E" stroke-width="1.5"/>
+  <text x="0" y="-35" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" letter-spacing="1" fill="#F2685E">CLICK ME</text>
+</g>
+
+<!-- ====== HC-SR04 ON ITS OWN STAND ======
+     The post is bolted to the FIXED base plate, never to the rotating one, so
+     the sensor stays put while the bins turn under it. The arm reaches in over
+     the parked bin and the head looks straight down into it.                  -->
+<g id="usG">
+  <!-- foot bracket on the base plate's right corner -->
+  <rect x="820" y="676" width="48" height="12" rx="3" fill="#8A9496" stroke="#5B6467" stroke-width="1.5"/>
+  <circle cx="830" cy="682" r="2.5" fill="#39413F"/><circle cx="858" cy="682" r="2.5" fill="#39413F"/>
+  <!-- post -->
+  <rect x="836" y="352" width="16" height="330" fill="url(#steelG)"/>
+  <rect x="839" y="352" width="4" height="330" fill="#fff" opacity=".25"/>
+  <!-- arm reaching in over the parked bin, with a gusset at the knee -->
+  <rect x="700" y="352" width="152" height="16" fill="url(#steelG)"/>
+  <rect x="700" y="355" width="152" height="4" fill="#fff" opacity=".25"/>
+  <path d="M810 368 L852 368 L852 410 Z" fill="#8A9496" opacity=".85"/>
+  <!-- drop bracket + the module, looking straight down -->
+  <rect x="708" y="368" width="14" height="16" fill="#6E787B"/>
+  <rect x="686" y="382" width="58" height="28" rx="3" fill="#1B4C86" stroke="#123561" stroke-width="1.5"/>
+  <circle cx="700" cy="396" r="10" fill="#0E2F55" stroke="#5C86B4" stroke-width="1.5"/>
+  <circle cx="730" cy="396" r="10" fill="#0E2F55" stroke="#5C86B4" stroke-width="1.5"/>
+  <rect x="710" y="386" width="10" height="14" rx="1" fill="#123561"/>
+  <!-- 4-pin header on the top edge -->
+  <rect x="694" y="376" width="42" height="7" rx="2" fill="#101416"/>
+  <g fill="#C9A22F"><rect x="698" y="377" width="3" height="5"/><rect x="708" y="377" width="3" height="5"/><rect x="718" y="377" width="3" height="5"/><rect x="728" y="377" width="3" height="5"/></g>
+</g>
+
+<!-- the four leads: VCC, TRIG, ECHO, GND — into the box's side grommet -->
+<g id="usWires" fill="none" stroke-linecap="round" stroke-width="3.2">
+  <path d="M699 377 C 656 366 610 374 570 384" stroke="#C42B22"/>
+  <path d="M709 377 C 664 371 616 381 570 389"  stroke="#E8A33D"/>
+  <path d="M719 377 C 672 377 624 388 570 393"  stroke="#3FA96B"/>
+  <path d="M729 377 C 680 384 632 395 572 397"  stroke="#15181A"/>
+  <g stroke="#8A9496" stroke-width="3">
+    <path d="M648 372 L650 392"/><path d="M604 380 L606 398"/>
+  </g>
+</g>
+
+<line id="usBeam" class="lbl" x1="715" y1="412" x2="715" y2="656" stroke="#5FE3CF" stroke-width="2" stroke-dasharray="5 8" opacity=".55"/>
+
+<!-- ============ WIRE MANAGEMENT: everything runs into the covered box ============ -->
+<g fill="none" stroke-linecap="round">
+  <!-- capacitive lead straight into the box top -->
+  <path d="M536 283 C 512 290 496 314 488 346" stroke="#20262B" stroke-width="5"/>
+  <!-- inductive + IR pair, zip-tied under the throat, into the box grommet -->
+  <path d="M862 284 C 840 330 800 348 756 353 C 700 360 650 362 612 368 C 584 372 570 378 564 386" stroke="#20262B" stroke-width="6"/>
+  <path d="M790 332 C 770 350 732 358 694 362 C 656 366 626 372 604 376" stroke="#20262B" stroke-width="5" opacity=".9"/>
+  <!-- gate servo jumper -->
+  <path d="M608 356 C 588 362 574 372 570 384" stroke="#20262B" stroke-width="5"/>
+  <!-- zip ties -->
+  <g stroke="#8A9496" stroke-width="3">
+    <path d="M756 348 L758 360"/><path d="M694 357 L695 369"/><path d="M612 363 L613 375"/>
+  </g>
+  <!-- battery pair, clipped along the floor, disappearing behind the support box
+       — hidden now that the real packs are modelled inside the support box -->
+  <g opacity="0">
+    <path d="M118 714 C 220 736 400 752 584 752" stroke="#C42B22" stroke-width="4"/>
+    <path d="M118 728 C 222 748 402 762 584 760" stroke="#15181A" stroke-width="4"/>
+    <g fill="#8A9496" stroke="none">
+      <rect x="236" y="736" width="8" height="12" rx="2"/><rect x="356" y="746" width="8" height="12" rx="2"/><rect x="476" y="750" width="8" height="12" rx="2"/>
+    </g>
+  </g>
+</g>
+
+<!-- ====== MAINS: the whole prototype runs off a 5V adapter on AC ====== -->
+<g id="mains">
+  <rect x="104" y="238" width="42" height="36" rx="3" fill="#EDEFE8" stroke="#A8B2AC" stroke-width="1.5"/>
+  <rect x="112" y="248" width="5" height="12" rx="1.5" fill="#3A4448"/>
+  <rect x="133" y="248" width="5" height="12" rx="1.5" fill="#3A4448"/>
+  <circle cx="125" cy="266" r="2" fill="#3A4448"/>
+  <g id="plugG">
+    <rect x="107" y="272" width="36" height="34" rx="4" fill="#E8EAE4" stroke="#9AA5A0" stroke-width="1.5"/>
+    <rect x="112" y="252" width="4" height="22" fill="#A8B2B5"/><rect x="134" y="252" width="4" height="22" fill="#A8B2B5"/>
+    <text x="125" y="292" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7.5" fill="#5B6467">5V 2A</text>
+    <path id="acCord" d="M125 306 C 132 344 210 392 300 416 C 356 430 392 434 396 410 C 398 380 396 320 400 268 C 402 252 420 244 440 244" stroke="#20262B" stroke-width="4" fill="none"/>
+  </g>
+  <circle id="acLed" cx="125" cy="300" r="2.4" fill="#4BC969"/>
+</g>
+
+<!-- ====== INFEED CONVEYOR — the waste queues here, one item at a time ====== -->
+<ellipse cx="200" cy="658" rx="168" ry="15" fill="#000" opacity=".22" filter="url(#blurS)"/>
+<g id="conveyor">
+  <rect x="78" y="527" width="14" height="120" fill="url(#pipeG)"/>
+  <rect x="316" y="527" width="14" height="120" fill="url(#pipeG)"/>
+  <rect x="68" y="645" width="34" height="9" rx="3" fill="#20262B"/>
+  <rect x="306" y="645" width="34" height="9" rx="3" fill="#20262B"/>
+  <rect x="92" y="594" width="224" height="8" fill="url(#pipeG)"/>
+  <!-- gear motor driving the head pulley -->
+  <rect x="336" y="529" width="48" height="38" rx="4" fill="#2A3033" stroke="#171C1E" stroke-width="1.5"/>
+  <g stroke="#3E464A" stroke-width="2"><path d="M342 536 V560"/><path d="M350 536 V560"/><path d="M358 536 V560"/></g>
+  <rect x="354" y="513" width="10" height="18" fill="#3E464A"/>
+  <!-- belt loop -->
+  <path d="M40 469 H360 A22 22 0 0 1 360 513 H40 A22 22 0 0 1 40 469 Z" fill="#20262B" stroke="#15181A" stroke-width="2"/>
+  <rect x="40" y="469" width="320" height="9" fill="#39413F"/>
+  <g id="beltTread" clip-path="url(#beltClip)"></g>
+  <circle cx="40" cy="491" r="13" fill="url(#steelG)" stroke="#5B6467" stroke-width="1.5"/>
+  <circle cx="360" cy="491" r="13" fill="url(#steelG)" stroke="#5B6467" stroke-width="1.5"/>
+  <circle cx="40" cy="491" r="4" fill="#39413F"/><circle cx="360" cy="491" r="4" fill="#39413F"/>
+  <rect x="18" y="513" width="364" height="14" rx="3" fill="url(#pipeG)"/>
+  <!-- end stops so the queue does not run off -->
+  <rect x="18" y="452" width="6" height="62" rx="2" fill="#5B6467"/>
+  <rect x="374" y="452" width="6" height="62" rx="2" fill="#5B6467"/>
+  <!-- jog panel: scroll the queue to bring any waste to the belt -->
+  <rect x="18" y="530" width="62" height="32" rx="5" fill="#20262B" stroke="#15181A" stroke-width="1.5"/>
+  <text x="49" y="574" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" letter-spacing="1" fill="#2A3634">JOG</text>
+</g>
+<g id="jogPrev" class="pick" tabindex="0" role="button" aria-label="Jog the conveyor back">
+  <circle class="pickhalo" cx="35" cy="546" r="15" fill="#5FE3CF" opacity="0"/>
+  <rect x="23" y="535" width="24" height="22" rx="4" fill="#1E4C2C" stroke="#0F2A18" stroke-width="1.5"/>
+  <path d="M39 540 L30 546 L39 552 Z" fill="#CFF4FF"/>
+</g>
+<g id="jogNext" class="pick" tabindex="0" role="button" aria-label="Jog the conveyor forward">
+  <circle class="pickhalo" cx="63" cy="546" r="15" fill="#5FE3CF" opacity="0"/>
+  <rect x="51" y="535" width="24" height="22" rx="4" fill="#1E4C2C" stroke="#0F2A18" stroke-width="1.5"/>
+  <path d="M59 540 L68 546 L59 552 Z" fill="#CFF4FF"/>
+</g>
+<g id="samples"></g>
+
+<!-- ====== THE GROUP: the students defending, standing at their infeed ======
+     Seen from behind, because that is where they stand: facing the panel and
+     facing their own machine. Each head is turned far enough to the left that
+     the cheek, the nose, one eye and the mouth still read, so you can see who
+     is speaking. app.js gives them the sway, the blinking, the mouth of
+     whoever is speaking and the bow.                                       -->
+<g id="students">
+  <g id="stu0Pos" transform="translate(150,748) scale(0.9)">
+    <ellipse cx="0" cy="1" rx="30" ry="6.5" fill="#000" opacity=".22" filter="url(#blurXS)"/>
+    <g id="stu0">
+      <rect x="-12" y="-50" width="9" height="42" rx="3" fill="#E9B98F"/><rect x="3" y="-50" width="9" height="42" rx="3" fill="#E9B98F"/><path d="M-18 -88 H18 L25 -46 H-25 Z" fill="#2B3550"/><path d="M-9 -88 V-47 M7 -88 V-47" stroke="#000" stroke-width="1" opacity=".16"/><rect x="-18" y="-10" width="15" height="10" rx="3.5" fill="#241E1A"/><rect x="-18" y="-4" width="15" height="4" rx="2" fill="#15110F"/><rect x="3" y="-10" width="15" height="10" rx="3.5" fill="#241E1A"/><rect x="3" y="-4" width="15" height="4" rx="2" fill="#15110F"/>
+      <path d="M-25 -152 C-27 -122 -26 -98 -24 -87 L24 -87 C26 -98 27 -122 25 -152 Z" fill="#F4F5F0" stroke="#D3D8CE" stroke-width="1.2"/>
+      <path d="M-22 -143 Q0 -138 22 -143" fill="none" stroke="#DCE0D6" stroke-width="1.3"/>
+      <path d="M0 -140 V-90" stroke="#DCE0D6" stroke-width="1.2"/>
+      <path d="M-25 -147 C-32 -127 -32 -109 -29 -96" stroke="#D3D8CE" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M25 -147 C32 -127 32 -109 29 -96" stroke="#D3D8CE" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M-25 -147 C-32 -127 -32 -109 -29 -96" stroke="#F4F5F0" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M25 -147 C32 -127 32 -109 29 -96" stroke="#F4F5F0" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="-29" cy="-93" r="5" fill="#E9B98F" stroke="#B77F52" stroke-width="1.1"/><circle cx="29" cy="-93" r="5" fill="#E9B98F" stroke="#B77F52" stroke-width="1.1"/>
+      <rect x="-5.2" y="-160" width="10" height="13" rx="3.5" fill="#E9B98F"/>
+      <path d="M-9 -151 Q0 -145.5 9 -151" fill="none" stroke="#B8452E" stroke-width="2.4"/>
+      
+      <g id="stu0Head">
+        <circle cx="0" cy="-176" r="18" fill="#E9B98F" stroke="#B77F52" stroke-width="1.4"/>
+        <path d="M-17.3 -178.6 C-19.8 -176.8 -21 -173.4 -19.2 -171.4 C-18.2 -170.3 -17 -170 -16.2 -170.4 Z" fill="#E9B98F" stroke="#B77F52" stroke-width="1.2" stroke-linejoin="round"/>
+        <path d="M-9 -191.6 A18 18 0 1 1 -9 -160.4 C-6.5 -169 -10.5 -177 -12.4 -183.5 C-13 -187.5 -11 -190 -9 -191.6 Z" fill="#2A2320" stroke="#2A2320" stroke-width="1.6" stroke-linejoin="round"/><ellipse cx="14" cy="-166" rx="6.2" ry="15" fill="#2A2320" transform="rotate(16 14 -166)"/><circle cx="9" cy="-184" r="2.6" fill="#C94F7C"/>
+        <ellipse id="stu0EyeR" cx="-6" cy="-178" rx="1.7" ry="2.1" fill="#201812" opacity="0"/>
+        <ellipse id="stu0EyeL" cx="-13.4" cy="-178" rx="1.8" ry="2.2" fill="#201812"/>
+        <path d="M-16.6 -183.4 q3 -1.5 5.6 -0.5" fill="none" stroke="#2A2320" stroke-width="1.1" opacity=".92"/>
+        <ellipse cx="-4.6" cy="-172.8" rx="2.4" ry="3.3" fill="#E9B98F" stroke="#B77F52" stroke-width="1"/>
+        <ellipse id="stu0Mouth" cx="-13.4" cy="-166.6" rx="2.6" ry="0.6" fill="#8A4A38"/>
+        <path id="stu0Smile" d="M-16 -168 Q-13.2 -162.6 -10.4 -166.6" fill="none" stroke="#7A3E2E" stroke-width="1.6" stroke-linecap="round" opacity="0"/>
+      </g>
+    </g>
+  </g>
+  <g id="stu1Pos" transform="translate(298,744) scale(0.9)">
+    <ellipse cx="0" cy="1" rx="30" ry="6.5" fill="#000" opacity=".22" filter="url(#blurXS)"/>
+    <g id="stu1">
+      <rect x="-17" y="-88" width="15" height="82" rx="4" fill="#241E1A"/><rect x="2" y="-88" width="15" height="82" rx="4" fill="#241E1A"/><path d="M-9.5 -86 V-14 M9.5 -86 V-14" stroke="#000" stroke-width="1" opacity=".13"/><rect x="-18" y="-10" width="15" height="10" rx="3.5" fill="#241E1A"/><rect x="-18" y="-4" width="15" height="4" rx="2" fill="#15110F"/><rect x="3" y="-10" width="15" height="10" rx="3.5" fill="#241E1A"/><rect x="3" y="-4" width="15" height="4" rx="2" fill="#15110F"/>
+      <path d="M-25 -152 C-27 -122 -26 -98 -24 -87 L24 -87 C26 -98 27 -122 25 -152 Z" fill="#F1F3EE" stroke="#D3D8CE" stroke-width="1.2"/>
+      <path d="M-22 -143 Q0 -138 22 -143" fill="none" stroke="#DCE0D6" stroke-width="1.3"/>
+      <path d="M0 -140 V-90" stroke="#DCE0D6" stroke-width="1.2"/>
+      <path d="M-25 -147 C-32 -127 -32 -109 -29 -96" stroke="#D3D8CE" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M25 -147 C32 -127 32 -109 29 -96" stroke="#D3D8CE" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M-25 -147 C-32 -127 -32 -109 -29 -96" stroke="#F1F3EE" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M25 -147 C32 -127 32 -109 29 -96" stroke="#F1F3EE" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="-29" cy="-93" r="5" fill="#8C5A3C" stroke="#5E3A22" stroke-width="1.1"/><circle cx="29" cy="-93" r="5" fill="#8C5A3C" stroke="#5E3A22" stroke-width="1.1"/>
+      <rect x="-5.2" y="-160" width="10" height="13" rx="3.5" fill="#8C5A3C"/>
+      <path d="M-9 -151 Q0 -145.5 9 -151" fill="none" stroke="#1B3C8C" stroke-width="2.4"/>
+      
+      <g id="stu1Head">
+        <circle cx="0" cy="-176" r="18" fill="#8C5A3C" stroke="#5E3A22" stroke-width="1.4"/>
+        <path d="M-17.3 -178.6 C-19.8 -176.8 -21 -173.4 -19.2 -171.4 C-18.2 -170.3 -17 -170 -16.2 -170.4 Z" fill="#8C5A3C" stroke="#5E3A22" stroke-width="1.2" stroke-linejoin="round"/>
+        <path d="M-9 -191.6 A18 18 0 1 1 -9 -160.4 C-6.5 -169 -10.5 -177 -12.4 -183.5 C-13 -187.5 -11 -190 -9 -191.6 Z" fill="#241A12" stroke="#241A12" stroke-width="1.6" stroke-linejoin="round"/><path d="M-6 -160 Q2 -156 10 -161" fill="none" stroke="#241A12" stroke-width="1.6" opacity=".55"/>
+        <ellipse id="stu1EyeR" cx="-6" cy="-178" rx="1.7" ry="2.1" fill="#201812" opacity="0"/>
+        <ellipse id="stu1EyeL" cx="-13.4" cy="-178" rx="1.8" ry="2.2" fill="#201812"/>
+        <path d="M-16.6 -183.4 q3 -1.5 5.6 -0.5" fill="none" stroke="#241A12" stroke-width="1.1" opacity=".92"/>
+        <ellipse cx="-4.6" cy="-172.8" rx="2.4" ry="3.3" fill="#8C5A3C" stroke="#5E3A22" stroke-width="1"/>
+        <ellipse id="stu1Mouth" cx="-13.4" cy="-166.6" rx="2.6" ry="0.6" fill="#8A4A38"/>
+        <path id="stu1Smile" d="M-16 -168 Q-13.2 -162.6 -10.4 -166.6" fill="none" stroke="#7A3E2E" stroke-width="1.6" stroke-linecap="round" opacity="0"/>
+      </g>
+    </g>
+  </g>
+  <g id="stu2Pos" transform="translate(76,806) scale(1.08)">
+    <ellipse cx="0" cy="1" rx="30" ry="6.5" fill="#000" opacity=".22" filter="url(#blurXS)"/>
+    <g id="stu2">
+      <rect x="-17" y="-88" width="15" height="82" rx="4" fill="#2F3947"/><rect x="2" y="-88" width="15" height="82" rx="4" fill="#2F3947"/><path d="M-9.5 -86 V-14 M9.5 -86 V-14" stroke="#000" stroke-width="1" opacity=".13"/><rect x="-18" y="-10" width="15" height="10" rx="3.5" fill="#241E1A"/><rect x="-18" y="-4" width="15" height="4" rx="2" fill="#15110F"/><rect x="3" y="-10" width="15" height="10" rx="3.5" fill="#241E1A"/><rect x="3" y="-4" width="15" height="4" rx="2" fill="#15110F"/>
+      <path d="M-25 -152 C-27 -122 -26 -98 -24 -87 L24 -87 C26 -98 27 -122 25 -152 Z" fill="#F4F5F0" stroke="#D3D8CE" stroke-width="1.2"/>
+      <path d="M-22 -143 Q0 -138 22 -143" fill="none" stroke="#DCE0D6" stroke-width="1.3"/>
+      <path d="M0 -140 V-90" stroke="#DCE0D6" stroke-width="1.2"/>
+      <path d="M-25 -147 C-34 -130 -31 -114 -22 -108" stroke="#D3D8CE" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M25 -147 C34 -130 31 -114 22 -108" stroke="#D3D8CE" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M-25 -147 C-34 -130 -31 -114 -22 -108" stroke="#F4F5F0" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M25 -147 C34 -130 31 -114 22 -108" stroke="#F4F5F0" stroke-width="9" fill="none" stroke-linecap="round"/><rect x="-31" y="-126" width="8" height="30" rx="2" fill="#2B4C7E" stroke="#17304F" stroke-width="1.3"/><circle cx="-22" cy="-106" r="4.8" fill="#C98E62" stroke="#96633C" stroke-width="1.1"/><circle cx="22" cy="-106" r="4.8" fill="#C98E62" stroke="#96633C" stroke-width="1.1"/>
+      <rect x="-5.2" y="-160" width="10" height="13" rx="3.5" fill="#C98E62"/>
+      <path d="M-9 -151 Q0 -145.5 9 -151" fill="none" stroke="#1B3C8C" stroke-width="2.4"/>
+      
+      <g id="stu2Head">
+        <circle cx="0" cy="-176" r="18" fill="#C98E62" stroke="#96633C" stroke-width="1.4"/>
+        <path d="M-17.3 -178.6 C-19.8 -176.8 -21 -173.4 -19.2 -171.4 C-18.2 -170.3 -17 -170 -16.2 -170.4 Z" fill="#C98E62" stroke="#96633C" stroke-width="1.2" stroke-linejoin="round"/>
+        <path d="M-9 -191.6 A18 18 0 1 1 -9 -160.4 C-6.5 -169 -10.5 -177 -12.4 -183.5 C-13 -187.5 -11 -190 -9 -191.6 Z" fill="#3A2A16" stroke="#3A2A16" stroke-width="1.6" stroke-linejoin="round"/><path d="M-6 -160 Q2 -156 10 -161" fill="none" stroke="#3A2A16" stroke-width="1.6" opacity=".55"/>
+        <ellipse id="stu2EyeR" cx="-6" cy="-178" rx="1.7" ry="2.1" fill="#201812" opacity="0"/>
+        <ellipse id="stu2EyeL" cx="-13.4" cy="-178" rx="1.8" ry="2.2" fill="#201812"/>
+        <path d="M-16.6 -183.4 q3 -1.5 5.6 -0.5" fill="none" stroke="#3A2A16" stroke-width="1.1" opacity=".92"/>
+        <ellipse cx="-4.6" cy="-172.8" rx="2.4" ry="3.3" fill="#C98E62" stroke="#96633C" stroke-width="1"/>
+        <ellipse id="stu2Mouth" cx="-13.4" cy="-166.6" rx="2.6" ry="0.6" fill="#8A4A38"/>
+        <path id="stu2Smile" d="M-16 -168 Q-13.2 -162.6 -10.4 -166.6" fill="none" stroke="#7A3E2E" stroke-width="1.6" stroke-linecap="round" opacity="0"/>
+      </g>
+    </g>
+  </g>
+  <g id="stu3Pos" transform="translate(222,810) scale(1.1)">
+    <ellipse cx="0" cy="1" rx="30" ry="6.5" fill="#000" opacity=".22" filter="url(#blurXS)"/>
+    <g id="stu3">
+      <rect x="-12" y="-50" width="9" height="42" rx="3" fill="#D9A377"/><rect x="3" y="-50" width="9" height="42" rx="3" fill="#D9A377"/><path d="M-18 -88 H18 L25 -46 H-25 Z" fill="#2F3947"/><path d="M-9 -88 V-47 M7 -88 V-47" stroke="#000" stroke-width="1" opacity=".16"/><rect x="-18" y="-10" width="15" height="10" rx="3.5" fill="#241E1A"/><rect x="-18" y="-4" width="15" height="4" rx="2" fill="#15110F"/><rect x="3" y="-10" width="15" height="10" rx="3.5" fill="#241E1A"/><rect x="3" y="-4" width="15" height="4" rx="2" fill="#15110F"/>
+      <path d="M-25 -152 C-27 -122 -26 -98 -24 -87 L24 -87 C26 -98 27 -122 25 -152 Z" fill="#FBFCF7" stroke="#D3D8CE" stroke-width="1.2"/>
+      <path d="M-22 -143 Q0 -138 22 -143" fill="none" stroke="#DCE0D6" stroke-width="1.3"/>
+      <path d="M0 -140 V-90" stroke="#DCE0D6" stroke-width="1.2"/>
+      <path d="M-25 -147 C-34 -130 -31 -114 -22 -108" stroke="#D3D8CE" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M25 -147 C34 -130 31 -114 22 -108" stroke="#D3D8CE" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M-25 -147 C-34 -130 -31 -114 -22 -108" stroke="#FBFCF7" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M25 -147 C34 -130 31 -114 22 -108" stroke="#FBFCF7" stroke-width="9" fill="none" stroke-linecap="round"/><rect x="-31" y="-126" width="8" height="30" rx="2" fill="#2B4C7E" stroke="#17304F" stroke-width="1.3"/><circle cx="-22" cy="-106" r="4.8" fill="#D9A377" stroke="#A87246" stroke-width="1.1"/><circle cx="22" cy="-106" r="4.8" fill="#D9A377" stroke="#A87246" stroke-width="1.1"/>
+      <rect x="-5.2" y="-160" width="10" height="13" rx="3.5" fill="#D9A377"/>
+      <path d="M-9 -151 Q0 -145.5 9 -151" fill="none" stroke="#B8452E" stroke-width="2.4"/>
+      <path d="M-7 -188 C9 -190 18 -173 17 -152 C16 -142 7 -138 -1 -140 C-8 -149 -10 -170 -7 -188 Z" fill="#1E1A18"/>
+      <g id="stu3Head">
+        <circle cx="0" cy="-176" r="18" fill="#D9A377" stroke="#A87246" stroke-width="1.4"/>
+        <path d="M-17.3 -178.6 C-19.8 -176.8 -21 -173.4 -19.2 -171.4 C-18.2 -170.3 -17 -170 -16.2 -170.4 Z" fill="#D9A377" stroke="#A87246" stroke-width="1.2" stroke-linejoin="round"/>
+        <path d="M-9 -191.6 A18 18 0 1 1 -9 -160.4 C-6.5 -169 -10.5 -177 -12.4 -183.5 C-13 -187.5 -11 -190 -9 -191.6 Z" fill="#1E1A18" stroke="#1E1A18" stroke-width="1.6" stroke-linejoin="round"/>
+        <ellipse id="stu3EyeR" cx="-6" cy="-178" rx="1.7" ry="2.1" fill="#201812" opacity="0"/>
+        <ellipse id="stu3EyeL" cx="-13.4" cy="-178" rx="1.8" ry="2.2" fill="#201812"/>
+        <path d="M-16.6 -183.4 q3 -1.5 5.6 -0.5" fill="none" stroke="#1E1A18" stroke-width="1.1" opacity=".92"/>
+        <ellipse cx="-4.6" cy="-172.8" rx="2.4" ry="3.3" fill="#D9A377" stroke="#A87246" stroke-width="1"/>
+        <ellipse id="stu3Mouth" cx="-13.4" cy="-166.6" rx="2.6" ry="0.6" fill="#8A4A38"/>
+        <path id="stu3Smile" d="M-16 -168 Q-13.2 -162.6 -10.4 -166.6" fill="none" stroke="#7A3E2E" stroke-width="1.6" stroke-linecap="round" opacity="0"/>
+      </g>
+    </g>
+  </g>
+  <g id="stu4Pos" transform="translate(368,802) scale(1.07)">
+    <ellipse cx="0" cy="1" rx="30" ry="6.5" fill="#000" opacity=".22" filter="url(#blurXS)"/>
+    <g id="stu4">
+      <rect x="-17" y="-88" width="15" height="82" rx="4" fill="#46414F"/><rect x="2" y="-88" width="15" height="82" rx="4" fill="#46414F"/><path d="M-9.5 -86 V-14 M9.5 -86 V-14" stroke="#000" stroke-width="1" opacity=".13"/><rect x="-18" y="-10" width="15" height="10" rx="3.5" fill="#241E1A"/><rect x="-18" y="-4" width="15" height="4" rx="2" fill="#15110F"/><rect x="3" y="-10" width="15" height="10" rx="3.5" fill="#241E1A"/><rect x="3" y="-4" width="15" height="4" rx="2" fill="#15110F"/>
+      <path d="M-25 -152 C-27 -122 -26 -98 -24 -87 L24 -87 C26 -98 27 -122 25 -152 Z" fill="#F1F3EE" stroke="#D3D8CE" stroke-width="1.2"/>
+      <path d="M-22 -143 Q0 -138 22 -143" fill="none" stroke="#DCE0D6" stroke-width="1.3"/>
+      <path d="M0 -140 V-90" stroke="#DCE0D6" stroke-width="1.2"/>
+      <path d="M-25 -147 C-32 -127 -32 -109 -29 -96" stroke="#D3D8CE" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M25 -147 C32 -127 32 -109 29 -96" stroke="#D3D8CE" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M-25 -147 C-32 -127 -32 -109 -29 -96" stroke="#F1F3EE" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M25 -147 C32 -127 32 -109 29 -96" stroke="#F1F3EE" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="-29" cy="-93" r="5" fill="#A8703F" stroke="#77492A" stroke-width="1.1"/><circle cx="29" cy="-93" r="5" fill="#A8703F" stroke="#77492A" stroke-width="1.1"/>
+      <rect x="-5.2" y="-160" width="10" height="13" rx="3.5" fill="#A8703F"/>
+      <path d="M-9 -151 Q0 -145.5 9 -151" fill="none" stroke="#1B3C8C" stroke-width="2.4"/>
+      
+      <g id="stu4Head">
+        <circle cx="0" cy="-176" r="18" fill="#A8703F" stroke="#77492A" stroke-width="1.4"/>
+        <path d="M-17.3 -178.6 C-19.8 -176.8 -21 -173.4 -19.2 -171.4 C-18.2 -170.3 -17 -170 -16.2 -170.4 Z" fill="#A8703F" stroke="#77492A" stroke-width="1.2" stroke-linejoin="round"/>
+        <path d="M-9 -191.6 A18 18 0 1 1 -9 -160.4 C-6.5 -169 -10.5 -177 -12.4 -183.5 C-13 -187.5 -11 -190 -9 -191.6 Z" fill="#241A12" stroke="#241A12" stroke-width="1.6" stroke-linejoin="round"/><circle cx="-3" cy="-192" r="6.4" fill="#241A12"/><circle cx="6" cy="-194" r="6.4" fill="#241A12"/><circle cx="14" cy="-187" r="6.4" fill="#241A12"/><circle cx="17" cy="-176" r="6.4" fill="#241A12"/>
+        <ellipse id="stu4EyeR" cx="-6" cy="-178" rx="1.7" ry="2.1" fill="#201812" opacity="0"/>
+        <ellipse id="stu4EyeL" cx="-13.4" cy="-178" rx="1.8" ry="2.2" fill="#201812"/>
+        <path d="M-16.6 -183.4 q3 -1.5 5.6 -0.5" fill="none" stroke="#241A12" stroke-width="1.1" opacity=".92"/>
+        <ellipse cx="-4.6" cy="-172.8" rx="2.4" ry="3.3" fill="#A8703F" stroke="#77492A" stroke-width="1"/>
+        <ellipse id="stu4Mouth" cx="-13.4" cy="-166.6" rx="2.6" ry="0.6" fill="#8A4A38"/>
+        <path id="stu4Smile" d="M-16 -168 Q-13.2 -162.6 -10.4 -166.6" fill="none" stroke="#7A3E2E" stroke-width="1.6" stroke-linecap="round" opacity="0"/>
+      </g>
+    </g>
+  </g>
+</g>
+
+<!-- battery — hidden now that the real packs are modelled inside the support box -->
+<g id="batt" opacity="0">
+  <ellipse cx="72" cy="748" rx="58" ry="12" fill="#000" opacity=".2" filter="url(#blurXS)"/>
+  <rect x="24" y="700" width="96" height="44" rx="5" fill="#1A1F22"/>
+  <g fill="#3F6FA8">
+    <rect x="30" y="706" width="84" height="14" rx="6"/><rect x="30" y="724" width="84" height="14" rx="6"/>
+  </g>
+</g>
+
+<!-- ====== MANUAL DISPOSAL AREA — the real bins a full load is carried to ====== -->
+<g id="dispStation">
+  <ellipse cx="1108" cy="756" rx="122" ry="14" fill="#000" opacity=".18" filter="url(#blurS)"/>
+  <g class="lbl">
+    <rect x="1024" y="626" width="168" height="22" rx="5" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+    <text x="1108" y="641" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" letter-spacing="1.5" fill="#F2DFB8">MANUAL DISPOSAL</text>
+  </g>
+  <ellipse id="dispHalo0" cx="1048" cy="710" rx="40" ry="52" fill="none" stroke="#2E9E4B" stroke-width="3.5" opacity="0"/>
+  <ellipse id="dispHalo1" cx="1108" cy="710" rx="40" ry="52" fill="none" stroke="#E0B41E" stroke-width="3.5" opacity="0"/>
+  <ellipse id="dispHalo2" cx="1168" cy="710" rx="40" ry="52" fill="none" stroke="#CF3A2E" stroke-width="3.5" opacity="0"/>
+  <!-- bio -->
+  <g>
+    <circle cx="1032" cy="750" r="6" fill="#14181A"/><circle cx="1064" cy="750" r="6" fill="#14181A"/>
+    <rect x="1022" y="674" width="52" height="72" rx="5" fill="#2E3538" stroke="#171C1E" stroke-width="2"/>
+    <path d="M1032 680 V740 M1048 680 V740 M1064 680 V740" stroke="#232A2D" stroke-width="2" fill="none"/>
+    <g id="dispLid0">
+      <rect x="1018" y="662" width="60" height="14" rx="4" fill="#2E9E4B" stroke="#1C6E33" stroke-width="1.5"/>
+      <rect x="1040" y="656" width="16" height="7" rx="3" fill="#1C6E33"/>
+    </g>
+    <rect x="1027" y="698" width="42" height="15" rx="3" fill="#0D1416" opacity=".9"/>
+    <text x="1048" y="709" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" letter-spacing=".5" fill="#5FD37E">BIO</text>
+  </g>
+  <!-- plastic -->
+  <g>
+    <circle cx="1092" cy="750" r="6" fill="#14181A"/><circle cx="1124" cy="750" r="6" fill="#14181A"/>
+    <rect x="1082" y="674" width="52" height="72" rx="5" fill="#2E3538" stroke="#171C1E" stroke-width="2"/>
+    <path d="M1092 680 V740 M1108 680 V740 M1124 680 V740" stroke="#232A2D" stroke-width="2" fill="none"/>
+    <g id="dispLid1">
+      <rect x="1078" y="662" width="60" height="14" rx="4" fill="#E0B41E" stroke="#A8890F" stroke-width="1.5"/>
+      <rect x="1100" y="656" width="16" height="7" rx="3" fill="#A8890F"/>
+    </g>
+    <rect x="1087" y="698" width="42" height="15" rx="3" fill="#0D1416" opacity=".9"/>
+    <text x="1108" y="709" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" letter-spacing=".5" fill="#EDC63D">PLASTIC</text>
+  </g>
+  <!-- metal -->
+  <g>
+    <circle cx="1152" cy="750" r="6" fill="#14181A"/><circle cx="1184" cy="750" r="6" fill="#14181A"/>
+    <rect x="1142" y="674" width="52" height="72" rx="5" fill="#2E3538" stroke="#171C1E" stroke-width="2"/>
+    <path d="M1152 680 V740 M1168 680 V740 M1184 680 V740" stroke="#232A2D" stroke-width="2" fill="none"/>
+    <g id="dispLid2">
+      <rect x="1138" y="662" width="60" height="14" rx="4" fill="#CF3A2E" stroke="#8E1F16" stroke-width="1.5"/>
+      <rect x="1160" y="656" width="16" height="7" rx="3" fill="#8E1F16"/>
+    </g>
+    <rect x="1147" y="698" width="42" height="15" rx="3" fill="#0D1416" opacity=".9"/>
+    <text x="1168" y="709" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" letter-spacing=".5" fill="#F2685E">METAL</text>
+  </g>
+</g>
+
+<!-- ============ LABEL TAGS — always on top, always readable ============ -->
+<g id="tags" class="lbl" pointer-events="none" font-family="IBM Plex Mono, monospace">
+  <!-- input hole -->
+  <rect x="640" y="118" width="120" height="22" rx="6" fill="#0D1416" opacity=".85"/>
+  <text x="700" y="134" text-anchor="middle" font-size="11" letter-spacing="2" fill="#F2F7F6">INPUT HOLE</text>
+  <!-- stage 1 · capacitive -->
+  <path d="M378 276 L532 283" stroke="#8FA6A2" stroke-width="1.5" stroke-dasharray="3 4" fill="none"/>
+  <rect x="156" y="246" width="222" height="82" rx="8" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="168" y="266" font-size="12" fill="#7FE3D4">STAGE 1 · PROXIMITY PAIR</text>
+  <text x="168" y="284" font-size="11" fill="#EDF3F2">CAPACITIVE · D3 — plastic</text>
+  <text x="168" y="300" font-size="11" fill="#9FB6B2">(&amp; metal too, if close)</text>
+  <text x="168" y="316" font-size="11" fill="#9FB6B2">same height · 128 mm gap</text>
+  <!-- stage 1 · inductive -->
+  <path d="M936 246 L868 280" stroke="#8FA6A2" stroke-width="1.5" stroke-dasharray="3 4" fill="none"/>
+  <rect x="938" y="212" width="176" height="56" rx="8" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="950" y="234" font-size="12" fill="#7FE3D4">INDUCTIVE · D4</text>
+  <text x="950" y="254" font-size="11" fill="#EDF3F2">metal only · stage 1</text>
+  <!-- stage 2 · IR -->
+  <path d="M846 318 L798 330" stroke="#8FA6A2" stroke-width="1.5" stroke-dasharray="3 4" fill="none"/>
+  <rect x="848" y="292" width="232" height="56" rx="8" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="860" y="314" font-size="12" fill="#7FE3D4">STAGE 2 · IR SENSOR — D7</text>
+  <text x="860" y="334" font-size="11" fill="#EDF3F2">sees whatever lands on the tap</text>
+  <!-- ultrasonic, on its own stand off the fixed base plate -->
+  <path d="M868 400 L748 390" stroke="#8FA6A2" stroke-width="1.5" stroke-dasharray="3 4" fill="none"/>
+  <rect x="870" y="378" width="214" height="102" rx="8" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="882" y="398" font-size="12" fill="#EDF3F2">HC-SR04 · ON FIXED STAND</text>
+  <g font-size="10.5">
+    <rect x="882" y="406" width="9" height="4" rx="1" fill="#C42B22"/><text x="897" y="411" fill="#9FB6B2">VCC &#8594; 5V</text>
+    <rect x="882" y="420" width="9" height="4" rx="1" fill="#E8A33D"/><text x="897" y="425" fill="#9FB6B2">TRIG &#8594; D8</text>
+    <rect x="982" y="406" width="9" height="4" rx="1" fill="#3FA96B"/><text x="997" y="411" fill="#9FB6B2">ECHO &#8594; D9</text>
+    <rect x="982" y="420" width="9" height="4" rx="1" fill="#8A9496"/><text x="997" y="425" fill="#9FB6B2">GND &#8594; GND</text>
+  </g>
+  <text x="882" y="445" font-size="10.5" fill="#9FB6B2">4-wire loom &#8594; box side grommet</text>
+  <text id="usTxt" x="882" y="468" font-size="13" fill="#7FE3D4">50 cm</text>
+  <!-- gate servo -->
+  <path d="M570 314 L606 340" stroke="#8FA6A2" stroke-width="1.5" stroke-dasharray="3 4" fill="none"/>
+  <rect x="378" y="290" width="192" height="48" rx="8" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="390" y="309" font-size="12" fill="#EDF3F2">SERVO D6 · GATE</text>
+  <text id="gateDeg" x="390" y="328" font-size="11" fill="#7FE3D4">write(180) → closed</text>
+  <!-- power module -->
+  <path d="M378 226 L438 236" stroke="#8FA6A2" stroke-width="1.5" stroke-dasharray="3 4" fill="none"/>
+  <rect x="160" y="196" width="220" height="48" rx="8" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="172" y="215" font-size="12" fill="#EDF3F2">POWER · <tspan id="pwrTagSrc" fill="#7FE3D4">AC ADAPTER</tspan></text>
+  <text id="pwrTagV" x="172" y="234" font-size="11" fill="#9FB6B2">pack 14.8 V · 82% · charger idle</text>
+  <!-- control box -->
+  <rect x="402" y="340" width="166" height="24" rx="6" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="412" y="357" font-size="11" fill="#EDF3F2">ARDUINO UNO + LCD BOX</text>
+  <!-- structure -->
+  <rect x="836" y="716" width="130" height="24" rx="6" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="846" y="733" font-size="11" fill="#EDF3F2">SUPPORT BOX</text>
+  <rect x="854" y="684" width="164" height="24" rx="6" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="864" y="701" font-size="11" fill="#EDF3F2">FIXED BASE PLATE</text>
+  <rect x="428" y="652" width="118" height="24" rx="6" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="438" y="669" font-size="11" fill="#EDF3F2">CASTORS ×3</text>
+  <g id="tagServoD5">
+    <rect x="662" y="730" width="78" height="20" rx="5" fill="#0D1416" opacity=".85"/>
+    <text x="672" y="744" font-size="10" fill="#EDF3F2">SERVO D5</text>
+  </g>
+  <rect x="60" y="392" width="300" height="32" rx="6" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text x="72" y="406" font-size="12" fill="#F2DFB8">INFEED CONVEYOR — CLICK A WASTE</text>
+  <text x="72" y="419" font-size="10" fill="#9FB6B2">19 items queued &#183; jog &#9664; &#9654; for the rest</text>
+</g>
+
+<!-- ====== popup: waste in the hole that no sensor can see ====== -->
+<g id="stuckMsg" opacity="0" pointer-events="none">
+  <path id="stuckLead" d="M830 498 L742 320" stroke="#F2685E" stroke-width="1.5" stroke-dasharray="3 4" fill="none"/>
+  <rect x="828" y="492" width="344" height="148" rx="10" fill="#1C1012" stroke="#F2685E" stroke-width="2"/>
+  <path d="M852 74 L864 96 L840 96 Z" fill="none" stroke="#F2685E" stroke-width="2.5" stroke-linejoin="round"/>
+  <rect x="851" y="518" width="2.5" height="7" fill="#F2685E"/><rect x="851" y="527" width="2.5" height="2.5" fill="#F2685E"/>
+  <g font-family="IBM Plex Mono, monospace">
+    <text x="876" y="520" font-size="13" fill="#F2685E" letter-spacing="1">WASTE NOT RECOGNISED</text>
+    <text x="876" y="536" font-size="11" fill="#C9B6B4">All three sensor pins stayed HIGH.</text>
+    <text x="844" y="560" font-size="11" fill="#EDE3E2">D4 inductive — glass is not metal</text>
+    <text x="844" y="576" font-size="11" fill="#EDE3E2">D3 capacitive — too little to sense</text>
+    <text x="844" y="592" font-size="11" fill="#EDE3E2">D7 infrared — clear glass lets the</text>
+    <text x="856" y="606" font-size="11" fill="#EDE3E2">beam pass instead of reflecting</text>
+    <text x="844" y="628" font-size="11.5" fill="#7FE3D4">&#8594; Click the waste in the hole to take it back</text>
+  </g>
+</g>
+
+<!-- ====== popup: a bin is full, waste must be carried out by hand ====== -->
+<g id="dispOverlay" opacity="0" pointer-events="none">
+  <rect x="398" y="428" width="614" height="128" rx="10" fill="#1C1012" stroke="#F2685E" stroke-width="2"/>
+  <g font-family="IBM Plex Mono, monospace">
+    <text x="416" y="452" font-size="13" fill="#F2685E" letter-spacing="1">BIN FULL &mdash; MANUAL DISPOSAL REQUIRED</text>
+    <text id="dispSub" x="416" y="472" font-size="11.5" fill="#EDE3E2">&#8212;</text>
+    <text id="dispSub2" x="416" y="490" font-size="11" fill="#C9B6B4">&#8212;</text>
+    <text id="dispStatus" x="416" y="490" font-size="11" fill="#7FE3D4" opacity="0">Carrying it over&hellip;</text>
+  </g>
+  <g id="dispBtn1" class="pick" tabindex="0" role="button" aria-label="Empty the full bin into the matching disposal bin" transform="translate(637,532)">
+    <rect class="pickhalo" x="-118" y="-17" width="236" height="34" rx="9" fill="#5FE3CF" opacity="0"/>
+    <rect x="-110" y="-15" width="220" height="30" rx="7" fill="#1E4C2C" stroke="#2E9E4B" stroke-width="1.6"/>
+    <text id="dispBtn1T" x="0" y="6" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11.5" letter-spacing=".4" fill="#CFF4FF">Lift the liner out</text>
+  </g>
+  <g id="dispBtn2" class="pick" tabindex="0" role="button" aria-label="Switch the emptying method" transform="translate(875,532)">
+    <rect class="pickhalo" x="-86" y="-17" width="172" height="34" rx="9" fill="#5FE3CF" opacity="0"/>
+    <rect x="-80" y="-15" width="160" height="30" rx="7" fill="#22282B" stroke="#5B6467" stroke-width="1.5"/>
+    <text id="dispBtn2T" x="0" y="6" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" letter-spacing=".3" fill="#9FB6B2">carry the bin instead</text>
+  </g>
+</g>
+
+<!-- the liner: a tied plastic garbage bag lifted out of the bin, carried to the
+     disposal station and dropped in whole. The bin never leaves the platform. -->
+<g id="sackG" opacity="0" pointer-events="none">
+  <ellipse cx="0" cy="34" rx="30" ry="8" fill="#000" opacity=".22"/>
+  <g transform="scale(1.85)">
+    <path d="M-11 -19 Q-20 -3 -17 9 A17 13 0 0 0 17 9 Q20 -3 11 -19 Z" id="sackBody" fill="#8A9294" opacity=".62" stroke="#7A8486" stroke-width="1.3"/>
+    <path d="M-13 1 q8 6 16 0 q6 -4 11 2" fill="none" stroke="#F2F7F6" stroke-width="1.1" opacity=".4"/>
+    <path d="M-11 -19 Q0 -13 11 -19 L7 -27 Q0 -23.5 -7 -27 Z" fill="#E4EEEF" opacity=".85" stroke="#7A8486" stroke-width="1"/>
+    <path d="M-6 -27 L-12 -34 M6 -27 L12 -34" stroke="#E4EEEF" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+</g>
+
+<!-- the whole bin, carried by hand from the platform to the disposal station -->
+<g id="carryG" opacity="0" pointer-events="none">
+  <ellipse cx="0" cy="30" rx="28" ry="8" fill="#000" opacity=".22"/>
+  <g transform="scale(0.52)">
+    <path d="M -58 -120 Q -54 -54 -41 -3 A 41 12 0 0 0 41 -3 Q 54 -54 58 -120 Z" id="carryBag" fill="#8A9294" stroke="#3A4448" stroke-width="3.5"/>
+    <path d="M-46 -104 H46" stroke="#000" stroke-width="6" opacity=".18"/>
+    <ellipse cx="0" cy="-120" rx="58" ry="16" fill="#14181A" opacity=".92"/>
+    <ellipse cx="0" cy="-123" rx="58" ry="16" fill="none" stroke="#39413F" stroke-width="4"/>
+  </g>
+  <path d="M-17 -62 Q0 -78 17 -62" fill="none" stroke="#3A4448" stroke-width="3.6" stroke-linecap="round" fill-opacity="0"/>
+</g>
+
+<!-- the presenter's hand, driven by app.js -->
+<g id="handG" opacity="0" pointer-events="none">
+  <polygon points="-336,170 -306,218 -40,38 -64,-8" fill="#3D5A80"/>
+  <polygon points="-88,22 -64,-8 -40,38 -66,64" fill="#2C4360"/>
+  <g stroke="#B77F52" fill="#E9B98F">
+    <rect x="-44" y="-16" width="46" height="38" rx="15" stroke-width="2"/>
+    <rect x="-18" y="-26" width="30" height="11" rx="5.5" stroke-width="1.5" transform="rotate(18 -18 -26)"/>
+    <rect x="-14" y="-16" width="32" height="11" rx="5.5" stroke-width="1.5" transform="rotate(8 -14 -16)"/>
+    <rect x="-12" y="-5" width="32" height="11" rx="5.5" stroke-width="1.5"/>
+    <rect x="-16" y="7" width="28" height="11" rx="5.5" stroke-width="1.5" transform="rotate(-14 -16 7)"/>
+  </g>
+</g>
+
+<rect x="0" y="0" width="1200" height="820" fill="url(#vig)" pointer-events="none"/>
+<g id="stateTagG" class="lbl">
+  <rect x="1070" y="16" width="120" height="27" rx="6" fill="#0D1416" opacity=".85" stroke="#39413F"/>
+  <text id="stateTag" x="1176" y="34" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" letter-spacing="2" fill="#EDF3F2" opacity=".95">loop()</text>
+</g>
+
+<!-- ====== panel interview: the question bubble, built by app.js ======
+     One <g> per panelist. Each holds a rounded box, a tail that points down at
+     that panelist's head, a name plate and the wrapped question text.        -->
+
+
+<!-- ====== VIEW DOWN THE HOLE ======================================
+     A round inspection view of the mouth seen from above, shown only while
+     the presentation is inside the input hole. The two proximity heads come
+     through the wall of the throat and face each other across the bore; the
+     floor of the bore is the closed gate, with the infrared looking across
+     it. Nothing hangs in the middle — that is the point of the picture.  -->
+<g id="boreView" opacity="0" pointer-events="none">
+  <!-- the cone from the real mouth out to the detail circle -->
+  <path d="M714 118 L883 108 L883 188 L714 186 Z" fill="#0D1416" opacity=".22"/>
+  <path d="M714 118 L883 108 M714 186 L883 188" stroke="#5FE3CF" stroke-width="1.4" stroke-dasharray="4 5" fill="none" opacity=".7"/>
+
+  <!-- the bore -->
+  <circle cx="975.0" cy="148.0" r="100.0" fill="#0F1417"/>
+  <circle cx="975.0" cy="148.0" r="100.0" fill="#0F1417"/>
+  <circle cx="975.0" cy="148.0" r="100.0" fill="none" stroke="#5FE3CF" stroke-width="2.4" opacity=".85"/>
+  <g stroke="#39413F" stroke-width="1.6" fill="none" opacity=".8"><path d="M1072.0 148.0 L1064.0 148.0"/><path d="M1059.0 196.5 L1052.1 192.5"/><path d="M1023.5 232.0 L1019.5 225.1"/><path d="M975.0 245.0 L975.0 237.0"/><path d="M926.5 232.0 L930.5 225.1"/><path d="M891.0 196.5 L897.9 192.5"/><path d="M878.0 148.0 L886.0 148.0"/><path d="M891.0 99.5 L897.9 103.5"/><path d="M926.5 64.0 L930.5 70.9"/><path d="M975.0 51.0 L975.0 59.0"/><path d="M1023.5 64.0 L1019.5 70.9"/><path d="M1059.0 99.5 L1052.1 103.5"/></g>
+  <circle cx="975.0" cy="148.0" r="78.0" fill="#0A0E10"/>
+  <circle cx="975.0" cy="148.0" r="78.0" fill="none" stroke="#2A3033" stroke-width="3"/>
+  <ellipse cx="975.0" cy="148.0" rx="78.0" ry="78.0" fill="url(#spec)" opacity=".10"/>
+
+  <!-- the floor of the bore: the closed gate, seen from above -->
+  <circle id="boreGate" cx="975.0" cy="148.0" r="56.0" fill="#20262B"/>
+  <circle cx="975.0" cy="148.0" r="56.0" fill="none" stroke="#39413F" stroke-width="2"/>
+  <path d="M929 182 H1021" stroke="#151A1D" stroke-width="3"/>
+  <path d="M929 186 H1021" stroke="#2E353A" stroke-width="1.6" opacity=".7"/>
+
+  <!-- capacitive head, through the left wall -->
+  <g id="boreCap">
+    <rect x="877" y="139" width="54" height="18" rx="3" fill="url(#steelG)" stroke="#5B6467" stroke-width="1.4"/>
+    <rect x="877" y="139" width="54" height="5" rx="2" fill="#fff" opacity=".18"/>
+    <circle cx="938" cy="148.0" r="11" fill="#E4E7E2" stroke="#9AA6A4" stroke-width="1.6"/>
+    <circle cx="938" cy="148.0" r="5" fill="none" stroke="#B8BEB8" stroke-width="1.2"/>
+  </g>
+  <!-- inductive head, facing it through the right wall -->
+  <g id="boreInd">
+    <rect x="1019" y="139" width="54" height="18" rx="3" fill="url(#steelG)" stroke="#5B6467" stroke-width="1.4"/>
+    <rect x="1019" y="139" width="54" height="5" rx="2" fill="#fff" opacity=".18"/>
+    <circle cx="1012" cy="148.0" r="11" fill="#C9A22F" stroke="#8E7420" stroke-width="1.6"/>
+    <circle cx="1012" cy="148.0" r="5" fill="none" stroke="#E0C468" stroke-width="1.2"/>
+  </g>
+  <!-- the gap they look across -->
+  <g id="boreGap">
+    <path d="M950 148.0 H1000" stroke="#5FE3CF" stroke-width="1.6" stroke-dasharray="4 5" opacity=".9"/>
+    <path d="M950 141 V155 M1000 141 V155" stroke="#5FE3CF" stroke-width="1.4" opacity=".7"/>
+    <text x="975.0" y="134" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" letter-spacing=".6" fill="#7FE3D4">128 mm</text>
+  </g>
+  <!-- the infrared, looking across the face of the gate -->
+  <g id="boreIr">
+    <g transform="rotate(-38 1017 194)">
+      <rect x="1002" y="186" width="30" height="15" rx="2" fill="#1E4C2C" stroke="#0F2A18" stroke-width="1.3"/>
+      <circle cx="1010" cy="194" r="4" fill="#0E2F55" stroke="#5C86B4" stroke-width="1.2"/>
+      <circle cx="1024" cy="194" r="4" fill="#3A1010" stroke="#B4635C" stroke-width="1.2"/>
+    </g>
+    <path d="M1001 170 H933" stroke="#F2685E" stroke-width="1.4" stroke-dasharray="3 4" opacity=".8"/>
+  </g>
+
+  <!-- what this picture is -->
+  <rect x="860" y="18" width="230" height="20" rx="6" fill="#0D1416" opacity=".9" stroke="#39413F"/>
+  <text x="975.0" y="32" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" letter-spacing="1.1" fill="#7FE3D4">VIEW DOWN THE HOLE</text>
+  <text x="975.0" y="44" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" fill="#6E7B7E">nothing sits in the waste path</text>
+</g>
+
+<!-- presentation pointers: the box, arrow and chip that mark whatever the
+     section is naming right now. Built by app.js, measured off the drawing. -->
+<g id="marks" pointer-events="none"></g>
+
+<g id="qBubbles" pointer-events="none"></g>
+</svg>
+<svg id="walkView" viewBox="0 0 1200 820" style="display:none" tabindex="0" role="img"
+     aria-label="Walking through the room: the machine, the group and the panel, from where you are standing"></svg>
+
+<!-- camera: walk the room, or hand it back to the defense -->
+<div class="viewbar" id="viewbar" role="group" aria-label="Camera">
+  <span class="vb-lbl">Camera</span>
+  <button type="button" class="vb" id="vbWalk" aria-pressed="false">Open 3D walkthrough</button>
+  <span class="vb-sep" aria-hidden="true"></span>
+  <button type="button" class="vb" data-view="room" aria-pressed="false">Whole room</button>
+  <button type="button" class="vb" data-view="group" aria-pressed="false">The group</button>
+  <button type="button" class="vb" data-view="panel" aria-pressed="false">The panel</button>
+  <button type="button" class="vb" data-view="machine" aria-pressed="false">The machine</button>
+  <button type="button" class="vb" data-view="bins" aria-pressed="false">The bins</button>
+  <span class="vb-sep" aria-hidden="true"></span>
+  <button type="button" class="vb vb-z" id="vbOut" aria-label="Move back">&minus;</button>
+  <button type="button" class="vb vb-z" id="vbIn" aria-label="Move closer">+</button>
+  <button type="button" class="vb" id="vbFollow" aria-pressed="true">Follow the speaker</button>
+  <span class="vb-sep" aria-hidden="true"></span>
+  <button type="button" class="vb" id="vbLabels" aria-pressed="true">Labels: on</button>
+  <span class="vb-hint" id="vbHint">drag to pan &middot; double-click to move in &middot; wheel zooms once you are inside</span>
+</div>
+<div class="viewbar walkbar" id="walkbar" role="group" aria-label="Walking" style="display:none">
+  <span class="vb-lbl">Walk</span>
+  <button type="button" class="vb vb-z" data-go="left"  aria-label="Turn left">&#8630;</button>
+  <button type="button" class="vb vb-z" data-go="fwd"   aria-label="Walk forward">&#9650;</button>
+  <button type="button" class="vb vb-z" data-go="back"  aria-label="Walk back">&#9660;</button>
+  <button type="button" class="vb vb-z" data-go="right" aria-label="Turn right">&#8631;</button>
+  <span class="vb-sep" aria-hidden="true"></span>
+  <button type="button" class="vb vb-z" data-go="sleft"  aria-label="Step left">&#8676;</button>
+  <button type="button" class="vb vb-z" data-go="sright" aria-label="Step right">&#8677;</button>
+  <span class="vb-sep" aria-hidden="true"></span>
+  <button type="button" class="vb vb-z" data-go="up"   aria-label="Fly up">&#9651;</button>
+  <button type="button" class="vb vb-z" data-go="down" aria-label="Come down">&#9661;</button>
+  <button type="button" class="vb" id="wkFly" data-tog="fly" aria-pressed="false">Fly</button>
+  <button type="button" class="vb" id="wkSit" data-tog="sit" aria-pressed="false">Sit down</button>
+  <span class="vb-sep" aria-hidden="true"></span>
+  <button type="button" class="vb" id="wkThird" data-tog="third" aria-pressed="false">See through his eyes</button>
+  <button type="button" class="vb" id="wkCut" data-tog="cut" aria-pressed="false">Cutaway</button>
+  <button type="button" class="vb" id="wkBore" data-tog="bore" aria-pressed="false">Down the hole</button>
+  <button type="button" class="vb" id="wkLabels" data-tog="labels" aria-pressed="true">Labels: on</button>
+  <span class="vb-sep" aria-hidden="true"></span>
+  <button type="button" class="vb" data-cam="behind">Behind it</button>
+  <button type="button" class="vb" data-cam="hole">At the hole</button>
+  <button type="button" class="vb" data-cam="bird">Above it all</button>
+  <span class="vb-hint" id="walkPos"></span>
+</div>
+<div class="hint">
+  <span><b>Platform:</b> <span id="fTurn">home &mdash; write(90)</span></span>
+  <span><b>Gate:</b> <span id="fTap">closed &mdash; holding</span></span>
+  <span><b>At the hole:</b> <span id="fItem">empty</span></span>
+  <span><b>Power:</b> <span id="fPower">AC adapter &mdash; 5 V 2 A</span></span>
+</div>
+</section>
+
+<!-- ====== panel interview: the practice defense ====== -->
+<section class="card" id="sideCard" style="margin-top:14px; display:none">
+  <div class="card-hd"><h2>The machine, view by view</h2><span class="tag">orthographic set &mdash; live</span></div>
+  <div class="card-bd">
+    <p class="note" style="margin:0 0 12px">The scene above is one fixed three-quarter view, and there are questions
+    you cannot answer from it: how far the gate actually drops, what stands behind the mast, how the three bins are
+    spread round the plate. This is the <b>same machine</b> drawn as an engineering set &mdash; a plan and the four
+    elevations &mdash; and every one of them is <b>live</b>: the plate angle, the gate angle, the fill of each bin
+    and the falling waste come off the running sketch every frame, so they move whether you are in the presentation
+    or feeding waste by hand.</p>
+
+    <div class="sideGrid">
+      <figure class="sidePane wide">
+        <figcaption><b>TOP</b> <span class="mono" id="sideTopBear">plan</span>
+          <em>looking straight down: the three bins spread round the plate, and the chute standing 67&nbsp;mm forward of the axis</em></figcaption>
+        <svg viewBox="0 0 620 436" id="sideTop" role="img" aria-label="Plan view of the machine, looking straight down"></svg>
+      </figure>
+      <figure class="sidePane">
+        <figcaption><b>FRONT</b> <span class="mono" id="sideFrontBear">0&deg;</span>
+          <em>square on to the chute &mdash; the face the scene above shows you</em></figcaption>
+        <svg viewBox="0 0 300 436" id="sideFront" role="img" aria-label="The machine seen from the front"></svg>
+      </figure>
+      <figure class="sidePane">
+        <figcaption><b>RIGHT</b> <span class="mono" id="sideRightBear">90&deg;</span>
+          <em>the sensor post is nearest &mdash; the HC&#8209;SR04 and its beam into the parked bin</em></figcaption>
+        <svg viewBox="0 0 300 436" id="sideRight" role="img" aria-label="The machine seen from its right-hand side"></svg>
+      </figure>
+      <figure class="sidePane">
+        <figcaption><b>BACK</b> <span class="mono" id="sideBackBear">180&deg;</span>
+          <em>from behind: the mast, and the gate swinging the other way</em></figcaption>
+        <svg viewBox="0 0 300 436" id="sideBack" role="img" aria-label="The machine seen from behind"></svg>
+      </figure>
+      <figure class="sidePane">
+        <figcaption><b>LEFT</b> <span class="mono" id="sideLeftBear">270&deg;</span>
+          <em>the mast is nearest &mdash; the Uno box, the three LEDs, the buzzer and the D10 button</em></figcaption>
+        <svg viewBox="0 0 300 436" id="sideLeft" role="img" aria-label="The machine seen from its left-hand side"></svg>
+      </figure>
+    </div>
+
+    <div class="iv-opts" style="margin-top:12px">
+      <label class="iv-opt">
+        <span>Turn the model <b id="sideSpinLbl">0&deg;</b></span>
+        <input type="range" id="sideSpin" min="-180" max="180" step="1" value="0"
+               aria-label="Rotate the whole orthographic set around the machine">
+      </label>
+      <button class="btn mini" type="button" id="sideSpinReset">Back to square on</button>
+    </div>
+    <p class="mono" id="sideState" style="margin:10px 0 0; font-size:11.5px; color:var(--ink-3)"></p>
+    <p class="note" style="margin-top:8px">The five stay in step, so <b>Turn the model</b> walks the whole set round
+    together and the plan turns with it. Bearings are the scene's own: 0&deg; is the face you are looking at above,
+    and the chute stands 67&nbsp;mm forward of the rotation axis &mdash; which is why the bins swing <i>under</i> it
+    rather than sitting on it, and why the plan is the view that finally makes that obvious.</p>
+  </div>
+</section>
+
+<section class="card iv" id="powerCard" style="margin-top:14px; display:none">
+  <div class="card-hd">
+    <h2>Power</h2>
+    <span class="tag" id="pwTag">AC adapter</span>
+  </div>
+  <div class="card-bd">
+    <p class="iv-disc"><b>Pick the build your project actually is.</b> Four ways to power
+    the same Uno, and the scene changes to match &mdash; a build with no panel has no panel
+    standing in the room, and a build with no pack has nothing behind the compartment door.
+    Whatever the build, the rule is the same: the Uno only ever sees one lead into its barrel
+    jack. The panel never feeds the board, it charges the pack, and the pack runs the machine.
+    The pack here drains and charges about 120&times; faster than a real one, so you can watch
+    what a sagging pack does. The presentation, the wiring flow and the panel&rsquo;s power
+    question all follow whichever build is selected.</p>
+
+    <div class="pw-src" role="group" aria-label="Project build" id="pwBuilds">
+      <button class="btn" data-build="ac" aria-pressed="false"><span>AC only</span><small>wall &rarr; 5 V adapter &rarr; USB</small></button>
+      <button class="btn" data-build="battery" aria-pressed="false"><span>Battery only</span><small>pack &rarr; buck 5 V &rarr; the board</small></button>
+      <button class="btn" data-build="solar" aria-pressed="false"><span>Solar + battery</span><small>sun &rarr; pack &rarr; buck 5 V</small></button>
+      <button class="btn" data-build="all" aria-pressed="true"><span>All three, switchable</span><small>selector on the module</small></button>
+    </div>
+
+    <div class="pw-src" role="group" aria-label="Power source" id="pwSrcRow">
+      <button class="btn" data-src="ac" aria-pressed="true"><span>AC adapter</span><small>220 V &rarr; 5 V 2 A &rarr; jack</small></button>
+      <button class="btn" data-src="battery" aria-pressed="false"><span>Battery pack</span><small>14.8 V &rarr; buck 5 V &rarr; the board</small></button>
+      <button class="btn" data-src="solar" aria-pressed="false"><span>Solar panel</span><small>18 V &rarr; charger &rarr; pack &rarr; buck</small></button>
+    </div>
+
+    <div class="pw-meter">
+      <div><div class="k">Arduino</div><div class="v ok" id="pwUno">running</div><div class="s" id="pwUnoSub">on the adapter</div></div>
+      <div id="pwPackTile"><div class="k">Pack</div><div class="v" id="pwPackV">14.8 V</div>
+        <div class="pw-bar" id="pwPackBar"><i id="pwPackBarI"></i></div><div class="s" id="pwPackNote">82% &middot; charger idle</div></div>
+      <div><div class="k">Module out</div><div class="v" id="pwOut">5 V &middot; 5 V</div><div class="s">the board &middot; the servo rail</div></div>
+      <div><div class="k">Servos</div><div class="v" id="pwServo">full speed</div><div class="s" id="pwServoSub">the first thing a sagging pack shows</div></div>
+    </div>
+
+    <div class="iv-opts">
+      <label class="iv-opt" id="pwSunRow" hidden>
+        <span>Sun on the panel <b id="pwSunLbl">70% &middot; bright</b></span>
+        <input type="range" id="pwSun" min="0" max="100" step="5" value="70">
+      </label>
+    </div>
+    <div class="iv-tools">
+      <button class="btn" id="pwPlug">Pull the adapter out</button>
+      <button class="btn" id="pwDrain">Drain the pack to 10%</button>
+      <button class="btn" id="pwFill">Charge the pack to full</button>
+    </div>
+    <p class="iv-foot" id="pwBuildNote"></p>
+
+    <div class="iv-bankhd"><span>Wiring flow &mdash; <b>the lit lane is the one running</b></span></div>
+    <div class="pw-flow" id="pwFlow"></div>
+
+    <ul class="pw-rules">
+      <li class="do"><b>The panel charges the pack; the pack runs the machine.</b> Panel &rarr; charge controller &rarr; pack &rarr; buck &rarr; Uno. A bare panel swings from 0 to 22&nbsp;V with every cloud &mdash; nothing digital lives on that.</li>
+      <li class="do"><b>5&nbsp;V, and nothing more, reaches the Arduino.</b> Whatever the source, the board is fed <b>5&nbsp;V</b> &mdash; from the adapter over USB, or from the buck into the 5&nbsp;V pin. The 14.8&nbsp;V pack and the 18&nbsp;V panel stop at the converter and never go past it.</li>
+      <li class="do"><b>Set the buck to 5.00&nbsp;V before it ever touches the board.</b> Turn the LM2596 pot with a meter on its output and nothing else connected, confirm 5.00&nbsp;V, then connect. Feeding the 5&nbsp;V pin bypasses the onboard regulator and the polarity diode, so a mis-set pot or a reversed lead kills the board with no second chance.</li>
+      <li class="do"><b>Servos on their own rail.</b> Two servos stall at over an amp each. A second buck at 6&nbsp;V, 3&nbsp;A feeds them; only the signal wires go to D5 and D6. Sharing the Uno&rsquo;s 5&nbsp;V pin is how the board resets mid-turn.</li>
+      <li class="do"><b>One ground.</b> Pack &minus;, buck &minus;, servo rail &minus;, sensor blue &minus; and Uno GND all meet on one rail. Every signal is measured against it.</li>
+      <li class="do"><b>Fuse the pack.</b> A 5&nbsp;A blade fuse on the pack + lead, before anything else. A shorted 4S pack will set fire to a jumper.</li>
+      <li class="do"><b>Selector, not a diode-OR.</b> One source at a time into the module. The switch means the adapter can stay plugged in as the backup while you run on the pack.</li>
+      <li class="dont"><b>Never the panel into the jack.</b> 22&nbsp;V open-circuit is over the Uno&rsquo;s 20&nbsp;V absolute maximum, and the current collapses the moment a servo moves.</li>
+      <li class="dont"><b>Never 14.8&nbsp;V into VIN or the barrel jack.</b> The onboard regulator is rated 7&ndash;12&nbsp;V; at 14.8&nbsp;V it cooks under load. That is what the buck is for, and it is why the buck is set to 5&nbsp;V and taken to the 5&nbsp;V pin rather than back through the regulator.</li>
+      <li class="dont"><b>Never 5&nbsp;V into the barrel jack.</b> The jack goes through the regulator, which needs about 6.5&nbsp;V in to give 5&nbsp;V out. Feed the jack 5&nbsp;V and the board runs at roughly 4&nbsp;V and behaves strangely. 5&nbsp;V goes to the USB port or the 5&nbsp;V pin, never the jack.</li>
+      <li class="dont"><b>Never bypass the BMS.</b> It is the only thing that stops a cell going under 3.0&nbsp;V, and it is why the machine goes dark at the cut-off instead of the pack dying quietly.</li>
+    </ul>
+  </div>
+</section>
+
+
+<section class="card iv" id="protoCard" style="margin-top:14px; display:none">
+  <div class="card-hd">
+    <h2>Prototype wiring</h2>
+    <span class="tag" id="ptTag">every element</span>
+  </div>
+  <div class="card-bd">
+    <p class="iv-disc"><b>Every element of the machine on one sheet.</b> Where each part sits
+    on the plywood &mdash; the input hole, the two heads through the wall of the throat, the gate
+    that is the floor of it, the plate, the three bins, the post, the box on the mast &mdash;
+    the core it leaves on, the pin it lands on, and what is feeding all of it. The drawing is
+    built from the same numbers the scene is, and every state on it is the running sketch&rsquo;s
+    own: the pins, the three lights, the buzzer, the gate angle, the reading and the display all
+    move while you watch. Change the build on the <b>Power</b> card and the sheet is redrawn for
+    that machine &mdash; a build with no pack has no pack on it, and says what that costs.</p>
+
+    <div class="pw-src" role="group" aria-label="How the sources change over" id="ptChg">
+      <button class="btn" data-chg="switch" aria-pressed="true"><span>Hand switch</span><small>selector on the mast &mdash; you turn it</small></button>
+      <button class="btn" data-chg="relay" aria-pressed="false"><span>Battery relay</span><small>SPDT coil &mdash; the adapter turns it</small></button>
+    </div>
+    <p class="iv-foot" id="ptChgNote"></p>
+
+    <div class="pt-sheet" id="ptSheet"></div>
+    <p class="iv-discmini">The drawing is one way of building it, written from what is actually in
+    <code>EnviroSortPro.ino</code> and from the parts this simulator models. It is not an approved
+    drawing and no panel has signed it &mdash; check every part number and every voltage against
+    what your group actually bought.</p>
+
+    <div class="iv-bankhd"><span>Element schedule &mdash; <b>a highlighted line is a pin doing something right now</b></span></div>
+    <div class="pt-tablewrap">
+      <table class="pt-table">
+        <thead><tr><th>&#8470;</th><th>Element</th><th>Where it sits</th><th>Pin</th><th>Core</th><th>What to know about it</th></tr></thead>
+        <tbody id="ptRows"></tbody>
+      </table>
+    </div>
+
+    <ul class="pw-rules">
+      <li class="do"><b>Only the black core off a head goes to a pin.</b> The brown is +14.8&nbsp;V and the blue is 0&nbsp;V. An LJ12A3 wants 6&ndash;36&nbsp;V to run and switches its output to 0&nbsp;V when it sees its material &mdash; that switched core is the only one the Uno ever touches.</li>
+      <li class="do"><b>D10 is <code>INPUT_PULLUP</code>, so the button goes to ground.</b> One side to D10, the other to 0&nbsp;V, and no resistor anywhere. The pin sits HIGH on the Uno&rsquo;s own pull-up and reads LOW while the button is held.</li>
+      <li class="do"><b>The servos take signal only from D5 and D6.</b> Their red goes to the 3&nbsp;A rail and their brown to the common ground. Two of them stalling is over an amp, which is more than the board&rsquo;s 5&nbsp;V pin will pass.</li>
+      <li class="do"><b>A3 is a pin like any other.</b> Using an analog pin as a digital output is legal and deliberate &mdash; the digital ones were full. It is worth saying so before a panelist asks whether it was a mistake.</li>
+      <li class="do"><b>The HC-SR04 is a 5&nbsp;V part.</b> It sits on the board rail, not on the 14.8&nbsp;V head rail. Trig is an output, echo is an input, and <code>pulseIn</code> blocks until it hears back.</li>
+      <li class="do"><b>Grommets and strain relief.</b> Every lead enters the box through a grommet and the loom is zip-tied under the throat, so nothing hangs into the mechanism and no core is ever taking the weight of its own cable.</li>
+      <li class="dont"><b>D13 is not a free pin.</b> It also drives the Uno&rsquo;s own on-board LED, so the metal light and the board light are the same thing. Live with it, or move the metal LED and say why.</li>
+      <li class="dont"><b>Never the barrel jack.</b> 5&nbsp;V through it leaves the board running at about 4&nbsp;V; 14.8&nbsp;V through it cooks the regulator. 5&nbsp;V goes to the USB port or to the 5&nbsp;V pin, and to nothing else.</li>
+      <li class="dont"><b>A relay changeover needs its two extra parts.</b> A flyback diode across the coil, or the transistor driving it dies; and a reservoir capacitor across the output, or the board resets every time the contact breaks on its way over.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="card iv" id="presentCard" style="margin-top:14px; display:none">
+  <div class="card-hd">
+    <h2>Presentation</h2>
+    <span class="tag" id="pzProgress">not started</span>
+  </div>
+  <div class="card-bd">
+
+    <p class="iv-disc"><b>A rehearsal of the demo, not a script you have to use.</b>
+    Twenty-four sections in the order a defense actually runs: who you are, why you built it,
+    the machine part by part, why the two servos are the ones they are, the code, three live
+    demonstrations, the full alarm cycle and the one fault it leaves behind, the weaknesses
+    you should own before the panel finds them, and the hand-over. Every word is written from
+    what is really in <code>EnviroSortPro.ino</code>. Read it, keep what is true for your
+    group, change the rest, and put it in your own words on the day.</p>
+
+    <div class="iv-stage" id="pzStage">
+      <div class="iv-who">
+        <span class="iv-dot" id="pzDot"></span>
+        <b id="pzWho">The group is not presenting yet</b>
+        <span class="iv-cat" id="pzTitle"></span>
+      </div>
+      <p class="pz-say" id="pzSay">Press <b>Start the presentation</b>. One member at a time takes a section, the camera walks to whatever they are talking about, and the words below are what they say &mdash; read them out loud yourself, or let the voice read them while you follow.</p>
+      <p class="pz-note" id="pzNote" hidden></p>
+      <div class="iv-clock">
+        <div class="iv-bar" id="pzBarWrap"><i id="pzBar"></i></div>
+        <span class="iv-time mono" id="pzTime">&mdash;</span>
+        <span class="iv-phase" id="pzPhase">idle</span>
+      </div>
+    </div>
+
+    <div class="iv-tools">
+      <button class="btn" id="pzStart">Start the presentation</button>
+      <button class="btn" id="pzPause" disabled>Pause</button>
+      <button class="btn" id="pzBack" disabled>Back</button>
+      <button class="btn" id="pzNext" disabled>Next section</button>
+      <button class="btn" id="pzStop" disabled>End</button>
+      <button class="btn" id="pzHand" hidden>Hand over to the panel</button>
+    </div>
+
+    <div class="iv-opts">
+      <label class="iv-opt">
+        <span>Speaking speed <b id="pzRateLbl">0.95&times;</b></span>
+        <input type="range" id="pzRate" min="0.6" max="1.4" step="0.05" value="0.95">
+      </label>
+    </div>
+
+    <div class="iv-chks">
+      <label class="iv-chk"><input type="checkbox" id="pzSpeak" checked> Read it aloud</label>
+      <label class="iv-chk"><input type="checkbox" id="pzCam" checked> Walk the camera to each part</label>
+      <label class="iv-chk"><input type="checkbox" id="pzMark" checked> Point at what is being said</label>
+      <label class="iv-chk"><input type="checkbox" id="pzAuto" checked> Move on by itself</label>
+    </div>
+
+    <div class="iv-bankhd">
+      <span>The sections &mdash; <b id="pzCount">15</b> in order</span>
+    </div>
+    <div class="iv-bankwrap"><ol class="iv-bank" id="pzList"></ol></div>
+    <p class="iv-foot">Click any section to jump to it. The demonstration sections put the
+    waste on the belt themselves &mdash; on the sentence that announces it, not at the start
+    &mdash; and wait for the machine to finish before moving on. In the alarm cycle the bin
+    is emptied straight after the buzzer sounds, so the tone runs for about 35&nbsp;seconds
+    and the three sections that explain the lockout run in quiet; the display, the lights,
+    the lockout and the open gate are all still there to point at, because in the sketch
+    only the D10 press clears those.</p>
+  </div>
+</section>
+
+<section class="card iv" id="interviewCard" style="margin-top:14px; display:none">
+  <div class="card-hd">
+    <h2>Panel interview</h2>
+    <span class="tag" id="ivProgress">not started</span>
+  </div>
+  <div class="card-bd">
+
+    <p class="iv-disc"><b>Possible questions, possible answers.</b> Nothing here is
+    the official question list and no script here is <i>the</i> correct answer. These are
+    questions a panel could reasonably ask about this project, with one way of answering
+    each &mdash; written from what is actually in your sketch and your findings. Your real
+    answer depends on your school, your group, your data and how your defense goes on the
+    day. Read them, keep what is true for you, change the rest, and never say a figure you
+    have not measured yourselves.</p>
+
+    <div class="iv-stage" id="ivStage">
+      <div class="iv-who">
+        <span class="iv-dot" id="ivDot"></span>
+        <b id="ivAsker">The panel is waiting</b>
+        <span class="iv-cat" id="ivCat"></span>
+      </div>
+      <p class="iv-q" id="ivQ">Press <b>Start</b>. Your group greets the panel first &mdash; with the greeting that matches the time on your own clock &mdash; says who you are and what the project is, and then the panel opens by asking why you came up with this study, then works through the design, the code, your evidence, what is strong, what is broken, and closes. One panelist at a time speaks aloud, a bubble opens above whoever is asking, and the clock runs while you answer. Then the room turns to your group: a bubble opens over the member whose question it is &mdash; <b>empty on purpose</b>, because the answer is printed below in a size you can read standing up, and it is read out for you in that member&rsquo;s own voice. They may press you with a follow-up before moving on.</p>
+      <div class="iv-clock">
+        <div class="iv-bar" id="ivBarWrap"><i id="ivBar"></i></div>
+        <span class="iv-time mono" id="ivTime">1:00</span>
+        <span class="iv-phase" id="ivPhase">idle</span>
+      </div>
+    </div>
+
+    <div class="iv-verdict" id="ivVerdict" hidden>
+      <div class="iv-vhd">
+        <span class="iv-vtag" id="ivVerdictTag">the panel has finished</span>
+        <span class="iv-clapdots" id="ivClapDots" aria-hidden="true"><i></i><i></i><i></i></span>
+      </div>
+      <p class="iv-vline" id="ivVerdictLine">&ldquo;On behalf of the panel &mdash; congratulations. You have successfully defended your project.&rdquo;</p>
+      <p class="iv-vsub">All three of them put the pen down and clap. This is the simulator&rsquo;s own
+      ending for getting through every question that was switched on &mdash; it is not a mark, and it
+      is not your school&rsquo;s decision.</p>
+    </div>
+
+    <div class="iv-script" id="ivScriptBox">
+      <div class="iv-scripthd">
+        <h5 id="ivScriptLbl">Your answer &mdash; read this aloud</h5>
+        <span class="iv-scriptmeta mono" id="ivScriptMeta"></span>
+        <button class="btn mini" type="button" id="ivAltBtn" disabled>Another way to answer</button>
+        <button class="btn mini" type="button" id="ivReadBtn" disabled>Read it to me</button>
+      </div>
+      <p class="iv-scripttx" id="ivScript">The script you read back is shown here once a question has been asked. It is written to be spoken, not summarised &mdash; read it straight through and it lands inside the answer time. Anything in square brackets is a figure only your group has. Every question carries a second version too; <b>Another way to answer</b> switches between them.</p>
+      <p class="iv-discmini">One possible answer, not the answer &mdash; say it in your own words.</p>
+    </div>
+
+    <div class="iv-tools">
+      <button class="btn" id="ivStart">Start interview</button>
+      <button class="btn" id="ivPause" disabled>Pause</button>
+      <button class="btn" id="ivRepeat" disabled>Repeat</button>
+      <button class="btn" id="ivFollowBtn" disabled>Follow-up</button>
+      <button class="btn" id="ivNext" disabled>Next question</button>
+      <button class="btn" id="ivPlus" disabled>+30 s</button>
+      <button class="btn" id="ivStop" disabled>End</button>
+    </div>
+
+    <div class="iv-opts">
+      <label class="iv-opt">
+        <span>Time to answer <b id="ivSecLbl">1:00</b></span>
+        <input type="range" id="ivSec" min="15" max="300" step="5" value="60">
+      </label>
+      <label class="iv-opt">
+        <span>Speaking speed <b id="ivRateLbl">0.95&times;</b></span>
+        <input type="range" id="ivRate" min="0.6" max="1.4" step="0.05" value="0.95">
+      </label>
+      <label class="iv-opt">
+        <span>Voice</span>
+        <select id="ivVoice"><option value="">auto &mdash; a different one each</option></select>
+      </label>
+      <label class="iv-opt">
+        <span>Your group <b>as they announce it</b></span>
+        <input type="text" id="ivGroup" value="Group 3" maxlength="34" spellcheck="false"
+               aria-label="How the group introduces itself to the panel">
+      </label>
+    </div>
+
+    <div class="iv-chks">
+      <label class="iv-chk"><input type="checkbox" id="ivIntro" checked> Open with the group&rsquo;s introduction</label>
+      <label class="iv-chk"><input type="checkbox" id="ivSpeak" checked> Speak the questions</label>
+      <label class="iv-chk"><input type="checkbox" id="ivFocus" checked> Zoom to whoever is speaking</label>
+      <label class="iv-chk"><input type="checkbox" id="ivFollow" checked> Panelists may follow up</label>
+      <label class="iv-chk"><input type="checkbox" id="ivAuto" checked> Auto-advance when time is up</label>
+      <label class="iv-chk"><input type="checkbox" id="ivShuffle"> Shuffle the order</label>
+      <label class="iv-chk"><input type="checkbox" id="ivScriptOn" checked> Show the answer script</label>
+      <label class="iv-chk"><input type="checkbox" id="ivReadBack" checked> Read the answer aloud for me</label>
+      <label class="iv-chk"><input type="checkbox" id="ivHints"> Show the answer outline</label>
+    </div>
+
+    <div class="iv-answer" id="ivHint" hidden></div>
+
+    <div class="iv-bankhd">
+      <span>Question bank &mdash; <b id="ivCount">0</b> in play</span>
+      <div class="iv-filters" id="ivFilters"></div>
+    </div>
+    <div class="iv-bankwrap"><ol class="iv-bank" id="ivBank"></ol></div>
+    <p class="iv-foot">Click any question to have that panelist ask it now. Categories switch off from the row of chips &mdash; only what is on gets asked.</p>
+  </div>
+</section>
+
+<section class="card" id="wiringCard" style="margin-top:14px; display:none">
+  <div class="card-hd"><h2>Wiring, cover off</h2><span class="tag">how to bind the sensor wires</span></div>
+  <div class="card-bd" style="padding:0; background:#0D1416; border-radius:0 0 14px 14px; overflow:hidden">
+  <svg viewBox="0 640 1400 690" role="img" aria-label="Wiring diagram showing how to bind the proximity sensor wires with wire connectors">
+  <defs>
+    <pattern id="wHoles" width="11" height="11" patternUnits="userSpaceOnUse">
+      <rect width="11" height="11" fill="none"/><rect x="4" y="4" width="3.4" height="3.4" fill="#9AA0A0"/>
+    </pattern>
+    <pattern id="wHoles2" width="18" height="18" patternUnits="userSpaceOnUse">
+      <rect width="18" height="18" fill="none"/><rect x="6" y="6" width="6" height="6" rx="1" fill="#8A9294"/>
+    </pattern>
+    <linearGradient id="wUno" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2A7EBE"/><stop offset=".5" stop-color="#1B6CA8"/><stop offset="1" stop-color="#145C92"/>
+    </linearGradient>
+    <linearGradient id="wChrome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7E888B"/><stop offset=".28" stop-color="#EDF1F2"/>
+      <stop offset=".6" stop-color="#B4BEC1"/><stop offset="1" stop-color="#6E787B"/>
+    </linearGradient>
+    <linearGradient id="wCell" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4E9BD8"/><stop offset=".45" stop-color="#2E7BC4"/><stop offset="1" stop-color="#1A5A96"/>
+    </linearGradient>
+    <linearGradient id="wServo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A8AEB1"/><stop offset=".5" stop-color="#8A9093"/><stop offset="1" stop-color="#666C6F"/>
+    </linearGradient>
+    <marker id="wArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1A1A1A"/>
+    </marker>
+    <radialGradient id="wLedR"><stop offset="0" stop-color="#FF8A80"/><stop offset="1" stop-color="#C42B22"/></radialGradient>
+    <radialGradient id="wLedY"><stop offset="0" stop-color="#FFEB8A"/><stop offset="1" stop-color="#D9A61E"/></radialGradient>
+    <radialGradient id="wLedG"><stop offset="0" stop-color="#9CE8A8"/><stop offset="1" stop-color="#2E9E4B"/></radialGradient>
+  </defs>
+
+  <rect x="0" y="640" width="1400" height="690" fill="#FBF6EC"/>
+
+  <!-- wire colours used on this sheet -->
+  <rect x="24" y="1120" width="230" height="124" rx="8" fill="#FFFFFF" stroke="#C6CFCC" stroke-width="1.5"/>
+  <text x="40" y="1142" font-family="IBM Plex Mono, monospace" font-size="11" letter-spacing="1.2" fill="#0D8B7F">WIRE COLOURS</text>
+  <g font-family="IBM Plex Mono, monospace" font-size="9.5" fill="#3A4448">
+    <rect x="40" y="1156" width="24" height="4" rx="2" fill="#E02020"/><text x="74" y="1161">+5 V · pack + lead</text>
+    <rect x="40" y="1176" width="24" height="4" rx="2" fill="#1A1A1A"/><text x="74" y="1181">GND / 0 V · signal core</text>
+    <rect x="40" y="1196" width="24" height="4" rx="2" fill="#8B5A2B"/><text x="74" y="1201">brown · +14.8 V</text>
+    <rect x="40" y="1216" width="24" height="4" rx="2" fill="#2E56C8"/><text x="74" y="1221">blue · 0 V (sensor)</text>
+  </g>
+
+  <!-- ================= PROXIMITY SENSOR HOOKUP ================= -->
+  <text x="30" y="678" font-family="Chakra Petch, sans-serif" font-size="21" font-weight="700" fill="#8E6512">Binding the 3-wire proximity head with wire connectors</text>
+  <text x="30" y="700" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#7A6A44">Worked through for the capacitive head. The inductive head is wired identically — only its signal goes to D4 instead of D3.</text>
+
+
+
+  <!-- ===== CHANNEL A — CAPACITIVE ===== -->
+  <rect x="20" y="690" width="862" height="182" rx="10" fill="#FFFFFF" stroke="#C9922F" stroke-width="1.8"/>
+  <rect x="20" y="690" width="8" height="182" rx="4" fill="#C9922F"/>
+  <text x="42" y="708" font-family="Chakra Petch, sans-serif" font-size="15" font-weight="700" fill="#C9922F">CHANNEL A — CAPACITIVE</text>
+  <text x="290" y="708" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#7A6A44">its own pack · its own connector · its own head</text>
+
+  <rect x="42" y="728" width="196" height="76" rx="6" fill="#1A1F22" stroke="#000" stroke-width="1.5"/>
+  <g stroke="#123048" stroke-width="1.2">
+    <rect x="50" y="735" width="180" height="13" rx="6" fill="url(#wCell)"/><rect x="50" y="750" width="180" height="13" rx="6" fill="url(#wCell)"/>
+    <rect x="50" y="765" width="180" height="13" rx="6" fill="url(#wCell)"/><rect x="50" y="780" width="180" height="13" rx="6" fill="url(#wCell)"/>
+  </g>
+  <text x="140" y="824" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#5B6B66">PACK A · 4 × 18650 = 14.8 V</text>
+
+  <rect x="300" y="728" width="200" height="112" rx="8" fill="#F2F2EE" stroke="#A8B2AE" stroke-width="2.5"/>
+  <path d="M400 736 V832" stroke="#C6CBC4" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="310" y="746" font-family="IBM Plex Mono, monospace" font-size="8" fill="#8A9294">FRONT</text>
+  <text x="490" y="746" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="8" fill="#8A9294">BACK</text>
+  <rect x="308" y="752" width="34" height="24" rx="3" fill="#2B3134"/>
+  <rect x="458" y="752" width="34" height="24" rx="3" fill="#2B3134"/>
+  <rect x="342" y="758" width="116" height="12" fill="url(#wChrome)"/>
+  <rect x="308" y="796" width="34" height="24" rx="3" fill="#2B3134"/>
+  <rect x="458" y="796" width="34" height="24" rx="3" fill="#2B3134"/>
+  <rect x="342" y="802" width="116" height="12" fill="url(#wChrome)"/>
+  <text x="400" y="748" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" font-weight="700" fill="#A03428">RED + ↔ BROWN +</text>
+  <text x="400" y="792" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" font-weight="700" fill="#22409E">BLACK − ↔ BLUE −</text>
+
+  <!-- head, cable gland on the left so all three wires leave together -->
+  <rect x="560" y="750" width="20" height="22" rx="3" fill="#2E56C8"/>
+  <rect x="584" y="742" width="15" height="38" rx="2" fill="#B4BEC1" stroke="#6E787B" stroke-width="1.2"/>
+  <rect x="603" y="742" width="15" height="38" rx="2" fill="#B4BEC1" stroke="#6E787B" stroke-width="1.2"/>
+  <rect x="622" y="748" width="86" height="26" fill="url(#wChrome)"/>
+  <g stroke="#8A9294" stroke-width="1"><path d="M632 748 V774"/> <path d="M642 748 V774"/> <path d="M652 748 V774"/> <path d="M662 748 V774"/> <path d="M672 748 V774"/> <path d="M682 748 V774"/> <path d="M692 748 V774"/></g>
+  <rect x="708" y="744" width="44" height="34" rx="5" fill="#E8A83A" stroke="#A87418" stroke-width="1.5"/>
+  <text x="762" y="756" font-family="IBM Plex Mono, monospace" font-size="9" fill="#8E6512">sensing</text>
+  <text x="762" y="768" font-family="IBM Plex Mono, monospace" font-size="9" fill="#8E6512">face</text>
+  <text x="560" y="806" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="700" fill="#3A4448">CAPACITIVE HEAD</text>
+  <text x="560" y="822" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="#5B6B66">one cable, three wires</text>
+
+  <!-- the moulded cable, then the three cores fan out -->
+  <path d="M560 761 H524" stroke="#A8AEB0" stroke-width="15" stroke-linecap="round" fill="none"/>
+  <g fill="none" stroke-linecap="round" stroke-width="5">
+    <path d="M238 742 C 272 742 280 760 308 764" stroke="#E02020"/>
+    <path d="M238 788 C 274 788 282 804 308 808" stroke="#1A1A1A"/>
+    <path d="M524 761 C 512 757 504 764 492 764" stroke="#8B5A2B"/>
+    <path d="M524 761 C 512 767 504 808 492 808" stroke="#2E56C8"/>
+    <path d="M524 761 C 536 783 540 838 566 838 H 860" stroke="#1A1A1A" stroke-width="6.5"/>
+  </g>
+  <text x="596" y="830" font-family="IBM Plex Mono, monospace" font-size="9.5" font-weight="700" fill="#1A1A1A">black signal → D3</text>
+  <g><rect x="866" y="831" width="24" height="12" rx="6" fill="#C6CBC4" stroke="#8A9294" stroke-width="1"/></g>
+
+  <!-- ===== CHANNEL B — INDUCTIVE ===== -->
+  <rect x="20" y="890" width="862" height="182" rx="10" fill="#FFFFFF" stroke="#B3282D" stroke-width="1.8"/>
+  <rect x="20" y="890" width="8" height="182" rx="4" fill="#B3282D"/>
+  <text x="42" y="908" font-family="Chakra Petch, sans-serif" font-size="15" font-weight="700" fill="#B3282D">CHANNEL B — INDUCTIVE</text>
+  <text x="290" y="908" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#7A6A44">its own pack · its own connector · its own head</text>
+
+  <rect x="42" y="928" width="196" height="76" rx="6" fill="#1A1F22" stroke="#000" stroke-width="1.5"/>
+  <g stroke="#123048" stroke-width="1.2">
+    <rect x="50" y="935" width="180" height="13" rx="6" fill="url(#wCell)"/><rect x="50" y="950" width="180" height="13" rx="6" fill="url(#wCell)"/>
+    <rect x="50" y="965" width="180" height="13" rx="6" fill="url(#wCell)"/><rect x="50" y="980" width="180" height="13" rx="6" fill="url(#wCell)"/>
+  </g>
+  <text x="140" y="1024" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#5B6B66">PACK B · 4 × 18650 = 14.8 V</text>
+
+  <rect x="300" y="928" width="200" height="112" rx="8" fill="#F2F2EE" stroke="#A8B2AE" stroke-width="2.5"/>
+  <path d="M400 936 V1032" stroke="#C6CBC4" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="310" y="946" font-family="IBM Plex Mono, monospace" font-size="8" fill="#8A9294">FRONT</text>
+  <text x="490" y="946" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="8" fill="#8A9294">BACK</text>
+  <rect x="308" y="952" width="34" height="24" rx="3" fill="#2B3134"/>
+  <rect x="458" y="952" width="34" height="24" rx="3" fill="#2B3134"/>
+  <rect x="342" y="958" width="116" height="12" fill="url(#wChrome)"/>
+  <rect x="308" y="996" width="34" height="24" rx="3" fill="#2B3134"/>
+  <rect x="458" y="996" width="34" height="24" rx="3" fill="#2B3134"/>
+  <rect x="342" y="1002" width="116" height="12" fill="url(#wChrome)"/>
+  <text x="400" y="948" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" font-weight="700" fill="#A03428">RED + ↔ BROWN +</text>
+  <text x="400" y="992" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" font-weight="700" fill="#22409E">BLACK − ↔ BLUE −</text>
+
+  <!-- head, cable gland on the left so all three wires leave together -->
+  <rect x="560" y="950" width="20" height="22" rx="3" fill="#2E56C8"/>
+  <rect x="584" y="942" width="15" height="38" rx="2" fill="#B4BEC1" stroke="#6E787B" stroke-width="1.2"/>
+  <rect x="603" y="942" width="15" height="38" rx="2" fill="#B4BEC1" stroke="#6E787B" stroke-width="1.2"/>
+  <rect x="622" y="948" width="74" height="26" fill="url(#wChrome)"/>
+  <g stroke="#8A9294" stroke-width="1"><path d="M632 948 V974"/> <path d="M642 948 V974"/> <path d="M652 948 V974"/> <path d="M662 948 V974"/> <path d="M672 948 V974"/> <path d="M682 948 V974"/></g>
+  <rect x="696" y="944" width="40" height="34" rx="5" fill="#E8A83A" stroke="#A87418" stroke-width="1.5"/>
+  <text x="746" y="956" font-family="IBM Plex Mono, monospace" font-size="9" fill="#8E6512">sensing</text>
+  <text x="746" y="968" font-family="IBM Plex Mono, monospace" font-size="9" fill="#8E6512">face</text>
+  <text x="560" y="1006" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="700" fill="#3A4448">INDUCTIVE HEAD</text>
+  <text x="560" y="1022" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="#5B6B66">one cable, three wires</text>
+
+  <!-- the moulded cable, then the three cores fan out -->
+  <path d="M560 961 H524" stroke="#A8AEB0" stroke-width="15" stroke-linecap="round" fill="none"/>
+  <g fill="none" stroke-linecap="round" stroke-width="5">
+    <path d="M238 942 C 272 942 280 960 308 964" stroke="#E02020"/>
+    <path d="M238 988 C 274 988 282 1004 308 1008" stroke="#1A1A1A"/>
+    <path d="M524 961 C 512 957 504 964 492 964" stroke="#8B5A2B"/>
+    <path d="M524 961 C 512 967 504 1008 492 1008" stroke="#2E56C8"/>
+    <path d="M524 961 C 536 983 540 1038 566 1038 H 860" stroke="#1A1A1A" stroke-width="6.5"/>
+  </g>
+  <text x="596" y="1030" font-family="IBM Plex Mono, monospace" font-size="9.5" font-weight="700" fill="#1A1A1A">black signal → D4</text>
+  <g><rect x="866" y="1031" width="24" height="12" rx="6" fill="#C6CBC4" stroke="#8A9294" stroke-width="1"/></g>
+
+  <text x="300" y="1140" font-family="IBM Plex Mono, monospace" font-size="10" fill="#5B6B66">Each ground jumper shares the negative front hole with its pack lead — twist the two ends together first.</text>
+  <text x="300" y="1156" font-family="IBM Plex Mono, monospace" font-size="10" fill="#5B6B66">All three cores leave the head in one cable: brown and blue turn back to the connector, black runs on to the pin.</text>
+
+  <!-- ===== common ground: full breadboard, every wire seated ===== -->
+  <g>
+    <rect x="900" y="686" width="480" height="406" rx="8" fill="#FFFFFF" stroke="#C6CFCC" stroke-width="1.5"/>
+    <text x="918" y="710" font-family="IBM Plex Mono, monospace" font-size="11.5" font-weight="700" fill="#0D8B7F">COMMON GROUND — every − meets here</text>
+    <text x="918" y="726" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="#8B5A2B">sensor BROWN + stops at the connector</text>
+    <text x="918" y="739" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="#22409E">sensor BLUE − &amp; battery − arrive on jumpers</text>
+
+    <rect x="916" y="752" width="448" height="278" rx="4" fill="#E9E9E4" stroke="#B4BAB6" stroke-width="2"/>
+    <!-- + line -->
+    <rect x="928" y="774" width="424" height="16" rx="7" fill="#D14A3A" opacity=".16"/>
+    <path d="M928 768 H1352" stroke="#D14A3A" stroke-width="3"/>
+    <rect x="928" y="774" width="424" height="16" fill="url(#wHoles2)"/>
+    <text x="912" y="786" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="700" fill="#A03428">+</text>
+    <!-- − line -->
+    <rect x="928" y="808" width="424" height="16" rx="7" fill="#2E56C8" opacity=".24"/>
+    <rect x="928" y="808" width="424" height="16" fill="url(#wHoles2)"/>
+    <path d="M928 832 H1352" stroke="#2E56C8" stroke-width="3"/>
+    <text x="912" y="822" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="15" font-weight="700" fill="#22409E">−</text>
+    <!-- terminal strips, columns joined in fives -->
+    <rect x="944" y="848" width="14" height="44" rx="3" fill="#2E9E4B" opacity=".2"/>
+    <rect x="1000" y="848" width="14" height="44" rx="3" fill="#2E9E4B" opacity=".2"/>
+    <rect x="1056" y="848" width="14" height="44" rx="3" fill="#2E9E4B" opacity=".2"/>
+    <rect x="928" y="848" width="424" height="44" fill="url(#wHoles)"/>
+    <rect x="928" y="896" width="424" height="11" fill="#DCDCD6"/>
+    <rect x="928" y="911" width="424" height="40" fill="url(#wHoles)"/>
+    <!-- opposite rails along the bottom edge, mirrored: − inside, + outside -->
+    <rect x="928" y="966" width="424" height="16" rx="7" fill="#2E56C8" opacity=".24"/>
+    <rect x="928" y="966" width="424" height="16" fill="url(#wHoles2)"/>
+    <path d="M928 960 H1352" stroke="#2E56C8" stroke-width="3"/>
+    <text x="912" y="980" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="15" font-weight="700" fill="#22409E">−</text>
+    <rect x="928" y="1000" width="424" height="16" rx="7" fill="#D14A3A" opacity=".16"/>
+    <rect x="928" y="1000" width="424" height="16" fill="url(#wHoles2)"/>
+    <path d="M928 1022 H1352" stroke="#D14A3A" stroke-width="3"/>
+    <text x="912" y="1013" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="700" fill="#A03428">+</text>
+    <!-- WRONG example: a male-to-male jumper bridging the − line to the + line -->
+    <path d="M1212 952 C 1218 928 1266 948 1272 986" stroke="#1A1A1A" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <g><rect x="1204" y="952" width="16" height="12" rx="2" fill="#1A1A1A"/><rect x="1209" y="962" width="6" height="12" rx="1" fill="#C6CDD0"/></g>
+    <g><rect x="1264" y="986" width="16" height="12" rx="2" fill="#1A1A1A"/><rect x="1269" y="996" width="6" height="12" rx="1" fill="#C6CDD0"/></g>
+    <path d="M1188 936 L1296 1020" stroke="#D14A3A" stroke-width="4"/>
+    <circle cx="1242" cy="978" r="17" fill="#FFFFFF" fill-opacity=".85" stroke="#D14A3A" stroke-width="4"/>
+    <path d="M1232 968 L1252 988 M1252 968 L1232 988" stroke="#D14A3A" stroke-width="4"/>
+    <text x="1326" y="982" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" font-weight="700" fill="#B3282D">WRONG</text>
+    <!-- each seated cap labelled, so the three − line wires can be told apart -->
+    <text x="984" y="845" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" font-weight="700" fill="#22409E">battery A −</text>
+    <text x="1050" y="845" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" font-weight="700" fill="#22409E">battery B −</text>
+    <text x="1126" y="845" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" font-weight="700" fill="#3A4448">Uno GND</text>
+    <text x="940" y="905" font-family="IBM Plex Mono, monospace" font-size="8" fill="#5B6B66">middle holes: every column of 5 is connected — green = one column</text>
+
+    <!-- the + line takes only the Uno 5 V -->
+    <path d="M1290 700 C 1290 730 1276 752 1266 766" stroke="#E02020" stroke-width="5" fill="none"/>
+    <g><rect x="1258" y="760" width="16" height="12" rx="2" fill="#1A1A1A"/><rect x="1263" y="770" width="6" height="12" rx="1" fill="#C6CDD0"/></g>
+    <text x="1244" y="696" font-family="IBM Plex Mono, monospace" font-size="9" fill="#A03428">Uno 5 V</text>
+
+    <!-- pack/head blue wires arrive through the left wall — drawn after this box so they stay visible -->
+    <path d="M1180 700 C 1180 744 1146 774 1126 798" stroke="#1A1A1A" stroke-width="5" fill="none"/>
+    <g><rect x="1118" y="794" width="16" height="12" rx="2" fill="#1A1A1A"/><rect x="1123" y="804" width="6" height="14" rx="1" fill="#C6CDD0"/></g>
+    <text x="1136" y="696" font-family="IBM Plex Mono, monospace" font-size="9" fill="#3A4448">Uno GND</text>
+    <circle cx="1046" cy="866" r="13" fill="#FFFFFF" stroke="#2E9E4B" stroke-width="3.5"/>
+    <path d="M1039 866 L1044 872 L1054 859" stroke="#2E9E4B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <text x="1066" y="871" font-family="IBM Plex Mono, monospace" font-size="10" font-weight="700" fill="#1C6E33">all three share this − row</text>
+
+    <!-- the same wire taken to the + line, struck out -->
+    <path d="M900 752 C 970 752 1030 757 1096 764" stroke="#2E56C8" stroke-width="5" fill="none" opacity=".36"/>
+    <g opacity=".36"><rect x="1094" y="758" width="16" height="12" rx="2" fill="#1A1A1A"/><rect x="1099" y="768" width="6" height="10" rx="1" fill="#C6CDD0"/></g>
+    <path d="M996 744 L1098 794" stroke="#D14A3A" stroke-width="4"/>
+    <circle cx="1044" cy="764" r="17" fill="#FFFFFF" fill-opacity=".85" stroke="#D14A3A" stroke-width="4"/>
+    <path d="M1034 754 L1054 774 M1054 754 L1034 774" stroke="#D14A3A" stroke-width="4"/>
+    <text x="1044" y="750" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" font-weight="700" fill="#B3282D">WRONG</text>
+
+    <text x="918" y="1048" font-family="IBM Plex Mono, monospace" font-size="10.5" font-weight="700" fill="#1C6E33">✓ DO — battery A −, battery B − and Uno GND all sit in the blue − row</text>
+    <text x="918" y="1064" font-family="IBM Plex Mono, monospace" font-size="10.5" font-weight="700" fill="#B3282D">✗ DON'T — no battery wire in the red + row — it feeds the 5 V parts</text>
+    <text x="918" y="1080" font-family="IBM Plex Mono, monospace" font-size="10.5" font-weight="700" fill="#B3282D">✗ DON'T — never bridge − row to + row with a jumper — short circuit</text>
+  </g>
+
+  <!-- ground jumpers arrive from the packs on the left, plug into the box's left side, and run on into the − line -->
+  <g fill="none" stroke-linecap="round" stroke-width="5">
+    <path d="M316 820 C 300 848 276 856 268 872 C 260 888 700 886 890 880 L 916 878" stroke="#2E56C8"/>
+    <path d="M316 1020 C 300 1054 280 1070 274 1090 C 268 1110 820 1104 890 1096 C 896 1040 892 930 916 886" stroke="#2E56C8"/>
+    <path d="M934 877 C 950 856 958 812 970 799" stroke="#2E56C8"/>
+    <path d="M936 885 C 990 862 1024 824 1040 799" stroke="#2E56C8"/>
+  </g>
+  <g><rect x="906" y="870" width="22" height="14" rx="2" fill="#1A1A1A"/><rect x="922" y="874" width="14" height="5" rx="1" fill="#C6CDD0"/></g>
+  <g><rect x="908" y="878" width="22" height="14" rx="2" fill="#1A1A1A"/><rect x="924" y="882" width="14" height="5" rx="1" fill="#C6CDD0"/></g>
+  <g><rect x="968" y="794" width="16" height="12" rx="2" fill="#1A1A1A"/><rect x="973" y="804" width="6" height="14" rx="1" fill="#C6CDD0"/></g>
+  <g><rect x="1038" y="794" width="16" height="12" rx="2" fill="#1A1A1A"/><rect x="1043" y="804" width="6" height="14" rx="1" fill="#C6CDD0"/></g>
+
+  <!-- ===== the black signal wires, seated in their pins ===== -->
+  <g>
+    <rect x="900" y="1104" width="480" height="140" rx="8" fill="#FFFFFF" stroke="#C6CFCC" stroke-width="1.5"/>
+    <text x="918" y="1120" font-family="IBM Plex Mono, monospace" font-size="11.5" font-weight="700" fill="#0D8B7F">BLACK SIGNAL WIRE → THE ARDUINO PIN</text>
+    <!-- both black cores run bundled down the gutter from the heads on the left and enter through this box's left side -->
+    <g fill="none" stroke-linecap="round" stroke-width="6.5">
+      <path d="M890 838 C 884 858 885 900 885 950 C 885 1020 885 1090 885 1116 C 885 1132 893 1139 903 1140 C 926 1141 942 1141 978 1141" stroke="#1A1A1A"/>
+      <path d="M890 1038 C 884 1046 884 1052 884 1062 C 884 1080 884 1094 890 1105 C 896 1116 908 1122 928 1126 L 964 1126 C 992 1126 1006 1127 1014 1134" stroke="#1A1A1A"/>
+    </g>
+    <rect x="918" y="1152" width="300" height="28" rx="2" fill="#141A1C"/>
+    <g fill="#E0B84A">
+      <rect x="928" y="1158" width="8" height="14"/><rect x="954" y="1158" width="8" height="14"/>
+      <rect x="1046" y="1158" width="8" height="14"/><rect x="1072" y="1158" width="8" height="14"/><rect x="1098" y="1158" width="8" height="14"/>
+    </g>
+    <rect x="976" y="1154" width="16" height="24" rx="2" fill="#2E9E4B"/>
+    <rect x="1010" y="1154" width="16" height="24" rx="2" fill="#2E9E4B"/>
+    <g><rect x="976" y="1134" width="16" height="14" rx="2" fill="#1A1A1A"/><rect x="981" y="1146" width="6" height="10" rx="1" fill="#C6CDD0"/></g>
+    <g><rect x="1010" y="1134" width="16" height="14" rx="2" fill="#1A1A1A"/><rect x="1015" y="1146" width="6" height="10" rx="1" fill="#C6CDD0"/></g>
+    <text x="984" y="1200" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="700" fill="#1C6E33">D3</text>
+    <text x="1018" y="1200" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="700" fill="#1C6E33">D4</text>
+    <text x="930" y="1200" font-family="IBM Plex Mono, monospace" font-size="9" fill="#8A9294">D2</text>
+    <text x="1046" y="1200" font-family="IBM Plex Mono, monospace" font-size="9" fill="#8A9294">D5</text>
+    <text x="1072" y="1200" font-family="IBM Plex Mono, monospace" font-size="9" fill="#8A9294">D6</text>
+    <text x="1240" y="1146" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#3A4448">capacitive black → D3</text>
+    <text x="1240" y="1164" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#3A4448">inductive black → D4</text>
+    <text x="1240" y="1186" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="#B3282D">signal only — never 14.8 V</text>
+    <text x="918" y="1230" font-family="IBM Plex Mono, monospace" font-size="10" fill="#5B6B66">Only black goes to the Arduino — brown and blue stop at the connector.</text>
+  </g>
+
+  <rect x="900" y="1256" width="480" height="66" rx="8" fill="#FDECEC" stroke="#E5484D" stroke-width="1.8"/>
+  <text x="918" y="1278" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="700" fill="#B3282D">Never tie the two packs' + together</text>
+  <text x="918" y="1294" font-family="IBM Plex Mono, monospace" font-size="10" fill="#B3282D">Paralleling two lithium packs lets one charge the other.</text>
+  <text x="918" y="1310" font-family="IBM Plex Mono, monospace" font-size="10" fill="#B3282D">Only the negatives are shared, and only as a ground reference.</text>
+  </svg>
+  </div>
+  <div class="hint">
+    <span><b>Two packs, two connectors, two heads &mdash; nothing shared but the ground.</b> Each 4&times;18650 pack feeds one head through its own 2-pair connector. Only the pack negatives meet, in the breadboard &minus; rail alongside Arduino GND. The 14.8&nbsp;V never touches the board.</span>
+  </div>
+</section>
+
+<div class="strip">
+  <section class="card">
+    <div class="card-hd"><h2>Sensor inputs</h2><span class="tag">LOW = detected</span></div>
+    <div class="card-bd">
+      <div id="alertFull" class="alert" style="flex-direction:column; align-items:stretch">
+        <div style="display:flex; align-items:center; gap:9px"><b>BIN FULL</b><span id="alertTxt"></span></div>
+        <p style="margin:6px 0 0; font-size:12px; color:var(--ink-2)">The ultrasonic sensor sees &le;20&nbsp;cm and locks the machine out. Manually carry the waste already in that bin over to the matching disposal bin shown at the right of the scene, then press the D10 button on the machine to resume &mdash; pressing D10 before it's emptied only clears the lockout for a moment, since the sensor still sees the full bin. Watch the gate while this is up: the sketch <b>never closes it</b> on the way into the alarm, so the throat is still open and anything you feed now drops straight into the full bin &mdash; finding 10. And note what stops the tone: <code>stopAlarm()</code> is called from one place only, the branch where the distance reads back above 20&nbsp;cm. <b>Emptying stops the buzzer; the button clears the display and the lights.</b> Lifting the bin out and setting it back still full just re-arms the alarm.</p>
+        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap">
+          <button class="mini" id="disposeHtmlBtn">Lift the liner out</button>
+          <button class="mini" id="linerHtmlBtn">Carry the bin instead</button>
+        </div>
+      </div>
+      <div id="alertStuck" class="alert"><b>NOT RECOGNISED</b><span>No sensor can see this waste &mdash; click it in the hole to take it back.</span></div>
+      <div class="rows">
+        <div class="row"><span class="pin">D4</span><span class="nm">Inductive &middot; stage 1<em>metal only &middot; checked first</em></span><span class="chip" id="chipInd">HIGH</span></div>
+        <div class="row"><span class="pin">D3</span><span class="nm">Capacitive &middot; stage 1<em>plastic &mdash; and metal too</em></span><span class="chip" id="chipCap">HIGH</span></div>
+        <div class="row"><span class="pin">D7</span><span class="nm">Infrared &middot; stage 2<em>anything resting on the tap</em></span><span class="chip" id="chipIr">HIGH</span></div>
+        <div class="row"><span class="pin">D8/9</span><span class="nm">Ultrasonic<em>reads the bin parked under the hole</em></span><span class="chip" id="chipUs">50 cm</span></div>
+        <div class="row"><span class="pin">D10</span><span class="nm">Button<em>only read while locked out</em></span><span class="chip" id="chipBtn">HIGH</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-hd"><h2>Outputs</h2></div>
+    <div class="card-bd">
+      <div class="leds">
+        <span class="ledbox"><span class="led plastic" id="ledPla"></span>D2 plastic</span>
+        <span class="ledbox"><span class="led metal" id="ledMet"></span>D13 metal</span>
+        <span class="ledbox"><span class="led bio" id="ledBio"></span>A3 bio</span>
+      </div>
+      <div class="rows">
+        <div class="row"><span class="pin">D12</span><span class="nm">Buzzer<em>bin-full alarm only</em></span><span class="buzz" id="buzzUi"><span class="ico"></span></span></div>
+        <div class="row"><span class="pin">D5</span><span class="nm">tap_servo<em>rotates the bin platform</em></span><span class="chip" id="chipS1">90</span></div>
+        <div class="row"><span class="pin">D6</span><span class="nm">tap_servo1<em>gate at the throat</em></span><span class="chip" id="chipS2">180</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-hd"><h2>Bin levels</h2><span class="tag">physical, not tracked in code</span></div>
+    <div class="card-bd"><div class="meters" id="metersEl"></div></div>
+  </section>
+
+  <section class="card">
+    <div class="card-hd"><h2>Serial monitor</h2><span class="tag">9600 baud</span></div>
+    <div class="card-bd"><div class="serial mono" id="serialEl"></div></div>
+  </section>
+</div>
+
+<div class="two">
+  <section class="card">
+    <div class="card-hd"><h2>Execution trace</h2><span class="tag">live line in your sketch</span></div>
+    <div class="card-bd">
+      <div class="trace" id="traceEl">
+<span class="ln" data-k="loop">void loop() {</span><span class="ln" data-k="dm">  if (detectionMaintenance()) return;</span><span class="ln" data-k="hw">  handleWasteDetection();</span><span class="ln" data-k="d500">  delay(500);</span><span class="ln">}</span><span class="ln">&nbsp;</span><span class="ln" data-k="dm-head">bool detectionMaintenance() {</span><span class="ln" data-k="dm-us">  duration = triggerUltrasonic();     <span id="trUs">--</span></span><span class="ln" data-k="dm-full">  if (distance &lt;= 20 &amp;&amp; !obstacleDetected)</span><span class="ln" data-k="dm-clear">  else if (distance &gt; 20 &amp;&amp; obstacleDetected)</span><span class="ln" data-k="dm-btn">  if (!operationsEnabled &amp;&amp; button == LOW)</span><span class="ln" data-k="dm-ret">  return !operationsEnabled;</span><span class="ln">}</span>
+      </div>
+      <div class="flags" id="flagsEl"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-hd"><h2>handleWasteDetection()</h2><span class="tag">branch taken</span></div>
+    <div class="card-bd">
+      <div class="trace" id="traceEl2">
+<span class="ln" data-k="hw-read">  val_metal / val_plastic / val_bio = digitalRead(...)</span><span class="ln" data-k="hw-metal">  if (val_metal == LOW)      → moveServos(80, 0)</span><span class="ln" data-k="hw-plastic">  if (val_plastic == LOW &amp;&amp; !metalDetected) → moveServos(165, 0)</span><span class="ln" data-k="hw-bio">  if (val_bio == LOW)        → moveServos(0, 0)</span><span class="ln" data-k="hw-reset">  if (none detected)         → resetServosAndLCD()</span><span class="ln">&nbsp;</span><span class="ln" data-k="ms-head">void moveServos(int pos1, int pos2) {</span><span class="ln" data-k="ms-1">  tap_servo.write(pos1);   // rotate platform</span><span class="ln" data-k="ms-d1">  delay(1000);</span><span class="ln" data-k="ms-2">  tap_servo1.write(pos2);  // open gate</span><span class="ln" data-k="ms-d2">  delay(200);</span><span class="ln">}</span>
+      </div>
+      <div class="flags">
+        <span class="flag">tap_servo home <b>90</b></span><span class="flag">bio <b>0</b></span>
+        <span class="flag">metal <b>80</b></span><span class="flag">plastic <b>165</b></span>
+        <span class="flag">gate closed <b>180</b></span><span class="flag">gate open <b>0</b></span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="card" style="margin-top:14px">
+  <div class="card-hd"><h2>What the code does, in order</h2><span class="tag">one pass of loop()</span></div>
+  <div class="steps" id="stepsEl">
+    <div class="step" data-s="dm"><div class="n">01</div><div class="t">Measure</div><div class="d">Ultrasonic fires first, every pass, before anything else</div></div>
+    <div class="step" data-s="full"><div class="n">02</div><div class="t">Full?</div><div class="d">&le;20 cm &rarr; alarm, lock out, <code>return</code> &mdash; no sorting at all</div></div>
+    <div class="step" data-s="read"><div class="n">03</div><div class="t">Read</div><div class="d">All three sensor pins read at once</div></div>
+    <div class="step" data-s="rot"><div class="n">04</div><div class="t">Rotate</div><div class="d">tap_servo turns the platform to that bin</div></div>
+    <div class="step" data-s="wait"><div class="n">05</div><div class="t">Wait 1 s</div><div class="d">delay(1000) lets the platform arrive</div></div>
+    <div class="step" data-s="gate"><div class="n">06</div><div class="t">Open gate</div><div class="d">tap_servo1 &rarr; 0, waste drops in</div></div>
+    <div class="step" data-s="home"><div class="n">07</div><div class="t">Reset</div><div class="d">Next pass sees nothing &rarr; servos home, LCD idle</div></div>
+  </div>
+</section>
+
+<section class="card" style="margin-top:14px">
+  <div class="card-hd"><h2>Why the sensors sit where they do</h2><span class="tag">the design logic</span></div>
+  <div class="card-bd">
+    <div class="two" style="margin-top:0">
+      <div class="note">
+        <h3 style="font-size:14px;margin-bottom:6px">Stage 1 &mdash; the two proximity heads, up on the wooden blocks</h3>
+        <p>The <b>capacitive</b> head reacts to solid plastic &mdash; a Coke bottle, a C2 bottle &mdash; and much more strongly when there is still liquid inside, because it senses the change in the electric field and water changes it a lot. It also reacts to metal. The <b>inductive</b> head reacts to metal and nothing else.</p>
+        <p>That difference is the whole trick: <b>capacitive alone means plastic; the inductive joining in means metal.</b> The sketch reads the inductive pin first, so when both go LOW the answer is Metal Waste.</p>
+        <p><b>Why the same height.</b> Both heads face each other across the throat on the same line, so one object crossing that line reaches both at the same instant. If one sat higher, a short can could reach the upper head and not the lower one, and the answer would depend on how deep you happened to push it.</p>
+        <p><b>Why the gap is set the way it is.</b> Too close together and the two heads share a target &mdash; anything passing between them trips both, and both&#8209;high reads as metal, so a plastic bottle would be called metal. Too far apart and a small can slips down the middle without either head seeing it. The spacing is chosen so a normal can or bottle fills the gap and a hand can still hold it there.</p>
+        <p><b>Why they are above the IR.</b> They are the opening stage of detection &mdash; waste passes them on the way in, before it reaches anything else.</p>
+      </div>
+      <div class="note">
+        <h3 style="font-size:14px;margin-bottom:6px">Stage 2 &mdash; the IR at the bottom of the hole, just above the tap</h3>
+        <p>Bio waste is the awkward one. Paper and rotten fruit are soft, light and irregular &mdash; they go straight through the hole and fall. There is nothing solid to hold up to a proximity head, and a proximity head would not reliably see them anyway.</p>
+        <p>So the IR sits at the <b>bottom of the hole, above the tap, aimed across the face of the tap</b>. The tap is closed, it catches whatever fell, and the IR is looking at exactly that spot. Anything that drops in ends up in the IR's field of view and stays there until the tap opens.</p>
+        <p><b>The catch.</b> An IR reflective sensor sees <em>any</em> object in front of it, not only bio waste. So the IR is really "something landed on the tap", and it is bio only by convention. That is why it is the last thing checked &mdash; and why a bottle or a can that skipped stage 1 gets called bio.</p>
+        <p><b>Where the two stages meet.</b> A tall item resting on the tap can still reach up into stage 1 &mdash; a standing bottle does exactly that. Then both stages report at once, and because the bio branch in the sketch has no guard it runs last and takes over the display. Try the plastic bottle with <em>Drop straight in</em> and watch the LCD.</p>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft)">
+      <h3 style="font-size:14px;margin-bottom:6px">The turntable is three parts, not one</h3>
+      <p>From the bottom up: a <b>rectangular plywood support box</b> on the floor, a <b>fixed triangular base plate</b> screwed down onto it, <b>three castors</b> near that plate's corners, and only then the <b>rotating triangular plate</b> with the bins riding on those castors.</p>
+      <p><b>Why not just bolt the plate to the servo.</b> A servo's output shaft is a drive, not a bearing. Three loaded bins sit about 67 mm off the axis, so their weight becomes a bending moment on that shaft: the plate droops on the loaded side, see-saws as it swings round, and the gearbox wears out. The castors carry that weight straight down into the box and leave the servo doing nothing but turning &mdash; which is all a 270&deg; hobby servo is good for.</p>
+      <p><b>Why the base is a triangle too.</b> Three castors under the three corners put a support directly beneath each bin, which is where the load is, without cutting a full disc of plywood. And because the base does <em>not</em> turn, its corners stay pointing the same way while the top plate rotates over them &mdash; you can see that in the scene.</p>
+      <p><b>Why a rectangle underneath.</b> A box is the easy shape to cut square and glue rigid, its flat footprint stops the whole tower rocking when a bin swings past, and the hollow gives you somewhere to mount the servo and the D10 button out of the way.</p>
+    </div>
+  </div>
+</section>
+
+<section class="card" style="margin-top:14px">
+  <div class="card-hd"><h2>Why both servos are 270&deg;</h2><span class="tag">travel on D5, torque on D6</span></div>
+  <div class="card-bd">
+    <p class="note" style="margin:0 0 12px">Both <code>tap_servo</code> (D5) and <code>tap_servo1</code> (D6) are <b>270&deg; metal&#8209;gear digital servos</b>, not the 9&nbsp;g SG90 that comes in most kits. They are the same part for two different reasons &mdash; the platform needs the <em>travel</em>, the gate needs the <em>torque</em> &mdash; and a panel will ask about the cost, so the numbers are worth knowing.</p>
+
+    <div class="two" style="margin-top:0">
+
+      <div class="note">
+        <h3 style="font-size:14px;margin-bottom:6px">D5 &mdash; the platform: it is a travel problem</h3>
+        <p>Three bins take turns under one hole, so their parked positions are spread round the plate. From the sketch: <b>bio <code>write(0)</code> = 0&deg;</b>, <b>metal <code>write(80)</code> = 120&deg;</b>, <b>plastic <code>write(165)</code> = 247.5&deg;</b>. The furthest bin is nearly 250&deg; from zero.</p>
+
+        <svg viewBox="0 0 300 240" role="img" aria-label="Bin positions at 0, 120 and 247.5 degrees against the 180-degree limit of an SG90"
+             style="width:100%;max-width:340px;display:block;margin:10px auto 8px;font-family:'IBM Plex Mono',monospace">
+          <text x="150" y="204" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">how far D5 must turn to park each bin</text>
+          <circle cx="150" cy="112" r="78" fill="none" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="3 4"/>
+          <!-- what an SG90 can sweep: 0 to 180 -->
+          <path d="M150 34 A 78 78 0 0 1 150 190" fill="none" stroke="var(--accent)" stroke-width="9" stroke-linecap="round" opacity=".85"/>
+          <!-- where it can never go, and where the plastic bin lives -->
+          <path d="M150 190 A 78 78 0 0 1 77.9 141.9" fill="none" stroke="var(--metal)" stroke-width="9" stroke-linecap="round" opacity=".9"/>
+          <!-- the axis and the hole the bins have to arrive under -->
+          <circle cx="150" cy="112" r="4" fill="var(--ink-3)"/>
+          <line x1="150" y1="112" x2="150" y2="34" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <!-- the three bins -->
+          <circle cx="150" cy="34" r="8.5" fill="var(--bio)"/>
+          <circle cx="217.5" cy="151" r="8.5" fill="var(--metal)"/>
+          <circle cx="77.9" cy="141.9" r="8.5" fill="var(--plastic)"/>
+          <text x="150" y="14" text-anchor="middle" font-size="10.5" fill="var(--ink-2)">BIO</text>
+          <text x="150" y="26" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">write(0) &middot; 0&deg;</text>
+          <text x="238" y="152" font-size="10.5" fill="var(--ink-2)">METAL</text>
+          <text x="238" y="164" font-size="10.5" fill="var(--ink-3)">write(80) &middot; 120&deg;</text>
+          <text x="60" y="130" text-anchor="end" font-size="10.5" fill="var(--ink-2)">PLASTIC</text>
+          <text x="60" y="142" text-anchor="end" font-size="10.5" fill="var(--ink-3)">write(165) &middot; 247.5&deg;</text>
+          <text x="150" y="219" text-anchor="middle" font-size="10.5" fill="var(--accent)">0&ndash;180&deg;: all an SG90 has</text>
+          <text x="150" y="231" text-anchor="middle" font-size="10.5" fill="var(--metal)">180&ndash;270&deg;: where the third bin is</text>
+        </svg>
+
+        <p><b>So an SG90 cannot do it.</b> It stops at 180&deg;. It would park bio and metal and then stall against its own end stop trying to reach plastic &mdash; a two&#8209;bin machine.</p>
+        <p><b>&ldquo;Then space the bins 90&deg; apart.&rdquo;</b> They will not fit. The bins ride <b>67&nbsp;mm</b> off the axis and are about <b>120&nbsp;mm</b> across. At 120&deg; apart their centres are <span class="kbd">2 &times; 67 &times; sin 60&deg; = 116 mm</span> apart &mdash; they only just clear. At 90&deg; apart it is <span class="kbd">2 &times; 67 &times; sin 45&deg; = 95 mm</span>, and they touch. Three bins that size need the whole circle, and the whole circle needs <b>at least 240&deg;</b> of sweep. 270&deg; is the standard size above that.</p>
+        <p><b>Then the load, second.</b> The castors carry the weight straight down, so the servo never holds the plate up &mdash; but it still starts and stops three filling bins, and every stop lets them keep going and twist the shaft back. That is what the <b>metal gearbox</b> is for. <b>Digital</b> is for the parking: a faster correction loop holds the bin square under the hole instead of settling a few degrees off, and a few degrees off at the rim is waste hitting the bin lip.</p>
+      </div>
+
+      <div class="note">
+        <h3 style="font-size:14px;margin-bottom:6px">D6 &mdash; the gate: it is a torque problem</h3>
+        <p><b>What the gate is actually for.</b> It is the floor of the hole. Everything dropped in lands on it and <em>stays</em> there &mdash; held on the stage&#8209;1 sensor line while the sketch reads it, held while the plate turns underneath &mdash; and it opens only once the correct bin has arrived. Without it, waste falls straight through into whichever bin is parked and nothing is sorted. It is a stop first and a door second.</p>
+        <p><b>Travel is not the argument here.</b> A flap only has to swing clear, ~90&deg;, so an SG90 has the sweep. What decides it is how much it can <em>hold</em>, and that is set by the arm:</p>
+        <p style="text-align:center;margin:10px 0"><span class="kbd" style="font-size:13px">torque needed = weight &times; distance from the hinge</span></p>
+        <div class="tblwrap">
+          <table>
+            <thead><tr><th>Flap arm</th><th>SG90 &middot; 1.8&nbsp;kg&middot;cm</th><th>270&deg; MG &middot; 10&nbsp;kg&middot;cm</th></tr></thead>
+            <tbody>
+              <tr><td>4 cm</td><td>450 g at the tip</td><td>2.5 kg</td></tr>
+              <tr><td>6 cm</td><td>300 g at the tip</td><td>1.6 kg</td></tr>
+              <tr><td>8 cm</td><td>225 g at the tip</td><td>1.2 kg</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top:9px">Those are <em>stall</em> figures with nothing spare &mdash; a servo held near its rating sags, buzzes and answers late, which is exactly the &ldquo;not responsive when it is heavy&rdquo; behaviour. Substitute your own servo's rated <span class="kbd">kg&middot;cm</span> from its datasheet; the shape of the table does not change.</p>
+        <p><b>And it gets landed on.</b> Every item is <em>dropped</em> from the mouth onto a closed flap, so the gearbox takes an impact, not a steady load. Nylon gears round off; metal ones do not.</p>
+        <p><b>So: the same 270&deg; metal&#8209;gear digital servo on D6.</b> Not for the sweep &mdash; for the holding torque, for a gearbox that survives being landed on, and so the machine carries one spare part instead of two.</p>
+        <p><b>The design rule that follows:</b> lengthen the flap to cover a wider hole and the torque you need rises in the same proportion. That is why the flap is no longer than the bore.</p>
+      </div>
+
+    </div>
+
+    <div class="note" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft)">
+      <h3 style="font-size:14px;margin-bottom:6px">One thing to own before they find it</h3>
+      <p>The sketch drives the gate from <code>write(180)</code> closed to <code>write(0)</code> open. On a 270&deg; unit that is a <b>full 270&deg; swing</b> &mdash; far more than a gate needs, and time paid on every single drop. The flap only needs about 90&deg;, which on a 270&deg; servo is <code>write(120)</code> &rarr; <code>write(60)</code>. Say it before the panel says it: we know, it is on the improvements list, and it does not affect where the waste lands &mdash; only how long the cycle takes.</p>
+    </div>
+  </div>
+</section>
+
+<section class="card" style="margin-top:14px">
+  <div class="card-hd"><h2>Tips &amp; strategy for the defense</h2><span class="tag">know the weakness, own it</span></div>
+  <div class="card-bd">
+    <div class="two" style="margin-top:0">
+      <div>
+        <h3 style="font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px">Know the weaknesses</h3>
+        <div class="finding"><span class="sev a">W1</span><div><h4>One piece of waste at a time</h4>
+          <p>Two pieces means two materials and one answer. A can and a bottle together will trip the inductive head and the whole load goes to the metal bin. Never load a handful &mdash; feed it one item, wait for the platform to come home, then feed the next.</p></div></div>
+        <div class="finding"><span class="sev a">W2</span><div><h4>Anything on the tap reads as bio</h4>
+          <p>The IR sees any object, so an item that never registered at stage 1 is called bio whatever it is made of. Throw a can in fast and it lands in the bio bin &mdash; not a wiring fault, just the loop looking twice a second while the can falls past stage 1 in about a tenth of a second.</p></div></div>
+        <div class="finding"><span class="sev a">W3</span><div><h4>Room light alone can trigger bio &mdash; with nothing in the machine</h4>
+          <p>The bio head is an IR obstacle module: an IR LED, a receiver and an <code>LM393</code> comparator with a trim pot. It cannot tell its own emitter's light from the room's. Direct sun, a halogen or incandescent lamp, or a camera flash into the throat pushes the receiver past the threshold &mdash; the module's own output LED lights, D7 reads LOW, and <code>handleWasteDetection()</code> calls it bio: green LED on A3, platform to <code>0</code>, gate open, on an empty tap. <b>Keep the throat shaded.</b> Hood the feed hole, do not set the prototype by a window or under a spotlight, and tune the pot in the room you will present in. Ordinary LED or fluorescent ceiling light emits little IR and is usually fine; sunlight and hot-filament lamps are what break it. (Note it is one digital bit, not a signal level &mdash; the pot sets where the line falls, and the module's LED just mirrors that bit.)</p></div></div>
+        <div class="finding"><span class="sev b">W4</span><div><h4>Wet bio can read as plastic</h4>
+          <p>The capacitive head responds to water. Hold a very wet fruit up at stage 1 and it can trip as plastic. Bio waste should be dropped, never presented.</p></div></div>
+        <div class="finding"><span class="sev b">W5</span><div><h4>Bin-full mostly watches one bin</h4>
+          <p>Home is <code>write(90)</code> and metal is <code>write(80)</code>, so at rest the ultrasonic is pointed into the metal bin. Empty all three before you start rather than trusting the alarm.</p></div></div>
+      </div>
+      <div>
+        <h3 style="font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px">Technique on the day</h3>
+        <div class="finding"><span class="sev c">1</span><div><h4>Bio &mdash; just drop it in</h4>
+          <p>Paper, a crumpled ball, a piece of fruit: put it in the hole and let it fall. It lands on the tap, the IR picks it up, green LED, bio bin. Do not hold it near the proximity heads.</p></div></div>
+        <div class="finding"><span class="sev c">2</span><div><h4>Plastic &mdash; present it, don't throw it</h4>
+          <p>Hold the bottle into the mouth so its body sits <b>between the two proximity heads</b>. Wait for the LCD to read <code>Plastic Waste</code> and the yellow LED to light, then let go. The platform is already turning by then, so it drops into the right bin.</p></div></div>
+        <div class="finding"><span class="sev c">3</span><div><h4>Metal &mdash; same, slowly</h4>
+          <p>Feed the can in slowly so both heads see it together. Both go LOW, the sketch checks the inductive first, the LCD reads <code>Metal Waste</code>. Say this out loud while you do it &mdash; it is the clearest moment to explain the two-sensor logic.</p></div></div>
+        <div class="finding"><span class="sev c">4</span><div><h4>Let it finish before the next piece</h4>
+          <p>One pass takes about 1.7 s: 1 s for the platform, 0.2 s for the tap, then <code>delay(500)</code>. Wait for the LCD to return to <code>Automatic Waste / Segregation</code> before the next item.</p></div></div>
+        <div class="finding"><span class="sev c">5</span><div><h4>Demo order, and own the limitation</h4>
+          <p>Name the two stages before you touch anything, then run bio &rarr; plastic &rarr; metal. If you are confident, finish by deliberately throwing the can in so it lands in the bio bin, and explain why. A panel that hears you predict the failure trusts the rest of the work far more than one that finds it for you.</p></div></div>
+        <div class="finding"><span class="sev c">6</span><div><h4>Tune the IR in the room, not at home</h4>
+          <p>Power up with the hopper empty and look at the green LED and the module's own output LED. If either is lit with nothing on the tap, the room's IR is already over your threshold &mdash; back the trim pot off until it goes out, then check that a sheet of paper on the tap still trips it. Do this again if the blinds get opened or someone points a light at you.</p></div></div>
+        <div class="finding"><span class="sev c">7</span><div><h4>Before you present</h4>
+          <p>Empty all three bins, bring a spare of each item, check the 14.8 V pack, and leave the serial monitor open &mdash; the running <code>Distance:</code> line is easy proof the ultrasonic is alive if a panelist asks.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="two">
+  <section class="card">
+    <div class="card-hd"><h2>Analysis of your sketch</h2><span class="tag">ten, by severity</span></div>
+    <div class="card-bd">
+      <div class="finding"><span class="sev a">1</span><div><h4>Bio is not guarded, so it overrides metal and plastic</h4>
+        <p>The metal branch has no guard, plastic has <code>&amp;&amp; !metalDetected</code>, but bio has none at all. A tin can that also reflects the IR sensor runs <code>moveServos(80,0)</code> <em>and then</em> <code>moveServos(0,0)</code> &mdash; the platform swings to metal, then to bio, and the can lands in the bio bin. Add <code>&amp;&amp; !metalDetected &amp;&amp; !plasticDetected</code> to the bio branch.</p></div></div>
+      <div class="finding"><span class="sev a">2</span><div><h4>Only the metal bin is watched between drops</h4>
+        <p>Home is <code>tap_servo.write(90)</code> and metal is <code>80</code> &mdash; nearly the same angle. So at rest the ultrasonic looks into the metal bin. Bio and plastic are only checked in the one pass right after they receive waste, then the platform returns home. A bin can sit full and unreported.</p></div></div>
+      <div class="finding"><span class="sev b">3</span><div><h4>Sensor pins have no pull-up</h4>
+        <p><code>pinMode(..., INPUT)</code> leaves the pin floating when an NPN open-collector sensor is not conducting, so it can read LOW at random. Use <code>INPUT_PULLUP</code> (or fit external pull-ups) on pins 3, 4 and 7.</p></div></div>
+      <div class="finding"><span class="sev b">4</span><div><h4><code>pulseIn</code> has no timeout</h4>
+        <p>If the echo never comes back, <code>pulseIn(echoPin, HIGH)</code> blocks for a full second, every pass. Use <code>pulseIn(echoPin, HIGH, 25000)</code> and treat 0 as "far away".</p></div></div>
+      <div class="finding"><span class="sev b">5</span><div><h4>A no-echo reading looks like a full bin</h4>
+        <p><code>duration</code> of 0 gives <code>distance</code> of 0, which passes <code>distance &lt;= 20</code> and fires the alarm. Guard with <code>if (distance &gt; 0 &amp;&amp; distance &lt;= 20)</code>.</p></div></div>
+      <div class="finding"><span class="sev c">6</span><div><h4><code>lcd.init()</code> runs every idle pass</h4>
+        <p><code>resetServosAndLCD()</code> is called from <code>handleWasteDetection()</code> whenever nothing is detected &mdash; twice a second &mdash; and it re-initialises the display each time. Move <code>lcd.init()</code> and <code>lcd.backlight()</code> into <code>setup()</code>.</p></div></div>
+      <div class="finding"><span class="sev c">7</span><div><h4>1 s may not cover a 247&deg; swing</h4>
+        <p>These are 270&deg; servos, so <code>write(165)</code> is about 247&deg; of real travel. Packing the bins corner to corner on a triangular plate cuts the inertia the servo has to fight, but the <em>travel</em> is unchanged &mdash; and if the gate opens before the plate arrives, the waste lands in the wrong bin. Time the worst case (home &rarr; plastic) and raise the <code>delay(1000)</code> if needed.</p></div></div>
+      <div class="finding"><span class="sev b">8</span><div><h4>Unrecognised waste jams the machine silently</h4>
+        <p>If nothing reads LOW, <code>handleWasteDetection()</code> falls through to <code>resetServosAndLCD()</code>: the gate stays closed at 180 and the LCD keeps showing the idle message, while the waste sits in the throat forever. Try the glass shard &mdash; nothing happens and nothing tells you why. A "not recognised" message plus a timeout would fix it. (Click the stuck waste to take it back out.)</p></div></div>
+      <div class="finding"><span class="sev c">9</span><div><h4>Locked-out loop free-runs</h4>
+        <p>When <code>detectionMaintenance()</code> returns true the loop <code>return</code>s before <code>delay(500)</code>, so it spins as fast as the serial print allows. Harmless, but it floods the serial monitor &mdash; you can see it in the panel above.</p></div></div>
+      <div class="finding"><span class="sev a">10</span><div><h4>The gate is left <em>open</em> when a bin fills</h4>
+        <p>The full-bin branch sounds the alarm, prints, clears <code>operationsEnabled</code> and <code>return</code>s <code>true</code> &mdash; and never touches <code>tap_servo1</code>. The trip fires on the pass straight <em>after</em> a drop, when the gate is still at <code>write(0)</code>, so the machine locks out with the floor of the throat hanging open. The sorting stops; the hole does not. Anything dropped in while the buzzer is going falls straight through into the bin that was just declared full, and the gate servo holds at 0 under load for the whole alarm. <code>resetServosAndLCD()</code> is the only thing that closes it, and that does not run until D10 is pressed. One line fixes it &mdash; <code>tap_servo1.write(180);</code> before the <code>return true</code>.</p>
+        <p class="note" style="margin-top:6px">Try it: fill a bin, and while the alarm is going, feed another item. It goes in.</p></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-hd"><h2>Pins &amp; angles</h2><span class="tag">from your sketch</span></div>
+    <div class="card-bd tblwrap">
+      <table>
+        <thead><tr><th>Component</th><th>Pin</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>I&sup2;C LCD 0x27</td><td class="p">A4 / A5</td><td>16&times;2</td></tr>
+          <tr><td>plastic_sensor_pin (capacitive)</td><td class="p">3</td><td>LOW = detected</td></tr>
+          <tr><td>metal_sensor_pin (inductive)</td><td class="p">4</td><td>LOW = detected</td></tr>
+          <tr><td>bio_sensor_pin (IR)</td><td class="p">7</td><td>LOW = detected</td></tr>
+          <tr><td>trigPin / echoPin</td><td class="p">8 / 9</td><td>full at &le; 20 cm</td></tr>
+          <tr><td>buttonPin</td><td class="p">10</td><td>INPUT_PULLUP</td></tr>
+          <tr><td>buzzerPin</td><td class="p">12</td><td>alarm only</td></tr>
+          <tr><td>ledPin (plastic)</td><td class="p">2</td><td>yellow</td></tr>
+          <tr><td>ledPin1 (metal)</td><td class="p">13</td><td>red</td></tr>
+          <tr><td>ledPin2 (bio)</td><td class="p">A3</td><td>green</td></tr>
+          <tr><td>tap_servo &mdash; platform <em>270&deg; metal-gear digital</em></td><td class="p">5</td><td>90 home / 0 bio / 80 metal / 165 plastic</td></tr>
+          <tr><td>tap_servo1 &mdash; gate <em>270&deg; metal-gear digital</em></td><td class="p">6</td><td>180 closed / 0 open</td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="margin-top:10px">On a 270&deg; servo the library value is not the real angle: physical = <span class="kbd">value &times; 1.5</span>. So home 90 is 135&deg;, plastic 165 is 247&deg;, and the gate swings a full 270&deg; between closed and open. Why both are 270&deg; units and not SG90s is set out in <b>Why both servos are 270&deg;</b> above &mdash; travel on D5, torque on D6.</p>
+    </div>
+  </section>
+</div>
+
+<footer>Served locally. The simulation executes the same control flow as <span class="mono">EnviroSortPro/EnviroSortPro.ino</span> &mdash; same order, same delays, same flags.</footer>
+
+</div>
+<script src="js/app.js"></script>
+</body>
+</html>

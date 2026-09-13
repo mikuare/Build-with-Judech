@@ -1,0 +1,41 @@
+# Keeps the JUDECH Supabase project awake on the Free plan.
+#
+# Supabase pauses a free project after a week without database activity. This
+# runs every three days and writes one heartbeat row through the public API —
+# a real write, which is what the pausing rule counts. Three days leaves two
+# missed runs before anything happens.
+#
+# To use it:
+#   1. Put this site in a GitHub repository (public is free; private uses your
+#      Actions minutes — this job takes a few seconds, so either is fine).
+#   2. Save this file as  .github/workflows/keepalive.yml
+#   3. Nothing else. The URL and anon key below are the same public pair that
+#      ships in js/config.js; Row Level Security is what protects the data, and
+#      heartbeat() can only insert a timestamp.
+#
+# You can also run it by hand: Actions → "Keep Supabase awake" → Run workflow.
+
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: "23 2 */3 * *"     # every 3rd day at 02:23 UTC (10:23 in Manila)
+  workflow_dispatch:           # and whenever you press the button
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Write one heartbeat row
+        env:
+          SUPABASE_URL: https://eghmgcwasumsvsanimmp.supabase.co
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaG1nY3dhc3Vtc3ZzYW5pbW1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjc2NjgsImV4cCI6MjEwNDYwMzY2OH0.PVnDAli4i3n8mIE2ETYnEk9xGDKyIB2MDOSB_ARjNcI
+        run: |
+          set -euo pipefail
+          out=$(curl -sS --fail -X POST "$SUPABASE_URL/rest/v1/rpc/heartbeat" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"p_source":"github-actions"}')
+          echo "Heartbeat recorded: $out"

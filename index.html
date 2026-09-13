@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- the page itself names the version of every asset, so it must always be
+     fetched fresh; the css and js under it are cached hard and busted by ?v= -->
+<meta http-equiv="cache-control" content="no-cache, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<title>Build with JUDECH — systems, apps and machines that work</title>
+<meta name="description" content="Build with JUDECH: web systems, mobile apps and embedded builds for a thesis, a capstone or a business. Full source code, the documentation your panel asks for, wiring diagrams, and a real person to ask. Take the whole package or pay for one part at a time.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7.5' fill='%230C1512'/><g fill='none' stroke='%234CD6B4' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='M11.4 10.4 6.4 16l5 5.6'/><path d='M20.6 10.4 25.6 16l-5 5.6'/><path d='M18.3 9.1 13.7 22.9'/></g></svg>">
+<script>
+/* the stored theme goes on before the first paint, so the page never flashes
+   the wrong one on its way in */
+(function(){try{var t=localStorage.getItem('judech.theme');
+if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/landing.css?v=20260914f">
+</head>
+<body>
+
+<!-- ===================== top bar ===================== -->
+<div class="topbar site-topbar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Build with Judech — home">
+      <span aria-hidden="true">
+        <b>Bu<i class="wm-code">&lt;/&gt;</i>ld with <em>Judech</em></b>
+      </span>
+    </a>
+    <nav class="topnav" aria-label="Main navigation">
+      <a href="#how">How it works</a>
+      <a href="#build">What I build</a>
+      <a href="#projects">Projects</a>
+      <a href="#proof" id="navProof" hidden>Proof</a>
+      <a href="#rights">Rights</a>
+      <a href="#contact">Contact</a>
+      <button class="icon-btn theme-toggle" type="button" data-theme-toggle
+              aria-pressed="false" aria-label="Switch to the dark theme" title="Switch to the dark theme">
+        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.4v2.7M12 18.9v2.7M2.4 12h2.7M18.9 12h2.7M5.2 5.2l1.9 1.9M16.9 16.9l1.9 1.9M18.8 5.2l-1.9 1.9M7.1 16.9l-1.9 1.9"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 1 1 9.4 3.5a7.1 7.1 0 0 0 11.1 11.1z"/></svg>
+      </button>
+    </nav>
+    <div class="auth-slot" id="authSlot" hidden></div>
+  </div>
+  <span class="read-bar" id="readBar" aria-hidden="true"></span>
+</div>
+
+<!-- ===================== hero ===================== -->
+<header class="hero pane-a" id="top">
+  <div class="wrap">
+    <div>
+      <span class="hello">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5H8zM6 15h12M9 12v6M15 12v6M4 15v4M20 15v4"/><circle cx="10" cy="6.5" r=".7" fill="currentColor"/><circle cx="14" cy="6.5" r=".7" fill="currentColor"/></svg>
+        Web &middot; Mobile &middot; Embedded &amp; robotics
+      </span>
+      <h1>Turning Ideas Into <em>Systems That Work.</em></h1>
+      <p class="lede">
+        From thesis and capstone projects to business ideas&mdash;we turn concepts into
+        working systems, apps, and machines. Delivered complete, with the source code,
+        wiring diagrams, documentation, and human support you need from build to handover.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary btn-lg" href="#projects">
+          See the projects
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </a>
+        <button class="btn btn-ghost btn-lg" type="button" data-open-messages>
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v12H8l-4 3z"/><path d="M8 9h8M8 13h5"/></svg>
+          Tell me what you need
+        </button>
+      </div>
+      <p class="hero-note">Not sure it can be built in time? Ask before you spend anything
+        &mdash; I will tell you honestly what is possible, and what it costs.</p>
+      <a class="scroll-cue" href="#how" id="scrollCue" data-gone="false">
+        <span class="scroll-cue-mouse" aria-hidden="true"><span></span></span>
+        <span class="scroll-cue-text">Scroll &mdash; there is more below</span>
+      </a>
+    </div>
+
+    <div class="hero-art" data-hero-slider role="region" aria-roledescription="carousel"
+         aria-label="JUDECH services showcase">
+      <div class="prototype-halo" aria-hidden="true"></div>
+      <div class="hero-slides">
+        <figure class="hero-slide is-active" data-hero-slide="embedded" aria-hidden="false">
+          <img data-hero-image src="img/hero-embedded-robot-v2.png"
+               alt="Embedded systems prototype robot with wheels, sensors, controller board and robotic arm"
+               width="1448" height="1086" fetchpriority="high">
+          <figcaption><span data-hero-eyebrow>Embedded systems &amp; robotics</span><strong data-hero-headline>Machines that sense, decide and move</strong></figcaption>
+        </figure>
+        <figure class="hero-slide hero-slide-web" data-hero-slide="web" aria-hidden="true">
+          <img data-hero-image src="img/hero-web-systems-v1.png"
+               alt="Custom web system with connected dashboards, records and workflow modules"
+               width="1448" height="1086" loading="lazy">
+          <figcaption><span data-hero-eyebrow>Web systems</span><strong data-hero-headline>Dashboards, portals and workflows built around you</strong></figcaption>
+        </figure>
+        <figure class="hero-slide" data-hero-slide="inventory" aria-hidden="true">
+          <img data-hero-image src="img/hero-inventory-erp-v1.png"
+               alt="Inventory and ERP workstation with stock dashboard, barcode scanner and warehouse items"
+               width="1448" height="1086" loading="lazy">
+          <figcaption><span data-hero-eyebrow>Inventory &amp; ERP</span><strong data-hero-headline>Stock, purchasing, sales and operations in one place</strong></figcaption>
+        </figure>
+        <figure class="hero-slide" data-hero-slide="automation" aria-hidden="true">
+          <img data-hero-image src="img/hero-mobile-automation-v1.png"
+               alt="Connected mobile applications, controller and smart automation sensors"
+               width="1448" height="1086" loading="lazy">
+          <figcaption><span data-hero-eyebrow>Mobile &amp; automation</span><strong data-hero-headline>Connected apps and devices that work together</strong></figcaption>
+        </figure>
+      </div>
+      <button class="hero-arrow hero-prev" type="button" data-hero-prev aria-label="Previous showcase slide">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button class="hero-arrow hero-next" type="button" data-hero-next aria-label="Next showcase slide">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <div class="hero-controls">
+        <div class="hero-dots" role="group" aria-label="Choose showcase slide">
+          <button class="is-active" type="button" data-hero-dot="0" aria-label="Show embedded systems and robotics" aria-current="true"></button>
+          <button type="button" data-hero-dot="1" aria-label="Show web systems" aria-current="false"></button>
+          <button type="button" data-hero-dot="2" aria-label="Show inventory and ERP" aria-current="false"></button>
+          <button type="button" data-hero-dot="3" aria-label="Show mobile and automation" aria-current="false"></button>
+        </div>
+        <button class="hero-toggle" type="button" data-hero-toggle aria-label="Pause slideshow" aria-pressed="false">
+          <svg class="pause-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7v10M15 7v10"/></svg>
+          <svg class="play-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7l8 5-8 5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== how it works ===================== -->
+<section class="how pane-b" id="how">
+  <div class="wrap">
+    <div class="sec-hd sec-hd-center">
+      <span class="kicker">How it works</span>
+      <h2>Four steps, nothing hidden</h2>
+      <p>You see the whole package before you spend a peso, and you decide how much of it
+         you take at a time.</p>
+    </div>
+    <div class="how-grid">
+      <div class="how-card">
+        <span class="n">1</span>
+        <h3>Look inside first</h3>
+        <p>Open any project below and see exactly what comes with it &mdash; every component
+           listed, with its own price where there is one. Nothing is hidden behind the
+           payment.</p>
+      </div>
+      <div class="how-card">
+        <span class="n">2</span>
+        <h3>Pay for what you need</h3>
+        <p>The whole package, or one part of it &mdash; the wiring diagram now, the code when
+           you are ready. Scan the GCash QR, send the reference and the receipt. Already paid
+           me elsewhere? Use the access code I give you.</p>
+      </div>
+      <div class="how-card">
+        <span class="n">3</span>
+        <h3>I check it myself</h3>
+        <p>No robot approves your payment. I match it against what actually arrived, usually
+           within the day, then you sign a short plain-language agreement &mdash; your name,
+           your signature, the date.</p>
+      </div>
+      <div class="how-card">
+        <span class="n">4</span>
+        <h3>It opens, and stays open</h3>
+        <p>Source, diagrams, documentation, the live demo or simulator where there is one.
+           It stays unlocked on your account, and whatever you did not buy is still waiting
+           at its own price.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== what I build ===================== -->
+<section class="band pane-a" id="build">
+  <div class="wrap">
+    <div class="sec-hd">
+      <span class="kicker">What I build</span>
+      <h2>One workshop, three kinds of build</h2>
+      <p>Software and hardware, for a defense panel or for a business that has to open on
+         Monday. Same care either way &mdash; and the same files handed over at the end.</p>
+    </div>
+    <div class="cap-grid" id="capGrid"></div>
+  </div>
+</section>
+
+<!-- ===================== projects ===================== -->
+<section class="band pane-b" id="projects">
+  <div class="wrap">
+    <div class="sec-hd">
+      <span class="kicker">The projects</span>
+      <h2>Ready now, and a few on the workbench</h2>
+      <p>Open a card to see everything inside it, component by component, with prices. Take
+         the whole package or start with one part. The ones still being built are marked
+         <em>coming soon</em> &mdash; you can still see what they will include, and ask to be
+         told the moment they are ready.</p>
+    </div>
+    <div class="filters" id="filterRow" role="group" aria-label="Filter projects"></div>
+    <div class="projects" id="projectGrid"></div>
+    <p class="empty" id="emptyNote" hidden>Nothing in this group yet — more is on the way.</p>
+    <noscript>
+      <div class="note" style="margin-top:22px">
+        <svg viewBox="0 0 24 24"><path d="M12 9v5M12 17.5v.5"/><circle cx="12" cy="12" r="9"/></svg>
+        <span>This page needs JavaScript switched on to show the projects.</span>
+      </div>
+    </noscript>
+  </div>
+</section>
+
+<!-- ===================== proof of legitimacy ===================== -->
+<section class="band pane-a" id="proof" hidden>
+  <div class="wrap">
+    <div class="sec-hd">
+      <h2>Proof of legitimacy</h2>
+    </div>
+    <div class="proof-grid" id="proofGrid"></div>
+  </div>
+</section>
+
+<!-- ===================== whose project is it ===================== -->
+<section class="band pane-a" id="rights">
+  <div class="wrap">
+    <div class="sec-hd">
+      <span class="kicker">Rights</span>
+      <h2>Whose project is it?</h2>
+      <p>It depends on whose idea it was. Both ways are honest &mdash; here is the difference
+         in plain words, written down before you pay for anything, not after.</p>
+    </div>
+    <div class="rights-grid" id="rightsGrid"></div>
+  </div>
+</section>
+
+<!-- ===================== contact ===================== -->
+<section class="band pane-b" id="contact">
+  <div class="wrap">
+    <div class="sec-hd">
+      <span class="kicker">Contact</span>
+      <h2>Talk to me first &mdash; it costs nothing</h2>
+      <p>Tell me your subject or your business, what it has to do, and when you need it.
+         I will tell you honestly whether I can build it in time, what it will cost, and
+         which parts you could take first if the budget is tight.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-card">
+        <h3>Reach me here</h3>
+        <div class="channels" id="channelList"></div>
+        <p class="hours" id="contactHours"></p>
+        <button class="btn btn-primary btn-sm channel-message" type="button" data-open-messages>
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v12H8l-4 3z"/><path d="M8 9h8M8 13h5"/></svg>
+          Chat with me right here
+        </button>
+        <p class="muted channel-note">Opens a private thread against your Google account &mdash;
+          you read the reply on this page, not in your inbox.</p>
+      </div>
+      <div class="contact-card ask">
+        <h3>What to send me</h3>
+        <ul class="ask-list">
+          <li>The project or system you need &mdash; or just the problem, if you are not sure yet</li>
+          <li>Whether it is a thesis, a capstone, or for a business</li>
+          <li>Your deadline, and your budget range</li>
+          <li>Any requirement sheet, rubric or spec you were given</li>
+        </ul>
+        <div class="ask-actions">
+          <button class="btn btn-primary btn-sm" data-open-project="more">Request a custom build</button>
+          <a class="btn btn-sm btn-ghost" href="#projects">Browse ready projects</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<button class="message-fab" type="button" id="messageFab" data-open-messages
+        aria-controls="msgDock" aria-expanded="false" aria-label="Open the chat with JUDECH">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v12H8l-4 3z"/><path d="M8 9h8M8 13h5"/></svg>
+  <strong class="message-fab-badge" id="messageFabBadge" aria-label="Unread replies" hidden>0</strong>
+  <span>Chat</span>
+</button>
+
+<!-- the nudge that explains where the reply lands -->
+<div class="chat-tip" id="chatTip" data-open="false" role="status" aria-live="polite">
+  <button class="chat-tip-x" id="chatTipClose" type="button" aria-label="Hide this tip">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <p><b>You can message JUDECH here.</b> Ask about any project, a price, or a deadline
+    &mdash; and the reply comes back in this same chat, so watch this button rather than
+    your inbox.</p>
+  <button class="chat-tip-never" id="chatTipNever" type="button">Do not show this again</button>
+</div>
+
+<!-- ===================== the message dock =====================
+     Lifted out of the contact section so it can be opened from anywhere on the
+     page and put away again without losing what was typed. -->
+<section class="msg-dock" id="msgDock" data-state="closed" aria-labelledby="msgDockTitle">
+  <header class="msg-dock-head" id="msgDockHead">
+    <span class="msg-dock-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16v12H8l-4 3z"/><path d="M8 9h8M8 13h5"/></svg>
+    </span>
+    <div class="msg-dock-who">
+      <b id="msgDockTitle">Chat with JUDECH</b>
+    </div>
+    <button class="msg-dock-btn" id="refreshMessages" type="button" title="Refresh the chat"
+            aria-label="Refresh the chat" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg>
+    </button>
+    <button class="msg-dock-btn" id="msgDockMin" type="button" title="Collapse"
+            aria-controls="msgDockBody" aria-expanded="true" aria-label="Collapse the chat">
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10l6 6 6-6"/></svg>
+    </button>
+    <button class="msg-dock-btn" id="msgDockClose" type="button" title="Close"
+            aria-label="Close the chat">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </header>
+
+  <div class="msg-dock-sleeve">
+   <div class="msg-dock-inner">
+    <div class="msg-tabs" id="msgTabs" role="tablist" aria-label="Your conversations" hidden></div>
+    <div class="msg-dock-body" id="msgDockBody">
+        <p class="msg-who" id="contactIdentity">Sign in with Google to start the chat and read
+          the replies here.</p>
+        <p class="msg-blocked" id="chatBlocked" hidden>
+          <b>This account cannot send messages.</b> If you think that is a mistake, reach me
+          through Facebook or Messenger and I will look at it. Anything you have already paid
+          for and signed for is still yours &mdash; open it from the project page as usual.
+        </p>
+
+        <form id="contactForm">
+          <div class="field">
+            <label for="contactTitle">Title</label>
+            <input id="contactTitle" maxlength="120" placeholder="e.g. Inventory system for my capstone" required>
+          </div>
+          <div class="field">
+            <label for="contactMessage">Message</label>
+            <textarea id="contactMessage" maxlength="4000" placeholder="Tell me what it must do, your deadline, budget range, and any requirements." required></textarea>
+          </div>
+          <div class="message-actions">
+            <button class="btn btn-primary btn-sm" id="sendContact" type="submit">Send message</button>
+            <span class="msg" id="contactMsg"></span>
+          </div>
+        </form>
+        <div class="my-messages" id="myMessages" hidden>
+          <div id="myMessageList"></div>
+          <p class="empty" id="myMessageEmpty" hidden>You have not sent a message yet.</p>
+        </div>
+        <label class="chat-pref">
+          <input type="checkbox" id="chatTipPref" checked>
+          <span>Remind me here that replies land in this chat</span>
+        </label>
+    </div>
+   </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <p class="copyright">
+      &copy; 2026 <span aria-label="Build with Judech"><span aria-hidden="true">Bu<i class="wm-code">&lt;/&gt;</i>ld with <em>Judech</em></span></span>
+    </p>
+    <div class="links">
+      <button type="button" data-open-privacy>Privacy</button>
+      <button type="button" data-open-siteterms>Terms of use</button>
+    </div>
+  </div>
+</footer>
+
+<!-- ===================== site policies (read-only) =====================
+     Not the package Terms &amp; Conditions — that one is signed at purchase and
+     lives further down this file. These two are notices about the website. -->
+<div id="siteDocs" hidden>
+
+  <article id="privacyDoc">
+    <p class="doc-lede">This notice explains what this website collects, why, who can see it,
+      and what you can ask me to do with it. It is here to be read &mdash; there is nothing to
+      sign, and nothing on this page changes what you agreed to when you bought a package.</p>
+
+    <h3>1. Who is behind this site</h3>
+    <p>This site is run by <b>Jude Michael Martinez</b>, trading as Build with Judech, in the
+      Philippines. One person handles it: there is no team and no third-party staff with access
+      to your details. You can reach me through any channel in the <b>Contact</b> section.</p>
+
+    <h3>2. What is collected, and when</h3>
+    <p>Nothing is collected while you browse. Information is only recorded when you do one of
+      these four things:</p>
+    <ul>
+      <li><b>Sign in with Google.</b> Your name, email address and profile picture, as Google
+        gives them to me. I never see or receive your Google password.</li>
+      <li><b>Submit a payment.</b> The name on the receipt, the payment method, the reference
+        number, the amount, the date, the screenshot of your receipt, and the contact detail
+        you choose to add.</li>
+      <li><b>Sign the package agreement.</b> Your name, whether you are a student or a
+        business, your school or organisation, your city or province, the date, your signature
+        as you drew or typed it, and the browser you signed from.</li>
+      <li><b>Send a message.</b> The title and the message, so I can answer it and so you can
+        read the reply on your own account later.</li>
+    </ul>
+    <p>The site also records when your account was last active, so I can tell whether you are
+      waiting on a reply. There is no advertising, no analytics service, no tracking pixel and
+      no third-party cookie anywhere on this site.</p>
+
+    <h3>3. Why it is collected</h3>
+    <p>Only to run the sale and the support that follows it: to check a payment is real, to
+      unlock what you paid for on your account and no one else's, to keep a record of the
+      agreement we both hold, and to answer you. Nothing is collected &ldquo;in case it is
+      useful later&rdquo;.</p>
+
+    <h3>4. Who can see it</h3>
+    <p><b>Only me.</b> Your details are not sold, rented, published, posted, shown to other
+      buyers, or handed to anyone for marketing. I will not disclose them to a third party
+      except in one case: where a law, a court or a government authority in the Philippines
+      compels it, and only as far as it compels it.</p>
+    <p>Two suppliers necessarily hold the data in order to serve it: <b>Supabase</b>, which
+      hosts the database and the file storage, and <b>Google</b>, which handles the sign-in.
+      They are processors, not audiences &mdash; they hold the data to run the service, not to
+      use it.</p>
+
+    <h3>5. How it is kept</h3>
+    <p>Receipts and signature images live in <b>private storage</b>: they are not on a public
+      address, and even I open them through links that expire after an hour. Every record is
+      fenced to the account that created it by database rules, not merely by what the page
+      chooses to show &mdash; one buyer cannot read another buyer's payments, agreements or
+      messages. Your purchases are also kept in your own browser so the page still knows what
+      you own on that device; clearing your browser data clears that copy, not the record on
+      the server.</p>
+    <p>No system is beyond reach, and I will not pretend otherwise. What I can promise is that
+      nothing is exposed publicly by design, and that if a breach ever affected your details I
+      would tell you and the National Privacy Commission, rather than keep quiet about it.</p>
+
+    <h3>6. How long it is kept</h3>
+    <p>Payment records and signed agreements are kept for as long as the sale needs to be
+      provable &mdash; yours as much as mine &mdash; and for as long as Philippine law requires
+      records of a transaction to be held. Messages are kept while the conversation is useful.
+      Anything else you can ask me to delete at any time.</p>
+
+    <h3>7. What you can ask for</h3>
+    <p>Under the Data Privacy Act of 2012 you may ask me to show you what I hold about you,
+      correct anything wrong, delete what is no longer needed, or send you a copy. Ask through
+      any contact channel and I will answer within a few days. Deleting an agreement or a
+      payment record may mean the matching package can no longer be unlocked on your account
+      &mdash; I will say so before doing it.</p>
+
+    <h3>8. Children</h3>
+    <p>If you are under 18, please have a parent, guardian or teacher involved before paying
+      for anything here.</p>
+
+    <h3>9. Changes</h3>
+    <p>If this notice changes, the date below changes with it, and anything significant will be
+      said in the reply to your next message rather than slipped in quietly.</p>
+    <p class="doc-date">Last updated 12 September 2026.</p>
+  </article>
+
+  <article id="siteTermsDoc">
+    <p class="doc-lede">These are the rules for using this <em>website</em>. They are separate
+      from the <b>package Terms &amp; Conditions</b> &mdash; the agreement you sign when you buy
+      something, which governs the files themselves. This page is for reading; nothing here is
+      signed, and nothing here replaces what you already signed.</p>
+
+    <h3>1. Using the site</h3>
+    <p>Browsing, reading and asking questions are free and open to anyone. By using the site you
+      accept the rules below. If you do not accept them, please simply leave the page.</p>
+
+    <h3>2. What you may not do to this site</h3>
+    <ul>
+      <li><b>No reverse engineering.</b> Do not decompile, disassemble, deobfuscate or otherwise
+        attempt to derive the source, structure or logic of this site, its dashboard, its
+        database or the simulator beyond what a browser normally shows you.</li>
+      <li><b>No copying the site itself.</b> Its code, layout, wording, graphics and the
+        Bu&lt;/&gt;ld with Judech name and mark are mine. Do not clone, rebrand or resell the
+        site or any part of it.</li>
+      <li><b>No breaking in.</b> Do not probe, scan or test the security of the site, try to
+        reach the admin dashboard, another buyer's records, the database or the file storage,
+        or use anyone else's account.</li>
+      <li><b>No getting round the gate.</b> Do not attempt to open a package, a component or a
+        file you have not paid for, or share a link, code or private offer meant for you with
+        anyone else.</li>
+      <li><b>No bots or bulk collection.</b> No scraping, crawling, harvesting or automated
+        access, and nothing that loads the site heavily enough to slow it down for others.</li>
+      <li><b>Nothing unlawful or abusive</b> through the message box, including anything that
+        misrepresents who you are.</li>
+    </ul>
+
+    <h3>3. What you tell me should be true</h3>
+    <p>Give a real name, a real reference number and a receipt that is actually yours. A payment
+      that cannot be matched to money I actually received will not be approved, and a submission
+      made under someone else's name may be refused outright.</p>
+
+    <h3>4. Your account</h3>
+    <p>What you buy is unlocked against the Google account you signed in with. Keep that account
+      to yourself &mdash; anything done through it is treated as done by you. Tell me at once if
+      you think someone else has got into it.</p>
+
+    <h3>5. Prices, quotes and availability</h3>
+    <p>Prices shown here can change at any time, and a project marked <em>coming soon</em> has no
+      promised date. A price quoted in a private link is good until that link expires or is
+      cancelled. What you already paid for is not affected by a later price change.</p>
+
+    <h3>6. The site itself comes with no warranty</h3>
+    <p>I keep this site running as well as I can, but it is offered as it is: it may be down for
+      maintenance, a page may misbehave, and the browser simulator is a teaching model rather
+      than a laboratory instrument. Nothing on the public pages is professional, academic or
+      legal advice. What is promised about a <em>package</em> you bought is promised in the
+      package Terms &amp; Conditions, not here.</p>
+
+    <h3>7. Links away from here</h3>
+    <p>Facebook, Messenger, TikTok, Shopee, Discord and any other outside link are run by other
+      people under their own rules. I am not responsible for what happens on them.</p>
+
+    <h3>8. Your privacy</h3>
+    <p>How your information is handled is set out in the <b>Privacy</b> notice, which sits beside
+      this one in the footer. In short: only I see it, it is never sold or disclosed, and you can
+      ask for a copy or its deletion at any time.</p>
+
+    <h3>9. If a rule here is broken</h3>
+    <p>I may withdraw access to the site or to an account, without a refund where the breach
+      concerns copying, reselling or getting round payment. Everything already lawfully bought
+      and signed for stays yours under the package terms.</p>
+
+    <h3>10. Which law applies</h3>
+    <p>These rules follow the laws of the Republic of the Philippines. If part of them is
+      unenforceable, the rest still stands. Talk to me first if something goes wrong &mdash; in
+      every case so far that has been enough.</p>
+    <p class="doc-date">Last updated 12 September 2026.</p>
+  </article>
+
+</div>
+
+<!-- ===================== the whole cover image ===================== -->
+<div class="overlay lightbox" id="imageOverlay" data-open="false" role="dialog" aria-modal="true"
+     aria-labelledby="imageCaption">
+  <div class="modal" tabindex="-1">
+    <button class="modal-x" data-close-image aria-label="Close the image">&times;</button>
+    <div class="lightbox-stage">
+      <button class="lb-arrow lb-prev" type="button" data-lb-step="-1" aria-label="Previous" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <img id="imageFull" src="" alt="">
+      <video id="videoFull" controls playsinline preload="metadata" hidden></video>
+      <button class="lb-arrow lb-next" type="button" data-lb-step="1" aria-label="Next" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="lightbox-say">
+      <p id="imageCaption">&nbsp;</p>
+      <p id="imageNote" hidden></p>
+      <p id="imageWhen" hidden></p>
+      <p id="imageCount" hidden></p>
+      <a id="imageOut" class="btn btn-sm btn-primary" target="_blank" rel="noopener" hidden></a>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== project overlay ===================== -->
+<div class="overlay" id="projectOverlay" data-open="false" role="dialog" aria-modal="true" aria-labelledby="projTitle">
+  <div class="modal" tabindex="-1">
+    <div class="modal-hd">
+      <div>
+        <h2 id="projTitle">&nbsp;</h2>
+        <p id="projTagline">&nbsp;</p>
+      </div>
+      <button class="modal-x" data-close-project aria-label="Close">&times;</button>
+    </div>
+    <div class="proj-body" id="projBody"></div>
+    <div class="modal-ft">
+      <span class="msg" id="projMsg"></span>
+      <button class="btn btn-ghost btn-sm" data-open-terms>Read the terms</button>
+      <button class="btn btn-sm" data-close-project>Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== sign in ===================== -->
+<div class="overlay" id="authOverlay" data-open="false" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="modal modal-sm" tabindex="-1">
+    <div class="modal-hd">
+      <div>
+        <h2 id="authTitle">One quick sign-in</h2>
+        <p id="authSub">Use your Google account before viewing or availing a project.</p>
+      </div>
+      <button class="modal-x" data-close-auth aria-label="Close">&times;</button>
+    </div>
+    <div class="auth-body">
+      <p class="auth-why" id="authWhy">Sign in before opening or availing a project. Your
+        Google account is recorded with your payment and signed agreement so the admin can
+        identify which account completed each transaction.</p>
+      <button class="btn google-btn" id="googleBtn">
+        <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true">
+          <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5-4.4 6.600v5.5h7.1c4.2-3.8 6.6-9.5 6.6-16.1z"/>
+          <path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.5 46 24 46z"/>
+          <path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.2-2.9.7-4.2v-5.7H4.5C3 17.1 2.1 20.4 2.1 24s.9 6.9 2.4 9.9l7.3-5.7z"/>
+          <path fill="#EA4335" d="M24 10.8c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.2 29.9 2 24 2 15.5 2 8.1 6.9 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/>
+        </svg>
+        Continue with Google
+      </button>
+      <p class="auth-fine">I only ever see your name, your email and your picture. Nothing
+        is posted anywhere, and your email is never shared &mdash; section 12 of the terms.</p>
+    </div>
+    <div class="modal-ft">
+      <span class="msg" id="authMsg"></span>
+      <button class="btn btn-ghost btn-sm" data-close-auth>Not now</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== payment overlay ===================== -->
+<div class="overlay" id="payOverlay" data-open="false" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+  <div class="modal" tabindex="-1">
+    <div class="modal-hd">
+      <div>
+        <h2 id="payTitle">Payment</h2>
+        <p id="paySub">&nbsp;</p>
+      </div>
+      <button class="modal-x" data-close-pay aria-label="Close">&times;</button>
+    </div>
+    <div class="pay-body" id="payBody"></div>
+    <div class="modal-ft">
+      <span class="msg" id="payMsg"></span>
+      <button class="btn btn-ghost btn-sm" data-close-pay>Close</button>
+      <button class="btn btn-primary btn-sm" id="payAction">Submit for approval</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== terms overlay ===================== -->
+<div class="overlay" id="termsOverlay" data-open="false" role="dialog" aria-modal="true" aria-labelledby="termsTitle">
+  <div class="modal" tabindex="-1">
+    <div class="modal-hd">
+      <div>
+        <h2 id="termsTitle">Project package &mdash; Terms &amp; Conditions</h2>
+        <p>Please read before purchasing or receiving the project files.</p>
+      </div>
+      <button class="modal-x" data-close-terms aria-label="Close">&times;</button>
+    </div>
+
+    <div class="modal-mid" id="termsScroll" tabindex="0">
+    <div class="terms" id="termsBody" data-read="false">
+      <div class="terms-col">
+      <h3>1. Package Contents</h3>
+      <p>The purchased project package may include the following, depending on the selected package:</p>
+      <ul>
+        <li>Source code / program files</li>
+        <li>System Wiring/Connection Diagram</li>
+        <li>List of materials and components w/ direct link on shopee</li>
+        <li>Project guidelines or documentation</li>
+        <li>Setup and troubleshooting assistance</li>
+        <li>Other files specifically agreed upon between the buyer and seller</li>
+      </ul>
+      <p>The exact inclusions shall depend on the package purchased.</p>
+
+      <h3>2. Ownership of Original Materials</h3>
+      <p>The source code, documentation, diagrams, guides, and other original materials created
+        by the seller remain the intellectual property of the seller unless a separate written
+        agreement states otherwise.</p>
+      <p>Purchase of the package does not automatically transfer ownership or copyright of the
+        original materials to the buyer.</p>
+
+      <h3>3. Intellectual Property and Copyright</h3>
+      <p>The seller's original source code, documentation, diagrams, guides, illustrations, and
+        other copyrightable materials are protected under applicable Philippine intellectual
+        property laws, including Republic Act No. 8293 (Intellectual Property Code of the
+        Philippines), as amended.</p>
+      <p>Copyright protection generally arises from the creation of an original work and does not
+        require the seller to obtain a patent or publicly publish the work in order for copyright
+        protection to exist.</p>
+      <p>Patent protection is a separate form of intellectual property protection and is not
+        required for the seller to claim copyright over applicable original materials such as
+        source code, documentation, and original technical diagrams.</p>
+      <p>The buyer acknowledges that the purchase of the package does not constitute an assignment
+        or transfer of the seller's copyright unless a separate written agreement expressly
+        provides otherwise.</p>
+
+      <h3>4. Permitted Use</h3>
+      <p>The buyer is granted permission to use the purchased materials for:</p>
+      <ul>
+        <li>Personal learning and educational purposes</li>
+        <li>Building and testing the project</li>
+        <li>Modifying the project for the buyer's own requirements</li>
+        <li>Demonstration or prototyping, subject to applicable school or institutional rules</li>
+      </ul>
+
+      <h3>5. Prohibited Use</h3>
+      <p>Without prior written permission from the seller, the buyer may not:</p>
+      <ul>
+        <li>Resell the source code or project files</li>
+        <li>Redistribute the complete package to other people</li>
+        <li>Upload the source code or files publicly</li>
+        <li>Post the complete files on social media, websites, repositories, or file-sharing platforms</li>
+        <li>Claim ownership of the seller's original source code, documentation, or other original materials</li>
+        <li>Use the purchased package as a commercial product for resale without a separate agreement</li>
+      </ul>
+
+      <h3>6. Academic Integrity</h3>
+      <p>The package is provided for educational, prototyping, and project-assistance purposes.</p>
+      <p>The buyer is responsible for complying with the academic-integrity policies of their
+        school, university, instructor, or institution.</p>
+      <p>The seller does not authorize the buyer to falsely represent the seller's work as
+        entirely the buyer's own work when such representation violates the applicable academic rules.</p>
+      <p>The buyer is responsible for determining what portions of the project they are required
+        to independently create, explain, modify, or document.</p>
+
+      <h3>7. Technical Assistance</h3>
+      <p>Technical assistance is limited to the scope agreed upon at the time of purchase.
+        Assistance may include guidance regarding:</p>
+      <ul>
+        <li>Code implementation</li>
+        <li>Circuit connections</li>
+        <li>Component identification</li>
+        <li>Setup and testing</li>
+        <li>Troubleshooting</li>
+        <li>Basic project modifications</li>
+      </ul>
+      <p>Technical assistance does not guarantee that the project will satisfy every requirement
+        imposed by the buyer's school, instructor, client, or institution.</p>
+
+      </div>
+      <div class="terms-col">
+      <h3>8. Components and Materials</h3>
+      <p>Unless explicitly stated otherwise, the buyer is responsible for acquiring the required
+        physical components and materials.</p>
+      <p>Differences in component brands, specifications, wiring, power supply, hardware versions,
+        or other external factors may affect project performance.</p>
+
+      <h3>9. Payment and Delivery</h3>
+      <p>Project files and other digital materials will be provided after the agreed payment has
+        been received.</p>
+      <p>The buyer should review the package contents upon delivery and immediately report missing
+        or incorrect files.</p>
+
+      <h3>10. Refunds</h3>
+      <p>Because the package may contain digital files and intellectual property that can be
+        accessed after delivery, refunds may be limited once the files have been provided.</p>
+      <p>Any refund or replacement request will be evaluated based on the circumstances and the
+        terms agreed upon before purchase.</p>
+
+      <h3>11. Originality and Third-Party Materials</h3>
+      <p>The seller represents that the materials personally created by the seller are provided
+        in good faith.</p>
+      <p>If third-party libraries, open-source code, references, diagrams, or other materials are
+        used in the project, their applicable licenses and terms remain in effect.</p>
+
+      <h3>12. Buyer Information and Privacy</h3>
+      <p>To keep a record of this agreement and to know who has purchased, the seller collects
+        the buyer's name, signature, whether the buyer is a student, the buyer's school or
+        university, the buyer's city or municipality and province, any contact details the buyer
+        chooses to give, and the payment details submitted (method, reference number and receipt).</p>
+      <p>This information is used only to keep the record of this agreement, to verify payment,
+        to provide the assistance described in Section 7, and for the seller's own records of
+        clients. It is processed in line with Republic Act No. 10173 (Data Privacy Act of 2012).</p>
+      <p>The seller will not sell, share, publish, or otherwise disclose the buyer's personal
+        information to any third party, except where the buyer gives consent or where disclosure
+        is required by law.</p>
+      <p>The information is kept securely and retained only for as long as it is needed for the
+        purposes above and for the record of this agreement. The buyer may ask to see, correct,
+        or delete their information at any time; the seller may keep the signed agreement itself
+        as the record of the transaction.</p>
+      <p>By signing, the buyer consents to the collection and use of this information as
+        described here.</p>
+
+      <h3>13. Agreement</h3>
+      <p>By purchasing or receiving the project package, the buyer acknowledges that they have
+        read and understood these terms and agree to use the materials within the permitted scope.</p>
+      </div>
+
+      <div class="rule"></div>
+      <div class="scroll-hint"><span>&darr; keep scrolling &mdash; the form is at the end</span></div>
+    </div>
+
+    <form class="form" id="agreeForm" novalidate>
+      <input id="fSellerDate" name="sellerDate" type="hidden">
+      <div class="form-grid">
+        <div class="field">
+          <label for="fSeller">Seller</label>
+          <input id="fSeller" name="seller" value="Jude Michael Martinez" readonly>
+        </div>
+        <div class="field">
+          <label for="fBuyerDate">Date</label>
+          <input id="fBuyerDate" name="buyerDate" type="date" required>
+        </div>
+        <div class="field">
+          <label for="fBuyer">Buyer name</label>
+          <input id="fBuyer" name="buyer" autocomplete="name" placeholder="Your full name" required>
+        </div>
+        <div class="field">
+          <label for="fType">Position</label>
+          <select id="fType" name="buyerType">
+            <option>Student</option>
+            <option value="Other">Other &mdash; let me type it</option>
+          </select>
+        </div>
+        <div class="field" id="fTypeOtherWrap" hidden>
+          <label for="fTypeOther">Other position</label>
+          <input id="fTypeOther" name="buyerTypeOther" placeholder="e.g. Teacher, researcher, freelancer, LGU office">
+        </div>
+        <div class="field">
+          <label for="fSchool">School / university</label>
+          <input id="fSchool" name="school" autocomplete="organization" placeholder="If you are a student">
+        </div>
+        <div class="field">
+          <label for="fLocation">City / municipality, province</label>
+          <input id="fLocation" name="location" autocomplete="address-level2" placeholder="e.g. Davao City, Davao del Sur" required>
+        </div>
+        <div class="field wide">
+          <label for="fProject">Project</label>
+          <input id="fProject" name="project" value="" readonly>
+        </div>
+
+        <label class="ack wide" id="ackWrap" data-locked="true">
+          <input type="checkbox" id="fAck" disabled>
+          <span>I have read, understood, and agree to the Terms &amp; Conditions above.</span>
+        </label>
+
+        <div class="field sig" id="sigField">
+          <!-- a canvas cannot be labelled with for=; it names itself instead -->
+          <span class="field-label" id="sigLabel">Buyer signature</span>
+          <div class="sigpad" id="sigPad" data-state="empty">
+            <canvas id="sigCanvas" tabindex="0" role="img"
+              aria-label="Buyer signature — sign with your mouse, finger or stylus"></canvas>
+            <span class="sig-baseline" aria-hidden="true"></span>
+            <span class="sig-x" aria-hidden="true">&times;</span>
+            <span class="sig-hint" id="sigHint">Sign here &mdash; mouse, finger or stylus</span>
+            <img class="sig-saved" id="sigSaved" alt="Your saved signature" hidden>
+            <span class="sig-badge" id="sigBadge" hidden>Signature saved</span>
+          </div>
+          <div class="sig-actions">
+            <button type="button" class="btn btn-sm btn-primary" id="sigSave" disabled>Save signature</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="sigClear">Clear</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="sigRedo" hidden>Sign again</button>
+            <span class="sig-msg" id="sigMsg">Draw your signature, then save it to attach it to this form.</span>
+          </div>
+          <div class="sig-typed" id="sigTypedWrap" hidden>
+            <input id="fSignTyped" placeholder="Type your full name as signature">
+            <span class="hint">Typed instead of drawn &mdash; still counts as your signature.</span>
+          </div>
+          <button type="button" class="linkish" id="sigToggle">Can&rsquo;t draw it? Type it instead</button>
+          <input type="hidden" id="fSign" name="signature">
+        </div>
+      </div>
+    </form>
+    </div>
+
+    <div class="modal-ft">
+      <span class="msg" id="formMsg">Read to the end of the terms to tick the box.</span>
+      <button class="btn btn-ghost btn-sm" data-close-terms>Not yet</button>
+      <button class="btn btn-primary btn-sm" id="agreeBtn" disabled>Agree &amp; continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== info overlay ===================== -->
+<div class="overlay" id="infoOverlay" data-open="false" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+  <div class="modal" tabindex="-1">
+    <div class="modal-hd">
+      <div>
+        <h2 id="infoTitle">&nbsp;</h2>
+        <p id="infoSub">&nbsp;</p>
+      </div>
+      <button class="modal-x" data-close-info aria-label="Close">&times;</button>
+    </div>
+    <div class="info-body" id="infoBody"></div>
+    <div class="modal-ft">
+      <span class="msg" id="infoMsg"></span>
+      <button class="btn btn-primary btn-sm" data-close-info>Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/theme.js?v=20260914f"></script>
+<script src="js/config.js"></script>
+<script src="js/backend.js"></script>
+<script src="js/pdf.js?v=20260914f"></script>
+<script src="js/landing.js?v=20260914f"></script>
+</body>
+</html>

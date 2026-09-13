@@ -1,0 +1,19 @@
+# secrets
+.env
+.env.local
+.env.*.local
+
+# os / editor junk
+desktop.ini
+.DS_Store
+Thumbs.db
+*.swp
+
+# build & deps
+node_modules/
+dist/
+.vercel/
+.netlify/
+
+# stray downloads
+*.deb

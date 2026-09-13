@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- the page itself names the version of every asset, so it must always be
+     fetched fresh; the css and js under it are cached hard and busted by ?v= -->
+<meta http-equiv="cache-control" content="no-cache, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Build with JUDECH — Admin</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7.5' fill='%230C1512'/><g fill='none' stroke='%23F0B95E' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='M11.4 10.4 6.4 16l5 5.6'/><path d='M20.6 10.4 25.6 16l-5 5.6'/><path d='M18.3 9.1 13.7 22.9'/></g></svg>">
+<script>
+/* the stored theme goes on before the first paint, so the page never flashes
+   the wrong one on its way in */
+(function(){try{var t=localStorage.getItem('judech.theme');
+if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/landing.css?v=20260914f">
+<link rel="stylesheet" href="css/admin.css?v=20260914f">
+</head>
+<body class="admin">
+
+<div class="topbar admin-topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span>
+        <b aria-label="Build with Judech"><span aria-hidden="true">Bu<i class="wm-code">&lt;/&gt;</i>ld with <em>Judech</em></span></b>
+        <span>Admin &middot; payments, packages, clients</span>
+      </span>
+    </a>
+    <nav class="topnav" aria-label="Admin navigation">
+      <a href="index.html">&larr; Project page</a>
+      <button class="icon-btn theme-toggle" type="button" data-theme-toggle
+              aria-pressed="false" aria-label="Switch to the dark theme" title="Switch to the dark theme">
+        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.4v2.7M12 18.9v2.7M2.4 12h2.7M18.9 12h2.7M5.2 5.2l1.9 1.9M16.9 16.9l1.9 1.9M18.8 5.2l-1.9 1.9M7.1 16.9l-1.9 1.9"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 1 1 9.4 3.5a7.1 7.1 0 0 0 11.1 11.1z"/></svg>
+      </button>
+
+      <button class="btn btn-sm signout" id="signOut" type="button" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6v8.6"/><path d="M7.5 6.7a7.3 7.3 0 1 0 9 0"/></svg>
+        Sign out
+      </button>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap admin-main">
+
+  <!-- ===================== not configured ===================== -->
+  <section class="card-block" id="noBackend" hidden>
+    <h2>Supabase is not connected</h2>
+    <p>Fill in <code>js/config.js</code> with your project URL and anon key, push the
+       migrations, then reload this page.</p>
+  </section>
+
+  <!-- ===================== sign in ===================== -->
+  <section class="card-block login" id="loginBox" hidden>
+    <span class="kicker">Admin</span>
+    <h2>Sign in</h2>
+    <p>Use the email and password of your Supabase Auth user.</p>
+    <form id="loginForm">
+      <div class="field"><label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required></div>
+      <div class="login-row">
+        <button class="btn btn-primary" id="loginBtn" type="submit">Sign in</button>
+        <span class="msg" id="loginMsg"></span>
+      </div>
+    </form>
+    <div class="or-line"><span>or</span></div>
+    <button class="btn google-btn" id="adminGoogle">
+      <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true">
+        <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.2-3.8 6.6-9.5 6.6-16.1z"/>
+        <path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.5 46 24 46z"/>
+        <path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.2-2.9.7-4.2v-5.7H4.5C3 17.1 2.1 20.4 2.1 24s.9 6.9 2.4 9.9l7.3-5.7z"/>
+        <path fill="#EA4335" d="M24 10.8c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.2 29.9 2 24 2 15.5 2 8.1 6.9 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/>
+      </svg>
+      Continue with Google
+    </button>
+    <p class="muted" style="margin-top:12px">Either way, the account still has to be listed
+       in <code>public.admins</code>.</p>
+  </section>
+
+  <!-- ===================== signed in, not an admin ===================== -->
+  <section class="card-block" id="notAdmin" hidden>
+    <span class="kicker">One more step</span>
+    <h2>This account is not an admin yet</h2>
+    <p>Run this once in the Supabase SQL editor (or add it as a migration), then reload:</p>
+    <pre id="adminSql"></pre>
+    <p class="muted">It adds your user to <code>public.admins</code>, which is what every
+       admin policy checks.</p>
+  </section>
+
+  <!-- ===================== dashboard ===================== -->
+  <section id="dash" hidden>
+    <div class="dash-head">
+      <div>
+        <span class="kicker">Dashboard</span>
+        <h2 id="dashTitle">Payments waiting for you</h2>
+      </div>
+      <div class="dash-tools">
+        <!-- the free-plan pulse: when the database last saw a write, and a way to give it one -->
+        <button class="pulse" id="pulse" type="button" data-state="unknown"
+                title="Supabase pauses a free project after a week without activity. This is the last activity it saw.">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span class="pulse-text" id="pulseText">Checking the database&hellip;</span>
+          <span class="pulse-act">Ping now</span>
+        </button>
+        <span class="muted" id="whoami"></span>
+        <button class="btn btn-sm" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" data-tab="inbox" aria-selected="true">Payments <span class="count" id="pendingCount">0</span></button>
+      <button class="tab" data-tab="messages" aria-selected="false">
+        <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v12H8l-4 3z"/><path d="M8 9h8M8 13h5"/></svg>
+        Messages <span class="count" id="messageCount">0</span>
+      </button>
+      <button class="tab" data-tab="activity" aria-selected="false">Users <span class="count presence-count" id="activeCount">0</span></button>
+      <button class="tab" data-tab="clients" aria-selected="false">
+        <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 100-8 4 4 0 000 8z"/><path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/></svg>
+        Clients
+      </button>
+      <button class="tab" data-tab="grants" aria-selected="false">Access codes</button>
+      <button class="tab" data-tab="agreements" aria-selected="false">Signed agreements</button>
+      <button class="tab" data-tab="hero" aria-selected="false">
+        <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M5 17l5-4 3 2 3-3 3 5"/></svg>
+        Hero slides
+      </button>
+      <button class="tab" data-tab="projects" aria-selected="false">Projects</button>
+      <button class="tab" data-tab="proof" aria-selected="false">
+        <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6z"/></svg>
+        Proof
+      </button>
+    </div>
+
+    <!-- inbox -->
+    <div class="panel" id="panel-inbox">
+      <div class="filters" id="inboxFilters">
+        <button class="filter" data-status="pending" aria-pressed="true">Pending</button>
+        <button class="filter" data-status="approved" aria-pressed="false">Approved</button>
+        <button class="filter" data-status="rejected" aria-pressed="false">Rejected</button>
+        <button class="filter" data-status="all" aria-pressed="false">All</button>
+      </div>
+      <div class="list" id="inboxList"></div>
+      <p class="empty" id="inboxEmpty" hidden>Nothing here.</p>
+    </div>
+
+    <!-- contact messages -->
+    <div class="panel" id="panel-messages" hidden>
+      <div class="inbox" id="inbox">
+        <aside class="inbox-list" aria-label="People who have written">
+          <div class="inbox-search">
+            <input id="inboxSearch" type="search" placeholder="Search a name, email or subject"
+                   autocomplete="off" aria-label="Search conversations">
+          </div>
+          <div id="inboxPeople"></div>
+        </aside>
+        <section class="inbox-view" id="inboxView" aria-label="Conversation"></section>
+      </div>
+      <p class="empty" id="messageEmpty" hidden>No messages yet.</p>
+    </div>
+
+    <!-- signed-in account activity -->
+    <div class="panel" id="panel-activity" hidden>
+      <div class="presence-summary card-block">
+        <div><span class="presence-number" id="activeTotal">0</span><span>active now</span></div>
+        <div><span class="presence-number" id="accountTotal">0</span><span>accounts seen</span></div>
+        <div><span class="presence-number" id="blockedTotal">0</span><span>blocked</span></div>
+        <p class="muted">Active means at least one browser or device checked in during the
+          last two minutes. Blocking an account stops it opening conversations, adding to
+          them, submitting a payment or redeeming a code &mdash; anything it already bought
+          and signed for stays theirs.</p>
+      </div>
+      <div class="filters" id="userFilters">
+        <button class="filter" data-users="all" aria-pressed="true">Everyone</button>
+        <button class="filter" data-users="active" aria-pressed="false">Active now</button>
+        <button class="filter" data-users="writers" aria-pressed="false">Have messaged</button>
+        <button class="filter" data-users="blocked" aria-pressed="false">Blocked</button>
+      </div>
+      <div class="list" id="activityList"></div>
+      <p class="empty" id="activityEmpty" hidden>No signed-in accounts have been recorded yet.</p>
+    </div>
+
+    <!-- per-client tracking -->
+    <div class="panel" id="panel-clients" hidden>
+      <div class="card-block client-intro">
+        <h3>Who has paid for what</h3>
+        <p class="muted">Every buyer, every project they have touched, and the state of each
+          component in it &mdash; delivered, paid but unsigned, waiting for you, or still
+          unpaid with the amount it would cost them.</p>
+        <div class="login-row">
+          <input id="clientSearch" placeholder="Search a name, an email or a project" autocomplete="off">
+          <span class="msg" id="clientMsg"></span>
+        </div>
+      </div>
+      <div class="list" id="clientList"></div>
+      <p class="empty" id="clientEmpty" hidden>Nobody has paid for anything yet.</p>
+    </div>
+
+    <!-- access codes -->
+    <div class="panel" id="panel-grants" hidden>
+      <div class="grant-form card-block">
+        <h3>Issue an access code</h3>
+        <p class="muted">For a buyer who already paid you somewhere else &mdash; Facebook,
+           Shopee, Messenger, in cash. They type the code on the project page instead of
+           paying again.</p>
+        <form id="grantForm">
+          <div class="grid2">
+            <div class="field"><label for="gProject">Project</label>
+              <select id="gProject" required></select></div>
+            <div class="field"><label for="gName">Buyer name</label>
+              <input id="gName" placeholder="As they gave it to you" required></div>
+            <div class="field"><label for="gChannel">Settled through</label>
+              <select id="gChannel">
+                <option>Facebook</option><option>Messenger</option><option>Shopee</option>
+                <option>GCash (sent directly)</option><option>Bank transfer</option>
+                <option>Cash</option><option>Other</option>
+              </select></div>
+            <div class="field"><label for="gExpires">Expires in (days, optional)</label>
+              <input id="gExpires" type="number" min="1" max="365" placeholder="never"></div>
+          </div>
+          <div class="field grant-scope">
+            <span class="lbl">What the code opens</span>
+            <div class="grant-item-list" id="gItems"><p class="muted">Pick a project first.</p></div>
+            <span class="hint">Tick only what this buyer should get now. Anything left
+              unticked stays held, and you release it later from the Payments tab.</span>
+          </div>
+          <div class="field"><label for="gNote">Note (optional)</label>
+            <input id="gNote" placeholder="e.g. paid PHP 1,500 on FB, 10 Sep"></div>
+          <div class="login-row">
+            <button class="btn btn-primary" id="grantBtn" type="submit">Create the code</button>
+            <span class="msg" id="grantMsg"></span>
+          </div>
+        </form>
+        <div class="new-code" id="newCode" hidden>
+          <span class="kicker">Send this to the buyer</span>
+          <div class="code-row">
+            <b id="newCodeText"></b>
+            <button class="btn btn-sm" id="copyCode">Copy</button>
+          </div>
+          <p class="muted" id="newCodeFor"></p>
+        </div>
+      </div>
+      <div class="list" id="grantList"></div>
+      <p class="empty" id="grantEmpty" hidden>No access codes yet.</p>
+    </div>
+
+    <!-- agreements -->
+    <div class="panel" id="panel-agreements" hidden>
+      <div class="list" id="agreementList"></div>
+      <p class="empty" id="agreementEmpty" hidden>No signed agreements yet.</p>
+    </div>
+
+    <!-- landing-page hero slideshow -->
+    <div class="panel" id="panel-hero" hidden>
+      <div class="card-block hero-admin-intro">
+        <h3>Landing-page slideshow</h3>
+        <p class="muted">Upload a replacement image or edit a slide's caption. The four generated
+          images stay bundled with the site and automatically return when you restore a default.</p>
+        <span class="msg" id="heroListMsg"></span>
+      </div>
+      <div class="hero-admin-grid" id="heroSlideList"></div>
+    </div>
+
+    <!-- proof of legitimacy -->
+    <div class="panel" id="panel-proof" hidden>
+      <div class="card-block proof-intro">
+        <h3>Proof of legitimacy</h3>
+        <p class="muted">The evidence section on the landing page: finished builds, handovers,
+          client messages, certificates, clips of the work running. Each tile carries a label
+          saying <em>what it is</em>, a title, a line of explanation, and a photo or a video.
+          The section stays off the page entirely until there is something published in it.</p>
+        <div class="login-row">
+          <button class="btn btn-primary btn-sm" id="proofNew">Add a proof</button>
+          <span class="msg" id="proofMsg"></span>
+        </div>
+      </div>
+      <datalist id="proofKinds">
+        <option>Delivered build</option><option>Client message</option>
+        <option>Payment received</option><option>Handover</option>
+        <option>Live deployment</option><option>Certificate</option>
+        <option>Competition</option><option>Workshop</option><option>Proof</option>
+      </datalist>
+      <div class="list" id="proofList"></div>
+      <p class="empty" id="proofEmpty" hidden>Nothing here yet — the section is hidden from
+        visitors until you add one.</p>
+    </div>
+
+    <!-- projects -->
+    <div class="panel" id="panel-projects" hidden>
+      <div class="card-block proj-intro">
+        <h3>The catalog</h3>
+        <p class="muted">What the project page shows &mdash; the cards, what is in each
+           package, and the file every item opens. Changes appear on the page as soon as
+           a visitor loads it.</p>
+        <div class="login-row">
+          <button class="btn btn-primary btn-sm" id="projNew">New project</button>
+          <span class="msg" id="projListMsg"></span>
+        </div>
+      </div>
+      <div class="list" id="projList"></div>
+      <p class="empty" id="projEmpty" hidden>No projects in the database yet &mdash; the page
+        is running on its built-in list.</p>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== project editor ===================== -->
+<div class="overlay" id="projOverlay" data-open="false" role="dialog" aria-modal="true" aria-labelledby="projTitle">
+  <div class="modal" tabindex="-1">
+    <div class="modal-hd">
+      <div>
+        <h2 id="projTitle">Project</h2>
+        <p id="projSub">&nbsp;</p>
+      </div>
+      <button class="modal-x" data-close-proj aria-label="Close">&times;</button>
+    </div>
+    <div class="proj-body" id="projBody"></div>
+    <div class="modal-ft">
+      <span class="msg" id="projMsg"></span>
+      <button class="btn btn-sm btn-danger" id="projDelete">Delete</button>
+      <button class="btn btn-sm" data-close-proj>Cancel</button>
+      <button class="btn btn-primary btn-sm" id="projSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== the whole signed agreement ===================== -->
+<div class="overlay" id="docOverlay" data-open="false" role="dialog" aria-modal="true" aria-labelledby="docTitle">
+  <div class="modal" tabindex="-1">
+    <div class="modal-hd">
+      <div>
+        <h2 id="docTitle">Signed agreement</h2>
+        <p id="docSub">&nbsp;</p>
+      </div>
+      <button class="modal-x" data-close-doc aria-label="Close">&times;</button>
+    </div>
+    <div class="doc-body" id="docBody"></div>
+    <div class="modal-ft">
+      <span class="msg" id="docMsg"></span>
+      <button class="btn btn-sm" id="docOpen">View PDF</button>
+      <button class="btn btn-sm" id="docDownload">Download PDF</button>
+      <button class="btn btn-primary btn-sm" data-close-doc>Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/theme.js?v=20260914f"></script>
+<script src="js/config.js"></script>
+<script src="js/backend.js"></script>
+<script src="js/pdf.js?v=20260914f"></script>
+<script src="js/admin.js?v=20260914f"></script>
+</body>
+</html>
