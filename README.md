@@ -373,6 +373,46 @@ handles in an in-app browser and returns from cleanly, but iOS may finish the si
 Safari rather than back in the app. The email-and-password form works in the installed app
 either way.
 
+### When a token has gone stale
+
+An access token lasts an hour. A phone asleep, a tab left open overnight, an installed app
+resumed from the background — all three come back holding a dead one, and the first call out
+is answered `401` rather than answered. On the dashboard that first call is
+`rpc/is_admin`, which is why it was the one showing up in the console.
+
+The old code treated any failure of that check as final: it printed the raw error and
+dropped to the sign-in screen, throwing away a session that was one refresh away from
+working. Three things changed.
+
+**`withFreshToken()` in `js/backend.js`.** If a call comes back looking like an auth failure
+— a 401, PostgREST's `PGRST301`, or a message mentioning the JWT — it asks for a new token
+and puts the same call again, exactly once. `unwrap()` now keeps `status` and `code` on the
+error it throws, which is what makes that judgement possible; `B.isAuthError(err)` is the
+same test, exported. It wraps `is_admin` and the two calls that fire on a timer
+(`record_presence`, `heartbeat`), because those are the ones that meet a token which died
+while the app was in the background.
+
+**A session that arrives *after* boot is now acted on.** `admin.js` only ever handled the
+session going *away*. If `getSession()` resolved before supabase-js had finished reading the
+URL hash — which is exactly what a Google redirect produces — the page sat on the sign-in
+form with a perfectly good session behind it. An id check keeps a routine token refresh from
+rebuilding the dashboard under the person using it.
+
+**A failure is now clean.** If the refresh cannot save it either, the half-session is let go
+of rather than left looking signed in: presence stops, `signOut()` runs, and the screen says
+*"That sign-in has expired. Please sign in again."* The reason the server actually gave is
+put in the console with `console.warn`, so an unexpected cause is still diagnosable. And
+`load()` moved outside that check, so a table that will not load is never reported as an
+expired sign-in.
+
+One 401 in the console is still expected and correct in this situation: there is no way to
+know a token is dead until the server says so. What should follow it now is a
+`refreshSession` and a second, successful `is_admin` — not a trip back to the sign-in form.
+
+The buyer side's calls are not wrapped. They run when someone opens a project or the chat
+rather than on load, so supabase-js's own background refresh has normally already dealt with
+it; if one ever does show the same 401, `withFreshToken` drops around it the same way.
+
 ### The way back
 
 A project opens over the catalog. A package item opens over the project. The image attached

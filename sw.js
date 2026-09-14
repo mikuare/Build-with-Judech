@@ -18,10 +18,10 @@
    --------------------------------------------------------------------------- */
 'use strict';
 
-const VERSION = 'judech-2026-09-14d';
+const VERSION = 'judech-2026-09-14e';
 const SHELL   = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
-const ASSETV  = '20260914q';          /* must match the ?v= the pages ask for */
+const ASSETV  = '20260914r';          /* must match the ?v= the pages ask for */
 
 const OFFLINE_URL = '/offline.html';
 

@@ -80,24 +80,58 @@
         stopPresence();
         state.user = null;
         if ($('#dash').hidden === false || $('#notAdmin').hidden === false) screen('login');
+        return;
       }
+      /* A session can turn up after boot has already decided there was none:
+         the Google redirect finishing, a token being refreshed, another tab
+         signing in. Without this the page sat on the sign-in form with a
+         perfectly good session behind it. The id check keeps a token refresh
+         from rebuilding the dashboard under the person using it. */
+      if (state.user && state.user.id === s.user.id) return;
+      afterSignIn(s.user);
     });
   }
 
   function afterSignIn(user) {
     state.user = user;
-    startPresence();
     $('#whoami').textContent = user.email || '';
+    /* presence waits for the admin check: it used to be the first call out
+       after a resume, which meant a stale token showed up in the console as a
+       401 on record_presence before anything had a chance to refresh it */
     B.isAdmin().then(function (ok) {
       if (!ok) {
         $('#adminSql').textContent =
           "insert into public.admins (user_id, email)\nvalues ('" + user.id + "', '" + (user.email || '') + "')\non conflict (user_id) do nothing;";
         screen('notadmin');
-        return;
+        return false;
       }
       screen('dash');
-      load();
-    }).catch(function (e) { say('#loginMsg', e.message, 'err'); screen('login'); });
+      startPresence();
+      return true;
+    }).catch(function (e) {
+      /* B.isAdmin already asked for a new token and tried again, so reaching
+         here means the sign-in really is finished. Let go of it rather than
+         leaving a page that looks signed in and answers nothing. */
+      stopPresence();
+      state.user = null;
+      var stale = B.isAuthError && B.isAuthError(e);
+      /* the sentence on screen is the plain one; the reason the server gave is
+         what you need in the console when it is not the obvious cause */
+      if (window.console && console.warn) {
+        console.warn('[admin] the admin check failed:', e && e.status, e && e.code,
+                     (e && e.original) || e);
+      }
+      screen('login');
+      say('#loginMsg', stale
+        ? 'That sign-in has expired. Please sign in again.'
+        : e.message, 'err');
+      if (stale && B.signOut) B.signOut().catch(function () {});
+      return false;
+    }).then(function (ok) {
+      /* the dashboard's own tables are fetched outside the check above, so a
+         query that will not load is never reported as an expired sign-in */
+      if (ok) load();
+    });
   }
 
   /* ---------- sign in / out ---------- */

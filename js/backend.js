@@ -19,8 +19,41 @@
   /* ---------- small helpers ---------- */
   function unwrap(res) {
     if (!res) throw new Error('No response from the server.');
-    if (res.error) throw new Error(friendly(res.error));
+    if (res.error) {
+      /* the human sentence is what gets shown, but the status and code are what
+         tell us whether the call is worth trying again */
+      var e = new Error(friendly(res.error));
+      e.status = res.error.status || res.status || 0;
+      e.code = res.error.code || '';
+      e.original = res.error;
+      throw e;
+    }
     return res.data;
+  }
+
+  /* PostgREST answers a dead token with a 401, and supabase-js turns an expired
+     one into PGRST301. Either way the call was fine and the token was not. */
+  function isAuthError(err) {
+    if (!err) return false;
+    if (err.status === 401 || err.code === 'PGRST301') return true;
+    var m = String(err.message || err).toLowerCase();
+    return m.indexOf('jwt') > -1 || m.indexOf('token is expired') > -1 ||
+           m.indexOf('invalid token') > -1 || m.indexOf('unauthorized') > -1;
+  }
+
+  /* An access token lasts an hour. A tab left open overnight, a phone asleep,
+     or an installed app resumed from the background all come back holding a
+     dead one, and the first call out is answered 401 rather than answered. That
+     is not a failure worth showing anybody: ask for a new token and put the
+     same call again, exactly once. */
+  function withFreshToken(call) {
+    return call().catch(function (err) {
+      if (!isAuthError(err)) throw err;
+      return refreshSession().then(function (s) {
+        if (!s) throw err;
+        return call();
+      }, function () { throw err; });
+    });
   }
   function friendly(err) {
     var m = (err && (err.message || err.error_description || err.msg)) || String(err);
@@ -203,14 +236,25 @@
     return client.auth.getSession().then(function (r) { return r.data && r.data.session; });
   }
   function onAuth(fn) { need(); return client.auth.onAuthStateChange(function (ev, s) { fn(s); }); }
+  function refreshSession() {
+    need();
+    return client.auth.refreshSession().then(function (r) {
+      if (r && r.error) throw new Error(friendly(r.error));
+      return r && r.data && r.data.session;
+    });
+  }
   function recordPresence(event) {
     need();
-    return client.rpc('record_presence', { p_event: event || 'heartbeat' }).then(unwrap);
+    return withFreshToken(function () {
+      return client.rpc('record_presence', { p_event: event || 'heartbeat' }).then(unwrap);
+    });
   }
   /* ---------- the heartbeat that keeps a free project awake ---------- */
   function heartbeat(source) {
     need();
-    return client.rpc('heartbeat', { p_source: source || 'admin' }).then(unwrap);
+    return withFreshToken(function () {
+      return client.rpc('heartbeat', { p_source: source || 'admin' }).then(unwrap);
+    });
   }
   function heartbeatStatus() {
     need();
@@ -311,7 +355,12 @@
       p_conversation_id: conversationId
     }).then(unwrap);
   }
-  function isAdmin() { need(); return client.rpc('is_admin').then(unwrap).then(function (d) { return d === true; }); }
+  /* the first call the dashboard makes, and so the one that meets a stale token */
+  function isAdmin() {
+    need();
+    return withFreshToken(function () { return client.rpc('is_admin').then(unwrap); })
+      .then(function (d) { return d === true; });
+  }
 
   function inbox(status) {
     need();
@@ -579,6 +628,8 @@
     deleteMessageEntry: deleteMessageEntry,
     deleteMessageConversation: deleteMessageConversation,
     isAdmin: isAdmin,
+    refreshSession: refreshSession,
+    isAuthError: isAuthError,
     inbox: inbox,
     approve: approve,
     reject: reject,
