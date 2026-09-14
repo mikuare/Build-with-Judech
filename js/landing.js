@@ -13,6 +13,10 @@
   var BRAND = 'JUDECH';
   var SELLER = 'Jude Michael Martinez';
   var KEY = 'judech.terms.v1:';         // one signature per project
+  /* the shared history stack: every view that opens over another registers
+     with it, so Back closes that view instead of leaving the site */
+  var Back = window.JudechBack || null;
+
   var PAY_KEY = 'judech.pay.v1:';       // the older single payment record per project
   var BUYS_KEY = 'judech.buys.v2:';     // every purchase of a project, oldest first
 
@@ -1367,6 +1371,17 @@
       if (target && !target.disabled) setTimeout(function () { target.focus(); }, 280);
     }
     if (state === 'closed' && focus !== false && fab) fab.focus();
+
+    /* The dock is a full-height sheet on a phone, so Back has to mean "put the
+       chat away" rather than "leave the site". Collapsed counts as open: it is
+       still on screen and still has your half-typed message in it. */
+    if (Back) {
+      if (state === 'closed') Back.drop('msgDock');
+      else if (!Back.has('msgDock')) {
+        Back.open({ key: 'msgDock', el: msgDock,
+                    close: function () { setMessageState('closed', false); } });
+      }
+    }
   }
 
   function openMessages(focus) { setMessageState('open', focus); }
@@ -1800,7 +1815,7 @@
       : 'Use your Google account before viewing or availing a project.';
     $('#authMsg').textContent = '';
     $('#authMsg').dataset.err = 'false';
-    openOverlay($('#authOverlay'));
+    openOverlay(authOverlay, underProject());
   }
 
   function startGoogle() {
@@ -1823,7 +1838,7 @@
     var want;
     try { want = JSON.parse(raw); } catch (e) { return; }
     if (!want || !want.p || !byId(want.p)) return;
-    closeOverlay($('#authOverlay'));
+    retire(authOverlay);
     openProject(want.p);
     if (want.a === 'payment') setTimeout(function () { openPayment(want.p); }, 250);
     else if (want.i) setTimeout(function () { requestItem(want.i); }, 250);
@@ -1927,7 +1942,7 @@
     $('#payTitle').innerHTML = 'Payment &mdash; ' + p.name;
     proofData = null; proofName = '';
     paintPayment();
-    openOverlay(payOverlay);
+    openOverlay(payOverlay, underProject());
     refreshStatus(id, true);
   }
 
@@ -2642,7 +2657,7 @@
   function payActionClick() {
     if (B.enabled && !signedIn()) {
       stopPoll();
-      closeOverlay(payOverlay);
+      retire(payOverlay);
       askSignIn(payFor, null, 'payment');
       return;
     }
@@ -2668,7 +2683,7 @@
     }
     var id = payFor;
     stopPoll();
-    closeOverlay(payOverlay);
+    retire(payOverlay);
     var cur = getPay(id);
     if (cur && !cur.signed) { openTerms(id, false, buyKey(cur)); return; }
     var next = pendingItem; pendingItem = null;
@@ -3022,8 +3037,17 @@
     return href + (href.indexOf('?') > -1 ? '&' : '?') + 'download=' + encodeURIComponent(name || '');
   }
 
+  /* The images and clips on screen at the moment, in the order the viewer pages
+     through them. Set by whichever file view is being drawn; read by the
+     delegated handler on #infoBody, so it survives that panel being redrawn. */
+  var infoMedia = [];
+
   function openFile(p, item, link) {
     var f = fileInfo(link.href);
+    var see = isViewable(link.href);
+    infoMedia = see ? [{ url: link.href, name: f.name,
+                         caption: (item && item.description) || '' }] : [];
+
     openInfo({
       title: esc(item ? item.name : f.name),
       sub: p.name + ' &mdash; ' + esc(f.kind),
@@ -3036,8 +3060,13 @@
         '<p style="margin-top:16px; display:flex; gap:9px; flex-wrap:wrap">' +
           '<a class="btn btn-sm btn-primary" id="fileGet" href="' + esc(downloadHref(link.href, f.name)) +
             '" download="' + esc(f.name) + '">' + svg(ICON.down) + 'Download it</a>' +
-          '<a class="btn btn-sm" id="fileSee" href="' + esc(link.href) + '" target="_blank" rel="noopener">' +
-            'Open in a tab</a>' +
+          /* an image or a clip is shown here, where Back still means something;
+             anything else genuinely needs the browser's own viewer */
+          (see
+            ? '<button class="btn btn-sm" type="button" data-file-view="0">' +
+                svg(ICON.zoom) + 'View it here</button>'
+            : '<a class="btn btn-sm" id="fileSee" href="' + esc(link.href) +
+                '" target="_blank" rel="noopener">Open in a tab</a>') +
         '</p>',
       msg: 'Yours to keep — save it somewhere you will find it again.'
     });
@@ -3046,9 +3075,22 @@
   /* Several files under one item, each named and explained, each with its own
      way out: view it, or keep it. */
   function openFileList(p, item, files) {
+    /* the pictures among them become one gallery, so View on the third photo
+       opens at the third photo and the arrows walk the rest */
+    infoMedia = files.filter(function (f) { return isViewable(f.url); })
+      .map(function (f) {
+        return { url: f.url, name: f.label || fileInfo(f.url).name, caption: f.note || '' };
+      });
+
+    var seen = 0;
     var rows = files.map(function (f) {
       var info = fileInfo(f.url);
       var name = f.label || info.name;
+      var view = isViewable(f.url)
+        ? '<button class="btn btn-sm" type="button" data-file-view="' + (seen++) + '">' +
+            svg(ICON.zoom) + 'View</button>'
+        : '<a class="btn btn-sm" href="' + esc(f.url) + '" target="_blank" rel="noopener">' +
+            'Open in a tab</a>';
       return '<li class="file-row">' +
         '<span class="file-ext">' + esc(info.ext ? info.ext.toUpperCase() : 'FILE') + '</span>' +
         '<span class="file-what"><b>' + esc(name) + '</b>' +
@@ -3056,7 +3098,7 @@
         '<span class="file-do">' +
           '<a class="btn btn-sm btn-primary" href="' + esc(downloadHref(f.url, info.name)) +
             '" download="' + esc(info.name) + '">' + svg(ICON.down) + 'Download</a>' +
-          '<a class="btn btn-sm" href="' + esc(f.url) + '" target="_blank" rel="noopener">View</a>' +
+          view +
         '</span>' +
       '</li>';
     }).join('');
@@ -3153,8 +3195,16 @@
       }).join('') + '</table></div>';
   }
 
-  /* ---------- overlays ---------- */
-  function openOverlay(el) {
+  /* ---------- overlays ----------
+     Each one is a view you must be able to get back out of. js/backstack.js
+     gives it an entry on the history stack, so the phone's own Back gesture
+     closes this view instead of the whole site — which matters most once the
+     site is installed as an app and there is no browser Back to press. Pass
+     `from` when the view was opened over another one and it also gets the
+     labelled way back, drawn above its heading.  */
+  var authOverlay = $('#authOverlay');
+
+  function openOverlay(el, from) {
     focusStack.push(document.activeElement);
     el.dataset.open = 'true';
     document.body.classList.add('modal-open');
@@ -3162,12 +3212,77 @@
       ? (termsBody.dataset.read === 'true' ? buyer : termsScroll)
       : el.querySelector('.modal');
     if (f && f.focus) f.focus({ preventScroll: true });
+    if (Back) {
+      var view = { key: el.id, el: el, backLabel: from || '', close: closerFor(el) };
+      if (replacing && Back.swap(replacing, view)) replacing = null;
+      else Back.open(view);
+    }
   }
+
   function closeOverlay(el) {
     el.dataset.open = 'false';
     if (!$('.overlay[data-open="true"]')) document.body.classList.remove('modal-open');
     var back = focusStack.pop();
     if (back && back.focus && document.contains(back)) back.focus({ preventScroll: true });
+  }
+
+  /* What closing each view actually means — the state it has to let go of, not
+     only the panel coming off the screen. Back runs exactly what the × runs, so
+     a swipe backwards cannot leave a payment poll ticking behind it. */
+  function closerFor(el) {
+    return function () {
+      if (el === imageOverlay) { closeImage(); return; }   /* restores its caller */
+      if (el === projectOverlay) openProjectId = null;
+      if (el === payOverlay) { pendingItem = null; stopPoll(); }
+      if (el === termsOverlay) pendingItem = null;
+      if (el === authOverlay) {
+        pendingItem = null;
+        try {
+          localStorage.removeItem(RESUME);
+          localStorage.removeItem(CONTACT_RESUME);
+          localStorage.removeItem(CONTACT_DRAFT);
+        } catch (e) {}
+      }
+      closeOverlay(el);
+    };
+  }
+
+  /* the page closing a view itself: take the history entry down with it */
+  function dismiss(el) {
+    if (Back && Back.has(el.id)) { Back.close(el.id); return; }
+    closerFor(el)();
+  }
+
+  /* The flow moving on of its own accord — signed in, so here is the project;
+     paid, so here are the terms. The view that follows inherits the one it
+     replaced, so a step forward on screen stays one press of Back to undo. If
+     nothing follows after all, the entry is unwound instead. */
+  var replacing = null;
+  function retire(el) {
+    closeOverlay(el);
+    if (!Back || !Back.has(el.id)) return;
+    replacing = el.id;
+    setTimeout(function () {
+      if (replacing !== el.id) return;
+      replacing = null;
+      Back.drop(el.id);
+    }, 400);
+  }
+
+  /* Showing one view over another is not the same as closing the one beneath:
+     it keeps its place in the back stack, so Back brings it back rather than
+     skipping past it. */
+  function veil(el) {
+    if (!el || el.dataset.open !== 'true') return null;
+    el.dataset.open = 'false';
+    return el;
+  }
+  function unveil(el) {
+    if (!el) return;
+    el.dataset.open = 'true';
+    document.body.classList.add('modal-open');
+    var m = el.querySelector('.modal');
+    if (m && m.focus) m.focus({ preventScroll: true });
   }
 
   /* ---------- the site's own notices ----------
@@ -3192,22 +3307,38 @@
   /* The cover, whole and uncropped — the framing only decides what the card
      shows, never what the buyer is allowed to look at. */
   var imageOverlay = $('#imageOverlay');
-  var imageReturn = null;            // the project modal to bring back afterwards
+  var imageVeiled = null;            // the view standing aside while it is up
 
   var gallery = { items: [], at: 0, title: '', out: null };
 
   function isVideoFile(url) { return /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(url || '')); }
+  function isImageFile(url) { return /\.(png|jpe?g|webp|gif|avif|bmp|svg)(\?|#|$)/i.test(String(url || '')); }
+  function isViewable(url) { return isImageFile(url) || isVideoFile(url); }
 
-  /* One viewer for everything: a single project cover, or a proof with a dozen
-     photos and a clip, paged through with the arrows or the arrow keys. */
-  function openGallery(items, title, out) {
+  /* One viewer for everything: a single project cover, a proof with a dozen
+     photos and a clip, or the images attached to a package item — paged with
+     the arrows or the arrow keys.
+
+     Whatever it opened over steps aside rather than closing, keeps its place in
+     the back stack, and is named on the button that goes back to it. Before
+     this, a package image opened in a new browser tab: on a phone, and doubly
+     so in the installed app, that left the buyer somewhere with no way home. */
+  function openGallery(items, title, out, startAt) {
     items = (items || []).filter(function (i) { return i && i.url; });
     if (!items.length && !out) return;
-    gallery = { items: items, at: 0, title: title || '', out: out || null };
-    imageReturn = projectOverlay.dataset.open === 'true' ? openProjectId : null;
-    if (imageReturn) closeOverlay(projectOverlay);
+    var at = Math.min(Math.max(parseInt(startAt, 10) || 0, 0), Math.max(items.length - 1, 0));
+    gallery = { items: items, at: at, title: title || '', out: out || null };
+
+    var from = infoOverlay.dataset.open === 'true' ? infoOverlay
+             : projectOverlay.dataset.open === 'true' ? projectOverlay
+             : null;
+    var label = from === infoOverlay ? ($('#infoTitle').textContent || '').trim()
+              : from === projectOverlay ? ($('#projTitle').textContent || '').trim()
+              : '';
+    imageVeiled = veil(from);
+
     paintGallery();
-    openOverlay(imageOverlay);
+    openOverlay(imageOverlay, label);
   }
 
   function openImage(url, title, note) {
@@ -3235,7 +3366,7 @@
       clip.hidden = true; shot.hidden = true;
     }
 
-    $('#imageCaption').textContent = gallery.title;
+    $('#imageCaption').textContent = (item && item.name) || gallery.title;
     var note = item && item.caption ? item.caption : '';
     $('#imageNote').textContent = note;
     $('#imageNote').hidden = !note;
@@ -3259,17 +3390,23 @@
     paintGallery();
   }
 
+  /* The DOM half of closing the viewer. The history half is dismiss(), so this
+     can also be what Back runs without the two chasing each other. */
   function closeImage() {
     closeOverlay(imageOverlay);
     var clip = $('#videoFull');
     clip.pause();
     clip.removeAttribute('src');
     $('#imageFull').removeAttribute('src');
-    if (imageReturn && byId(imageReturn)) {
-      openProjectId = imageReturn;
-      openOverlay(projectOverlay);
-    }
-    imageReturn = null;
+    unveil(imageVeiled);
+    imageVeiled = null;
+  }
+
+  /* the name of the project modal underneath, when there is one — what the way
+     back should be labelled with */
+  function underProject() {
+    return projectOverlay.dataset.open === 'true'
+      ? ($('#projTitle').textContent || '').trim() : '';
   }
 
   function openInfo(cfg) {
@@ -3277,7 +3414,10 @@
     $('#infoSub').innerHTML = cfg.sub || '';
     $('#infoBody').innerHTML = cfg.html;
     $('#infoMsg').textContent = cfg.msg || '';
-    openOverlay(infoOverlay);
+    /* opened from inside a project, it says which project it goes back to */
+    var from = cfg.from !== undefined ? cfg.from
+      : underProject();
+    openOverlay(infoOverlay, from);
   }
 
   /* ---------- the signature pad ----------
@@ -3557,7 +3697,7 @@
     } else if (rec) {
       formMsg.textContent = 'Signed ' + pretty(rec.buyerDate) + '. Editing the fields signs it again.';
     }
-    openOverlay(termsOverlay);
+    openOverlay(termsOverlay, underProject());
     sig.ready();                       // the canvas can only be sized once it is on screen
     termsScroll.scrollTop = rec ? termsScroll.scrollHeight : 0;
     checkRead();
@@ -3598,7 +3738,7 @@
 
   function accept() {
     if (B.enabled && !signedIn()) {
-      closeOverlay(termsOverlay);
+      retire(termsOverlay);
       askSignIn(termsFor, pendingItem, pendingItem ? 'item' : 'project');
       return;
     }
@@ -3641,7 +3781,7 @@
 
     function finish() {
       save(termsFor, rec, termsBuy);
-      closeOverlay(termsOverlay);
+      retire(termsOverlay);
       if (openProjectId === p.id) paintProject();
       var next = pendingItem; pendingItem = null;
       if (next) setTimeout(function () { openPackageItem(p, next); }, 120);
@@ -4034,38 +4174,44 @@
     el.addEventListener('click', function () { openProject(el.dataset.openProject); });
   });
   $('#googleBtn').addEventListener('click', startGoogle);
+  /* Every way out of a view now runs the same thing — the ×, the footer button,
+     the backdrop, Escape, the labelled back button and the phone's own Back
+     gesture. dismiss() carries the state each view has to let go of and takes
+     its history entry down with it. */
   $$('[data-close-auth]').forEach(function (el) {
-    el.addEventListener('click', function () {
-      pendingItem = null;
-      try {
-        localStorage.removeItem(RESUME);
-        localStorage.removeItem(CONTACT_RESUME);
-        localStorage.removeItem(CONTACT_DRAFT);
-      } catch (e) {}
-      closeOverlay($('#authOverlay'));
-    });
+    el.addEventListener('click', function () { dismiss(authOverlay); });
   });
   $$('[data-close-pay]').forEach(function (el) {
-    el.addEventListener('click', function () { pendingItem = null; stopPoll(); closeOverlay(payOverlay); });
+    el.addEventListener('click', function () { dismiss(payOverlay); });
   });
   $('#payAction').addEventListener('click', payActionClick);
   $$('[data-close-project]').forEach(function (el) {
-    el.addEventListener('click', function () { openProjectId = null; closeOverlay(projectOverlay); });
+    el.addEventListener('click', function () { dismiss(projectOverlay); });
   });
   $$('[data-close-terms]').forEach(function (el) {
-    el.addEventListener('click', function () { pendingItem = null; closeOverlay(termsOverlay); });
+    el.addEventListener('click', function () { dismiss(termsOverlay); });
   });
   $$('[data-close-info]').forEach(function (el) {
-    el.addEventListener('click', function () { closeOverlay(infoOverlay); });
+    el.addEventListener('click', function () { dismiss(infoOverlay); });
   });
-  [projectOverlay, $('#authOverlay'), payOverlay, termsOverlay, infoOverlay].forEach(function (ov) {
+  [projectOverlay, authOverlay, payOverlay, termsOverlay, infoOverlay].forEach(function (ov) {
     ov.addEventListener('mousedown', function (e) {
       if (e.target !== ov) return;
-      if (ov === termsOverlay || ov === payOverlay || ov === $('#authOverlay')) pendingItem = null;
-      if (ov === payOverlay) stopPoll();
-      if (ov === projectOverlay) openProjectId = null;
-      closeOverlay(ov);
+      dismiss(ov);
     });
+  });
+
+  /* an image or a clip attached to a package opens in the viewer above this
+     panel, not in a browser tab the buyer cannot get back from */
+  $('#infoBody').addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('[data-file-view]');
+    if (!btn) return;
+    e.preventDefault();
+    if (!infoMedia.length) return;
+    var at = Number(btn.dataset.fileView) || 0;
+    /* the viewer is titled with the file being looked at; the way back keeps
+       the name of the panel it came from */
+    openGallery(infoMedia, (infoMedia[at] && infoMedia[at].name) || '', null, at);
   });
   $$('[data-open-privacy]').forEach(function (el) {
     el.addEventListener('click', function () { openSiteDoc('privacy'); });
@@ -4075,11 +4221,11 @@
   });
 
   $$('[data-close-image]').forEach(function (el) {
-    el.addEventListener('click', closeImage);
+    el.addEventListener('click', function () { dismiss(imageOverlay); });
   });
   imageOverlay.addEventListener('mousedown', function (e) {
     if (e.target === imageOverlay || e.target.id === 'imageFull' ||
-        e.target.id === 'imageCaption') closeImage();
+        e.target.id === 'imageCaption') dismiss(imageOverlay);
   });
   $$('#imageOverlay [data-lb-step]').forEach(function (b) {
     b.addEventListener('click', function (e) {
@@ -4095,13 +4241,11 @@
 
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
+    /* the back stack knows which view is really on top, including one that is
+       standing aside behind the viewer */
+    if (Back && Back.depth()) { Back.back(); return; }
     var open = $$('.overlay[data-open="true"]').pop();
-    if (!open) return;
-    if (open === imageOverlay) { closeImage(); return; }
-    if (open === termsOverlay || open === payOverlay || open === $('#authOverlay')) pendingItem = null;
-    if (open === payOverlay) stopPoll();
-    if (open === projectOverlay) openProjectId = null;
-    closeOverlay(open);
+    if (open) dismiss(open);
   });
 
   termsScroll.addEventListener('scroll', checkRead);

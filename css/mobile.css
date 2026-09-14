@@ -1,0 +1,507 @@
+/* JUDECH — the small screen, and the installed app
+   ===========================================================================
+   One sheet, loaded last by all three pages, doing two things that neither
+   landing.css nor style.css should have to carry twice:
+
+     · make the pages behave on a phone or a tablet held any way up — nothing
+       narrower than the screen, nothing under the notch, nothing you have to
+       aim at, and no field that zooms Safari in when you tap it;
+     · dress the four pieces js/pwa.js builds — the install offer, the update
+       notice, the connection pill and the iOS instruction sheet — in whichever
+       theme the page underneath is wearing.
+
+   It only ever uses the custom properties both design systems already define
+   (--ground, --panel, --line, --ink*, --accent*, --shadow), so the same rule
+   comes out warm on the catalog and cool in the simulator without a fork.
+   =========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   1. The edges of the screen
+   viewport-fit=cover lets the page fill an iPhone corner to corner, which also
+   means the page is now responsible for the corners. These four are read back
+   everywhere something sits against an edge.
+   --------------------------------------------------------------------------- */
+:root{
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --gutter: 20px;
+  --tap: 44px;                 /* the smallest thing a thumb should have to hit */
+}
+@media (max-width:640px){ :root{ --gutter:16px } }
+@media (max-width:380px){ :root{ --gutter:14px } }
+
+/* ---------------------------------------------------------------------------
+   2. Hardening
+   --------------------------------------------------------------------------- */
+html{
+  -webkit-text-size-adjust:100%;        /* iOS rotating to landscape re-flows,
+                                           it does not inflate the type */
+  text-size-adjust:100%;
+  overflow-x:clip;                      /* a stray wide child is clipped, and
+                                           unlike hidden this keeps sticky */
+}
+body{ overflow-x:clip; -webkit-tap-highlight-color:transparent }
+
+/* Anything that can be wider than its box, told not to be. */
+img, svg, video, canvas, iframe, table, pre{ max-width:100% }
+
+/* A long URL or a reference number in a narrow cell breaks rather than pushing
+   the whole page sideways. */
+td, th, .bubble, .chat-line, .note, .muted, dd, li, p{ overflow-wrap:break-word }
+code, kbd, samp, .mono, .kbd{ overflow-wrap:anywhere }
+
+/* A tap that lands on a label should not select the word under it. */
+@media (pointer:coarse){
+  .btn, .mini, .proto-view, .pay-tab, .topnav a, .topnav button,
+  .step, .chip, .msg-dock-btn, .chat-icon{ -webkit-user-select:none; user-select:none }
+}
+
+/* ---------------------------------------------------------------------------
+   3. Gutters that respect the notch
+   Both pages centre their content in a .wrap; in landscape on a notched phone
+   the left inset is real and the text has to move in from it.
+   --------------------------------------------------------------------------- */
+.wrap{
+  padding-left:max(var(--gutter), var(--sal));
+  padding-right:max(var(--gutter), var(--sar));
+}
+@media (max-width:640px){
+  footer.site .wrap{ padding-bottom:calc(38px + var(--sab)) }
+}
+
+/* ---------------------------------------------------------------------------
+   4. Grids that cannot be narrower than their track
+   repeat(auto-fit, minmax(280px, 1fr)) is a promise the box cannot keep at
+   320px wide, and the overflow it causes is the single commonest reason a page
+   scrolls sideways on a phone. min() lets the track give up first.
+   --------------------------------------------------------------------------- */
+.strip{        grid-template-columns:repeat(auto-fit,minmax(min(268px,100%),1fr)) }
+.two{          grid-template-columns:repeat(auto-fit,minmax(min(330px,100%),1fr)) }
+.sideGrid{     grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr)) }
+.projects, .pkg-grid, .cap-grid, .how-grid, .form-grid,
+.rights-grid, .contact-grid, .pay-grid, .grid2{ min-width:0 }
+.strip > *, .two > *, .sideGrid > *, .projects > *, .pkg-grid > *{ min-width:0 }
+
+/* ---------------------------------------------------------------------------
+   5. Things you have to hit
+   Pointer-coarse only: a mouse does not need a 44px button and the desktop
+   layouts were drawn for the size they are.
+   --------------------------------------------------------------------------- */
+@media (pointer:coarse){
+  .btn, a.btn, button.btn{ min-height:var(--tap) }
+  .btn-sm, .btn.btn-sm{ min-height:40px }
+  .icon-btn, .topnav .icon-btn{ width:var(--tap); height:var(--tap) }
+  .topnav a, .topnav button{ min-height:40px; display:inline-flex; align-items:center }
+  .mini{ min-height:36px; padding-inline:12px }
+  .proto-view{ min-height:40px }
+  .msg-dock-btn{ width:38px; height:38px }
+  .chat-icon{ width:34px; height:34px }
+  /* the pencil and the bin on a message have no hover to appear on */
+  .bubble-tools{ opacity:1; transform:none }
+  .hero-arrow, .lb-arrow{ width:44px; height:44px }
+  input[type=checkbox], input[type=radio]{ width:20px; height:20px }
+}
+
+/* ---------------------------------------------------------------------------
+   6. Fields
+   Safari zooms the page in whenever it focuses a control whose type is under
+   16px, and it does not zoom back out. Every field on a phone is 16px.
+   --------------------------------------------------------------------------- */
+@media (max-width:900px){
+  /* !important is the blunt instrument on purpose: the pages set field sizes
+     from rules carrying an id, and losing that argument means Safari zooms the
+     layout in on first tap and never zooms back out. */
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]),
+  select, textarea{ font-size:16px !important }
+  select{ max-width:100% }
+  textarea{ min-height:104px }
+}
+input, select, textarea, button{ max-width:100% }
+input[type=file]{ max-width:100%; font-size:13px }
+
+/* ---------------------------------------------------------------------------
+   7. Sideways scrollers
+   A table, a wiring sheet or a row of tools that is wider than the phone
+   scrolls on its own instead of taking the page with it — and says so, with a
+   shadow at whichever edge still has content behind it.
+   --------------------------------------------------------------------------- */
+.tblwrap, .table-wrap, .pt-tablewrap, .pt-sheet, .doc-body,
+.hdr-tools, .site-topbar .topnav, .steps{
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;
+}
+.tblwrap, .table-wrap{
+  background-image:
+    linear-gradient(to right, var(--panel) 30%, transparent),
+    linear-gradient(to left,  var(--panel) 30%, transparent),
+    linear-gradient(to right, rgba(0,0,0,.16), transparent 14px),
+    linear-gradient(to left,  rgba(0,0,0,.16), transparent 14px);
+  background-position:0 0, 100% 0, 0 0, 100% 0;
+  background-repeat:no-repeat;
+  background-size:34px 100%, 34px 100%, 14px 100%, 14px 100%;
+  background-attachment:local, local, scroll, scroll;
+}
+/* the row of tools above the machine snaps, so it never rests mid-button */
+@media (max-width:900px){
+  .hdr-tools{ scroll-snap-type:x proximity; scroll-padding-inline:var(--gutter) }
+  .hdr-tools .btn{ scroll-snap-align:start }
+}
+.site-topbar .topnav{ scroll-snap-type:x proximity }
+.site-topbar .topnav > *{ scroll-snap-align:center }
+
+/* ---------------------------------------------------------------------------
+   8. Dialogs become sheets
+   A centred card with the keyboard up is a card you cannot read. Below 640px
+   every overlay comes off the bottom edge instead, sized in dvh so the address
+   bar sliding away does not cut the last line off.
+   --------------------------------------------------------------------------- */
+@media (max-width:640px){
+  .overlay{ padding:0 }
+  .overlay[data-open="true"]{ place-items:end center }
+  .modal, .modal-sm{
+    width:100%;
+    max-height:min(94dvh, calc(100dvh - var(--sat) - 12px));
+    margin-block:0;
+    border-radius:22px 22px 0 0;
+    border-bottom:0;
+    padding-bottom:var(--sab);
+  }
+  .overlay.lightbox{ padding:0 }
+  .overlay.lightbox[data-open="true"]{ place-items:center }
+  .overlay.lightbox .modal{ border-radius:16px; margin-block:auto }
+}
+.modal, .doc-body, .msg-dock-body, .thread-entries,
+.inbox-list, .admin-thread, .serial, .trace{ overscroll-behavior:contain }
+
+/* The viewer's two floating controls are the only chrome it has, so they clear
+   the notch and stay a thumb's width apart from each other. */
+.overlay.lightbox .modal-x, .shot-overlay .modal-x{
+  top:calc(16px + var(--sat)); right:calc(18px + var(--sar));
+}
+.overlay.lightbox .modal-back, .shot-overlay .modal-back{
+  top:calc(16px + var(--sat)); left:calc(18px + var(--sal));
+  max-width:calc(100% - 96px - var(--sal) - var(--sar));
+}
+@media (pointer:coarse){
+  .modal-back{ min-height:40px }
+  .overlay.lightbox .modal-x, .shot-overlay .modal-x{ width:44px; height:44px }
+}
+/* on a phone the sheet's own heading is the anchor; keep the way back on top
+   of it and let a long project name give way rather than push the × off */
+@media (max-width:640px){
+  .modal-hd{ padding:16px 16px 14px }
+  .modal-hd h2{ font-size:19px }
+  .modal-ft{ padding-inline:16px }
+  .modal-back{ font-size:12.5px; padding:7px 12px 7px 8px }
+}
+
+/* ---------------------------------------------------------------------------
+   9. The catalog on a phone
+   --------------------------------------------------------------------------- */
+@media (max-width:640px){
+  .hero h1{ font-size:clamp(29px,8.4vw,40px) }
+  .hero .lede{ font-size:16px }
+  .hero .cta{ gap:9px }
+  .hero .cta .btn{ flex:1 1 auto; justify-content:center }
+  .kicker{ font-size:11.5px }
+  .note{ padding:14px; gap:11px; font-size:14px }
+  .code-row b{ font-size:23px; letter-spacing:.1em; overflow-wrap:anywhere }
+  .pay-switch{ gap:7px }
+  .pay-tab{ flex:1 1 140px; padding:10px 12px; font-size:13.5px }
+  footer.site .wrap{ gap:16px }
+  footer.site .links{ margin-left:0; gap:14px 18px }
+}
+@media (max-width:380px){
+  .hero .cta .btn{ flex:1 1 100%; }
+  .pay-tab{ flex:1 1 100% }
+}
+
+/* the fab and the dock, off the home-indicator and out of each other's way */
+.message-fab{ bottom:calc(22px + var(--sab)); right:calc(22px + var(--sar)) }
+@media (max-width:640px){
+  .message-fab{ bottom:calc(14px + var(--sab)); right:calc(14px + var(--sar)) }
+}
+body.has-pwa-banner .message-fab{
+  bottom:calc(var(--pwa-banner-h, 104px) + 24px + var(--sab));
+  transition:bottom .3s cubic-bezier(.2,.85,.3,1);
+}
+/* js/pwa.js holds the install offer back until the greeting has gone; this is
+   only the belt, for a greeting that opens while the offer is already up */
+body.has-pwa-banner .chat-tip{ bottom:calc(var(--pwa-banner-h, 104px) + 84px + var(--sab)) }
+
+.msg-dock{ max-height:min(78dvh,700px) }
+@media (max-width:560px){
+  .msg-dock{
+    max-height:min(88dvh, calc(100dvh - var(--sat) - 8px));
+    padding-bottom:var(--sab);
+    border-radius:22px 22px 0 0;
+  }
+  .msg-dock-head{ padding-block:15px }     /* it is also the drag handle */
+  .bubble{ max-width:88%; font-size:14.5px }
+}
+
+/* ---------------------------------------------------------------------------
+   10. The simulator on a phone
+   The machine is the point of the page, so it keeps its size and everything
+   around it gives way.
+   --------------------------------------------------------------------------- */
+@media (max-width:640px){
+  .page-sim .wrap{ padding-top:16px; padding-bottom:calc(40px + var(--sab)) }
+  .page-sim h1{ font-size:21px }
+  /* the eyebrow wraps to two lines on a phone; the badge belongs beside the
+     first of them, not floating in the middle of the block */
+  .brandline{ align-items:flex-start }
+  .brandline .mark{ margin-top:2px }
+  .hdr-tools{ gap:7px }
+  .serial{ height:150px }
+  .card-bd{ padding:12px 13px }
+  .card-hd{ padding:10px 13px }
+  .steps{ padding:11px 13px; scroll-snap-type:x proximity }
+  .step{ scroll-snap-align:start; min-width:150px }
+  .pt-tablewrap{ max-height:330px }
+  .sidePane svg{ max-height:min(48vh,360px) }
+  .leds{ gap:11px }
+  .row{ grid-template-columns:44px minmax(0,1fr) auto; gap:7px }
+  .finding{ grid-template-columns:22px minmax(0,1fr) }
+}
+/* dragging the free-walk view pans the model; every other drawing keeps the
+   browser's own pinch-to-zoom, which is how a diagram is read on a phone */
+#walkView{ touch-action:none }
+
+/* ---------------------------------------------------------------------------
+   11. The dashboard on a phone
+   --------------------------------------------------------------------------- */
+@media (max-width:640px){
+  .admin-main{ padding-bottom:calc(40px + var(--sab)) }
+  .card-block{ padding-inline:15px }
+  .proof-table{ min-width:640px }
+  .tbl-act{ text-align:left }
+  .tbl-act .btn + .btn{ margin-left:5px }
+  .code-row{ gap:9px }
+  .inbox-list{ max-height:280px }
+  .inbox-view .admin-thread{ max-height:56dvh }
+  .presence-summary{ gap:12px }
+  .pulse{ width:100%; justify-content:flex-start }
+  .pulse-text{ max-width:none; flex:1; min-width:0 }
+}
+
+/* ---------------------------------------------------------------------------
+   12. The tablet
+   Between a phone and a laptop there is room for two of most things, and an
+   iPad in portrait is 768–834px wide — squarely inside the range where the
+   desktop grid is too tight and the phone stack wastes half the screen.
+   --------------------------------------------------------------------------- */
+@media (min-width:641px) and (max-width:1024px){
+  .wrap{ --gutter:26px }
+  .hero h1{ font-size:clamp(36px,5.4vw,46px) }
+  .projects, .pkg-grid, .cap-grid{ grid-template-columns:repeat(2,minmax(0,1fr)) }
+  .how-grid{ grid-template-columns:repeat(2,minmax(0,1fr)) }
+  .strip{ grid-template-columns:repeat(2,minmax(0,1fr)) }
+  .msg-dock{ width:min(430px,calc(100vw - 44px)) }
+}
+/* a tablet in landscape is a small laptop; let the hero sit side by side again */
+@media (min-width:900px) and (max-width:1024px){
+  .hero .wrap{ grid-template-columns:minmax(0,1fr) minmax(0,.9fr); gap:32px }
+}
+
+/* ---------------------------------------------------------------------------
+   13. A phone on its side
+   Barely 380px of height: the sticky header and the big vertical rhythm are
+   what has to go, not the content.
+   --------------------------------------------------------------------------- */
+@media (max-height:520px) and (orientation:landscape){
+  .topbar{ position:static }
+  .hero{ padding-block:22px 18px }
+  section.band{ padding-block:26px }
+  .msg-dock{ max-height:calc(100dvh - 16px) }
+  .overlay[data-open="true"]{ place-items:center }
+  .modal{ max-height:calc(100dvh - 16px); border-radius:18px }
+  .sidePane svg{ max-height:70vh }
+  .serial{ height:120px }
+}
+
+/* ---------------------------------------------------------------------------
+   14. Once it is installed
+   No browser chrome means the page owns the status bar, and an install button
+   inside an installed app is a joke at the user's expense.
+   --------------------------------------------------------------------------- */
+.pwa-standalone .topbar{ padding-top:var(--sat) }
+.pwa-standalone body{ overscroll-behavior-y:none }   /* no rubber-band on a page
+                                                        that is meant to be an app */
+.pwa-standalone [data-pwa-install]{ display:none !important }
+.pwa-standalone .pwa-install, .pwa-standalone .pwa-ios{ display:none !important }
+@media (display-mode:standalone), (display-mode:fullscreen), (display-mode:minimal-ui){
+  .topbar{ padding-top:var(--sat) }
+  [data-pwa-install]{ display:none !important }
+}
+/* the title-bar area, when the desktop app draws its own window controls */
+@media (display-mode:window-controls-overlay){
+  .topbar{ padding-top:env(titlebar-area-height, 0px) }
+}
+
+/* ===========================================================================
+   15. The four pieces js/pwa.js builds
+   =========================================================================== */
+.pwa-btn{
+  font:inherit; font-weight:800; font-size:14px; line-height:1;
+  min-height:42px; padding:11px 18px; border-radius:999px; cursor:pointer;
+  border:1.5px solid var(--line); background:var(--panel); color:var(--ink);
+  transition:filter .15s, border-color .15s, transform .12s;
+}
+.pwa-btn:hover{ border-color:var(--accent) }
+.pwa-btn:active{ transform:translateY(1px) }
+.pwa-btn-go{ background:var(--accent); border-color:var(--accent); color:var(--on-accent) }
+.pwa-btn-go:hover{ filter:brightness(1.08) }
+.pwa-btn-go[disabled]{ opacity:.6; cursor:progress }
+.pwa-btn-quiet{ background:transparent; color:var(--ink-2) }
+
+.pwa-install-mark{
+  width:44px; height:44px; flex:none; display:grid; place-items:center;
+  border-radius:13px; overflow:hidden; background:#0C1512;
+}
+.pwa-install-mark svg{ width:100%; height:100% }
+
+/* ---------- the install offer ---------- */
+.pwa-install{
+  position:fixed; z-index:120;
+  left:max(12px, var(--sal)); right:max(12px, var(--sar));
+  bottom:calc(12px + var(--sab));
+  margin-inline:auto; max-width:460px;   /* left+right already give the width;
+                                            a percentage here would measure the
+                                            viewport and hang off the edge */
+  display:grid; grid-template-columns:auto minmax(0,1fr); gap:10px 13px;
+  align-items:center;
+  padding:14px 15px;
+  background:var(--panel); color:var(--ink);
+  border:1.5px solid var(--line); border-radius:20px;
+  box-shadow:0 24px 60px -22px rgba(0,0,0,.5), var(--shadow);
+  opacity:0; visibility:hidden; transform:translateY(18px) scale(.98);
+  transition:opacity .24s ease, transform .3s cubic-bezier(.2,.85,.3,1), visibility .3s;
+}
+.pwa-install[data-open="true"]{ opacity:1; visibility:visible; transform:none }
+.pwa-install-txt b{
+  display:block; font-family:"Nunito","Chakra Petch",system-ui,sans-serif;
+  font-size:15px; font-weight:800; line-height:1.25;
+}
+.pwa-install-txt span{
+  display:block; margin-top:3px; font-size:13px; line-height:1.45; color:var(--ink-2);
+}
+.pwa-install-acts{
+  grid-column:1/-1; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;
+}
+.pwa-install-acts .pwa-btn{ flex:0 1 auto }
+@media (max-width:400px){
+  .pwa-install-acts .pwa-btn{ flex:1 1 auto }
+}
+
+/* ---------- a newer build is waiting ---------- */
+.pwa-toast{
+  position:fixed; z-index:125;
+  left:max(12px, var(--sal)); right:max(12px, var(--sar));
+  bottom:calc(12px + var(--sab));
+  margin-inline:auto; max-width:430px;
+  display:grid; gap:11px;
+  padding:14px 16px;
+  background:var(--panel); color:var(--ink);
+  border:1.5px solid var(--accent); border-radius:18px;
+  box-shadow:0 24px 60px -22px rgba(0,0,0,.5), var(--shadow);
+  opacity:0; visibility:hidden; transform:translateY(18px);
+  transition:opacity .24s ease, transform .3s cubic-bezier(.2,.85,.3,1), visibility .3s;
+}
+.pwa-toast[data-open="true"]{ opacity:1; visibility:visible; transform:none }
+.pwa-toast-txt b{
+  display:block; font-family:"Nunito","Chakra Petch",system-ui,sans-serif;
+  font-size:15px; font-weight:800;
+}
+.pwa-toast-txt span{ display:block; margin-top:3px; font-size:13px; color:var(--ink-2) }
+.pwa-toast-acts{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap }
+
+/* ---------- the connection ---------- */
+.pwa-pill{
+  position:fixed; z-index:130;
+  top:calc(10px + var(--sat)); left:50%;
+  padding:9px 17px; border-radius:999px;
+  font-family:"Nunito","Chakra Petch",system-ui,sans-serif;
+  font-size:13px; font-weight:800; white-space:nowrap;
+  max-width:calc(100vw - 32px); overflow:hidden; text-overflow:ellipsis;
+  color:var(--on-accent); background:var(--accent);
+  box-shadow:0 14px 34px -14px rgba(0,0,0,.6);
+  opacity:0; pointer-events:none;
+  transform:translate(-50%,-14px);
+  transition:opacity .22s ease, transform .28s cubic-bezier(.2,.85,.3,1);
+}
+.pwa-pill[data-open="true"]{ opacity:1; transform:translate(-50%,0) }
+.pwa-pill[data-kind="bad"]{
+  color:#fff;
+  background:var(--bad, var(--metal, #C4453C));
+}
+
+/* ---------- how you install one on iOS ---------- */
+.pwa-ios{
+  position:fixed; inset:0; z-index:140;
+  display:grid; place-items:end center;
+  padding:16px;
+  background:rgba(12,21,18,.58); backdrop-filter:blur(4px);
+  opacity:0; transition:opacity .24s ease;
+}
+.pwa-ios[data-open="true"]{ opacity:1 }
+.pwa-ios-card{
+  width:min(420px,100%);
+  margin-bottom:calc(6px + var(--sab));
+  padding:22px 20px;
+  text-align:center;
+  background:var(--panel); color:var(--ink);
+  border:1.5px solid var(--line); border-radius:24px;
+  box-shadow:0 30px 70px -24px rgba(0,0,0,.6);
+  transform:translateY(22px);
+  transition:transform .32s cubic-bezier(.2,.85,.3,1);
+}
+.pwa-ios[data-open="true"] .pwa-ios-card{ transform:none }
+.pwa-ios-card .pwa-install-mark{ margin:0 auto 14px; width:54px; height:54px; border-radius:16px }
+.pwa-ios-card > b{          /* the heading only — the steps use <b> inline */
+  display:block; font-family:"Nunito","Chakra Petch",system-ui,sans-serif;
+  font-size:19px; font-weight:800; line-height:1.25;
+}
+.pwa-ios-card p{ margin:9px 0 0; font-size:14px; line-height:1.55; color:var(--ink-2) }
+.pwa-ios-steps{
+  margin:18px 0 20px; padding:0; list-style:none;
+  display:grid; gap:10px; text-align:left; counter-reset:step;
+}
+/* the number in its own column so the sentence beside it stays one paragraph
+   and wraps under itself, not under the number */
+.pwa-ios-steps li{
+  display:grid; grid-template-columns:23px minmax(0,1fr); gap:11px;
+  align-items:start;
+  padding:12px 14px; border-radius:14px;
+  background:var(--accent-soft); color:var(--ink);
+  font-size:14px; line-height:1.5;
+}
+.pwa-ios-steps li::before{
+  counter-increment:step; content:counter(step);
+  width:23px; height:23px; margin-top:1px; display:grid; place-items:center;
+  border-radius:50%; background:var(--accent); color:var(--on-accent);
+  font-size:12px; font-weight:800;
+}
+.pwa-ios-steps b{ font-weight:800 }
+.pwa-ios-glyph{ display:inline-flex; vertical-align:-4px }
+.pwa-ios-glyph svg{
+  width:17px; height:17px; fill:none; stroke:var(--accent);
+  stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+}
+.pwa-ios-card .pwa-btn{ width:100% }
+
+@media (prefers-reduced-motion:reduce){
+  .pwa-install, .pwa-toast, .pwa-pill, .pwa-ios, .pwa-ios-card{
+    transition-duration:.01ms !important; transform:none !important;
+  }
+  .pwa-install[data-open="true"], .pwa-toast[data-open="true"]{ transform:none }
+  .pwa-pill{ transform:translate(-50%,0) }
+}
+
+/* nothing the browser built belongs on paper */
+@media print{
+  .pwa-install, .pwa-toast, .pwa-pill, .pwa-ios,
+  .message-fab, .msg-dock{ display:none !important }
+}

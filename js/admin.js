@@ -830,6 +830,40 @@
     });
   }
 
+  /* ---------- views you can be sent back out of ----------
+     The dashboard is three panels deep in places, and on a phone — or in the
+     installed app, where there is no browser chrome at all — the × in the
+     corner was the only way out of any of them. js/backstack.js gives each one
+     a history entry, so the phone's Back gesture closes that panel and nothing
+     else, and draws the labelled way back into a panel opened over another. */
+  var Back = window.JudechBack || null;
+  var VIEW_CLOSERS = {};
+
+  function openView(el, close, from) {
+    el.dataset.open = 'true';
+    document.body.classList.add('modal-open');
+    VIEW_CLOSERS[el.id] = close;
+    if (Back) Back.open({ key: el.id, el: el, backLabel: from || '', close: close });
+  }
+
+  function shutView(el) {
+    el.dataset.open = 'false';
+    if (!$('.overlay[data-open="true"]')) document.body.classList.remove('modal-open');
+  }
+
+  function dismissView(el) {
+    if (Back && Back.has(el.id)) { Back.close(el.id); return; }
+    var close = VIEW_CLOSERS[el.id];
+    if (close) close();
+  }
+
+  /* the name of the panel underneath, for the button that goes back to it */
+  function underView() {
+    if ($('#docOverlay').dataset.open === 'true') return ($('#docTitle').textContent || '').trim();
+    if ($('#projOverlay').dataset.open === 'true') return ($('#projTitle').textContent || '').trim();
+    return '';
+  }
+
   /* A receipt is the whole reason to trust a reference number, so it opens at
      the size it was taken rather than as a 130px thumbnail. */
   function openShot(url, name) {
@@ -840,20 +874,17 @@
     $('#shotSave').href = url;
     $('#shotSave').setAttribute('download',
       'receipt-' + String(name || 'payment').replace(/[^A-Za-z0-9]+/g, '-').slice(0, 50) + '.jpg');
-    $('#shotOverlay').dataset.open = 'true';
-    document.body.classList.add('modal-open');
+    openView($('#shotOverlay'), closeShot, underView());
   }
   function closeShot() {
-    $('#shotOverlay').dataset.open = 'false';
+    shutView($('#shotOverlay'));
     $('#shotFull').removeAttribute('src');
-    if (!$('.overlay[data-open="true"]')) document.body.classList.remove('modal-open');
   }
-  $$('[data-close-shot]').forEach(function (el) { el.addEventListener('click', closeShot); });
-  $('#shotOverlay').addEventListener('mousedown', function (e) {
-    if (e.target === $('#shotOverlay') || e.target.id === 'shotFull') closeShot();
+  $$('[data-close-shot]').forEach(function (el) {
+    el.addEventListener('click', function () { dismissView($('#shotOverlay')); });
   });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && $('#shotOverlay').dataset.open === 'true') closeShot();
+  $('#shotOverlay').addEventListener('mousedown', function (e) {
+    if (e.target === $('#shotOverlay') || e.target.id === 'shotFull') dismissView($('#shotOverlay'));
   });
 
   function decide(id, action) {
@@ -2430,8 +2461,12 @@
       $('#pPackageList').addEventListener('click', function () { setTimeout(paintShareItems, 0); });
     }
 
-    $('#projOverlay').dataset.open = 'true';
-    document.body.classList.add('modal-open');
+    openView($('#projOverlay'), closeProjectView);
+  }
+
+  function closeProjectView() {
+    shutView($('#projOverlay'));
+    state.editing = null;
   }
 
   /* ---------- private links ----------
@@ -2676,11 +2711,7 @@
 
   $('#projNew').addEventListener('click', function () { openProject(null); });
   $$('[data-close-proj]').forEach(function (el) {
-    el.addEventListener('click', function () {
-      $('#projOverlay').dataset.open = 'false';
-      document.body.classList.remove('modal-open');
-      state.editing = null;
-    });
+    el.addEventListener('click', function () { dismissView($('#projOverlay')); });
   });
   $('#projSave').addEventListener('click', function () {
     var row;
@@ -2772,8 +2803,7 @@
     $('#docSub').textContent = 'Please read before purchasing or receiving the project files.';
     $('#docMsg').textContent = '';
     $('#docBody').innerHTML = '<div class="doc-sheet"><p>Loading…</p></div>';
-    $('#docOverlay').dataset.open = 'true';
-    document.body.classList.add('modal-open');
+    openView($('#docOverlay'), closeDocView, underView());
 
     loadTerms().then(function (terms) {
       var stale = a.terms_version && a.terms_version !== CURRENT_TERMS;
@@ -3023,18 +3053,23 @@
     });
   }
 
+  function closeDocView() {
+    shutView($('#docOverlay'));
+    state.doc = null;
+  }
   $$('[data-close-doc]').forEach(function (el) {
-    el.addEventListener('click', function () {
-      $('#docOverlay').dataset.open = 'false';
-      document.body.classList.remove('modal-open');
-      state.doc = null;
-    });
+    el.addEventListener('click', function () { dismissView($('#docOverlay')); });
   });
   $('#docOverlay').addEventListener('mousedown', function (e) {
-    if (e.target === $('#docOverlay')) { $('[data-close-doc]').click(); }
+    if (e.target === $('#docOverlay')) dismissView($('#docOverlay'));
   });
+
+  /* one Escape handler for the lot: the stack knows which is on top */
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && $('#docOverlay').dataset.open === 'true') $('[data-close-doc]').click();
+    if (e.key !== 'Escape') return;
+    if (Back && Back.depth()) { Back.back(); return; }
+    var open = $$('.overlay[data-open="true"]').pop();
+    if (open) dismissView(open);
   });
   function createAdminPdf(download) {
     var record = state.doc;

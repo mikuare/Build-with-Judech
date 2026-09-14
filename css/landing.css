@@ -465,6 +465,8 @@ footer.site .links a:hover, footer.site .links button:hover{color:var(--accent)}
 .overlay[data-open="true"]{display:grid; place-items:start center}
 #termsOverlay{z-index:90}
 #infoOverlay{z-index:95}
+/* the viewer opens over any of them — a package file list included */
+#imageOverlay{z-index:100}
 .modal{width:min(840px,100%); margin-block:auto; background:var(--panel); color:var(--ink);
   border:1.5px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-lg);
   display:flex; flex-direction:column; max-height:calc(100dvh - 40px); overflow:hidden}
@@ -475,6 +477,32 @@ footer.site .links a:hover, footer.site .links button:hover{color:var(--accent)}
 .modal-x{margin-left:auto; background:var(--panel-2); border:1.5px solid var(--line); border-radius:50%;
   width:34px; height:34px; display:grid; place-items:center; flex:none; font-size:17px; line-height:1}
 .modal-x:hover{border-color:var(--accent)}
+/* ---------- the way back ----------
+   Drawn by js/backstack.js into whichever view was opened over another one. It
+   sits above the heading rather than beside the ×, because it is not another
+   way of closing this view — it names the one underneath and goes there. */
+.modal-back{display:inline-flex; align-items:center; gap:5px; margin:0 0 8px -8px;
+  padding:6px 12px 6px 8px; border:0; border-radius:999px; background:var(--panel-2);
+  color:var(--ink-2); font:inherit; font-family:"Nunito",sans-serif; font-size:13px;
+  font-weight:800; line-height:1.2; max-width:100%; cursor:pointer;
+  transition:background .15s, color .15s}
+.modal-back:hover{background:var(--accent-soft); color:var(--accent)}
+.modal-back:active{transform:translateY(1px)}
+.modal-back svg{width:15px; height:15px; flex:none; fill:none; stroke:currentColor;
+  stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round}
+.modal-back span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+/* The image viewer has no heading to sit under, so it pairs with the × instead.
+   A wiring diagram is as likely to be white as a photo is to be dark, so both
+   controls bring their own ground rather than tinting what is behind them. */
+.overlay.lightbox .modal-back, .shot-overlay .modal-back{
+  position:fixed; top:16px; left:18px; z-index:3; margin:0;
+  padding:9px 15px 9px 10px;
+  background:rgba(10,18,15,.72); color:#F2F6F4;
+  border:1px solid rgba(255,255,255,.22); backdrop-filter:blur(8px);
+  box-shadow:0 6px 18px -6px rgba(0,0,0,.6)}
+.overlay.lightbox .modal-back:hover, .shot-overlay .modal-back:hover{
+  background:rgba(10,18,15,.9); border-color:rgba(255,255,255,.5); color:#fff}
+
 .modal-ft{display:flex; align-items:center; gap:12px; flex-wrap:wrap;
   padding:15px 22px; border-top:1.5px solid var(--line-soft); background:var(--panel)}
 .modal-ft .msg{font-size:13.5px; color:var(--ink-3); flex:1; min-width:190px}
@@ -513,10 +541,11 @@ footer.site .links a:hover, footer.site .links button:hover{color:var(--accent)}
 .overlay.lightbox #imageCaption{font-family:"Nunito",sans-serif; font-weight:800; font-size:14.5px;
   color:#F2F6F4; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.16);
   border-radius:999px; padding:6px 16px}
-.overlay.lightbox .modal-x{position:fixed; top:16px; right:18px; z-index:2; margin:0;
-  width:42px; height:42px; font-size:21px; color:#F2F6F4; background:rgba(255,255,255,.12);
-  border-color:rgba(255,255,255,.2)}
-.overlay.lightbox .modal-x:hover{background:rgba(255,255,255,.22); border-color:#F2F6F4}
+.overlay.lightbox .modal-x{position:fixed; top:16px; right:18px; z-index:3; margin:0;
+  width:42px; height:42px; font-size:21px; color:#F2F6F4; background:rgba(10,18,15,.72);
+  border-color:rgba(255,255,255,.22); backdrop-filter:blur(8px);
+  box-shadow:0 6px 18px -6px rgba(0,0,0,.6)}
+.overlay.lightbox .modal-x:hover{background:rgba(10,18,15,.9); border-color:#F2F6F4}
 .receipt{display:none; margin-bottom:16px; align-items:center; gap:12px; flex-wrap:wrap;
   background:var(--accent-soft); border:1.5px solid color-mix(in srgb,var(--accent) 35%,transparent);
   border-radius:var(--radius-sm); padding:12px 16px; font-size:14px}
@@ -901,7 +930,7 @@ body{font-size:16px; line-height:1.65}
   color:var(--accent); padding-inline:.03em; vertical-align:.015em}
 .brand:hover .wm-code{color:var(--sun)}
 .foot-brand .wm-code{font-size:.72em}
-.brand span span, .brand > span > span{font-size:11.5px; letter-spacing:.05em;
+.brand > span > span{font-size:11.5px; letter-spacing:.05em;
   text-transform:uppercase; font-weight:700; color:var(--ink-3)}
 .brand img{border-radius:14px; box-shadow:var(--shadow-soft)}
 /* the lockup is the wordmark alone — no logo tile to lean on, so it gets a
@@ -1010,7 +1039,7 @@ footer.site .links{align-self:center}
   section.band{padding-block:48px}
 }
 @media (max-width:560px){
-  .brand span span, .brand > span > span{display:none}
+  .brand > span > span{display:none}
   .hero h1{font-size:clamp(30px,8.5vw,40px)}
   .btn-lg{width:100%; justify-content:center}
 }

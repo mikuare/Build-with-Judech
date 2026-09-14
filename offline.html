@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Offline — Build with JUDECH</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F8F6F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/favicon.ico" sizes="32x32 16x16">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<style>
+  :root{
+    --ground:#F8F6F1; --panel:#FFFFFF; --line:#E5E0D6;
+    --ink:#1F302B; --ink-2:#5B6A64; --ink-3:#8B968F;
+    --accent:#12876F; --accent-soft:#DCF1EA; --on-accent:#FFFFFF;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#101512; --panel:#19211D; --line:#2B3730;
+      --ink:#E7EDEA; --ink-2:#A3B0AA; --ink-3:#78857F;
+      --accent:#4CD6B4; --accent-soft:#123029; --on-accent:#052019;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0; height:100%}
+  body{
+    display:grid; place-items:center;
+    padding:max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+            max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    background:var(--ground); color:var(--ink);
+    font-family:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased; text-align:center;
+  }
+  .sheet{width:min(430px,100%)}
+  .mark{width:64px; height:64px; margin:0 auto 20px; display:block}
+  h1{font-size:clamp(23px,6vw,29px); font-weight:800; line-height:1.2; margin:0}
+  p{color:var(--ink-2); font-size:15.5px; margin:12px 0 0}
+  .dot{display:inline-flex; align-items:center; gap:8px; margin-bottom:16px;
+    padding:6px 14px; border-radius:999px; background:var(--accent-soft);
+    color:var(--accent); font-size:13px; font-weight:800}
+  .dot i{width:8px; height:8px; border-radius:50%; background:currentColor;
+    animation:beat 1.8s ease-in-out infinite}
+  @keyframes beat{50%{opacity:.35; transform:scale(.8)}}
+  .acts{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:26px}
+  .btn{display:inline-flex; align-items:center; justify-content:center; min-height:48px;
+    padding:12px 22px; border-radius:999px; border:1.5px solid var(--line);
+    background:var(--panel); color:inherit; font:inherit; font-weight:800; font-size:15px;
+    text-decoration:none; cursor:pointer}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+  .fine{margin-top:22px; font-size:13px; color:var(--ink-3)}
+  @media (prefers-reduced-motion:reduce){ .dot i{animation:none} }
+</style>
+</head>
+<body>
+  <main class="sheet">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="7.5" fill="#0C1512"/>
+      <g fill="none" stroke="#4CD6B4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11.4 10.4 6.4 16l5 5.6"/><path d="M20.6 10.4 25.6 16l-5 5.6"/><path d="M18.3 9.1 13.7 22.9"/>
+      </g>
+    </svg>
+    <span class="dot"><i></i> No connection</span>
+    <h1>This page needs the network</h1>
+    <p>The pages you have already opened are still here. Anything that reads your
+       account &mdash; payments, packages, your message thread &mdash; waits until
+       you are back on.</p>
+    <div class="acts">
+      <button class="btn primary" type="button" id="again">Try again</button>
+      <a class="btn" href="/">Open the catalog</a>
+      <a class="btn" href="/simulation.html">Open the simulator</a>
+    </div>
+    <p class="fine">This screen came from your device, not from the server.</p>
+  </main>
+<script>
+  var btn = document.getElementById('again');
+  btn.addEventListener('click', function () { location.reload(); });
+  /* the moment the network is back, go and get the page that was asked for */
+  window.addEventListener('online', function () { location.reload(); });
+</script>
+</body>
+</html>

@@ -2,26 +2,47 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- the page itself names the version of every asset, so it must always be
      fetched fresh; the css and js under it are cached hard and busted by ?v= -->
 <meta http-equiv="cache-control" content="no-cache, must-revalidate">
 <meta http-equiv="pragma" content="no-cache">
 <title>Build with JUDECH — systems, apps and machines that work</title>
 <meta name="description" content="Build with JUDECH: web systems, mobile apps and embedded builds for a thesis, a capstone or a business. Full source code, the documentation your panel asks for, wiring diagrams, and a real person to ask. Take the whole package or pay for one part at a time.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7.5' fill='%230C1512'/><g fill='none' stroke='%234CD6B4' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='M11.4 10.4 6.4 16l5 5.6'/><path d='M20.6 10.4 25.6 16l-5 5.6'/><path d='M18.3 9.1 13.7 22.9'/></g></svg>">
+<!-- the .ico is the one every browser looks for at the site root whether or not
+     the page names an icon; the svg below is what a modern one actually draws -->
+<link rel="icon" href="/favicon.ico" sizes="32x32 16x16">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7.5' fill='%230C1512'/><g fill='none' stroke='%234CD6B4' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='M11.4 10.4 6.4 16l5 5.6'/><path d='M20.6 10.4 25.6 16l-5 5.6'/><path d='M18.3 9.1 13.7 22.9'/></g></svg>">
 <script>
 /* the stored theme goes on before the first paint, so the page never flashes
    the wrong one on its way in */
 (function(){try{var t=localStorage.getItem('judech.theme');
 if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
+<!-- ===== installable app =====
+     The manifest makes the site something you can keep on a home screen; the
+     two theme-colors hand the phone the right colour for the bar above the
+     page in either theme, and the apple-* pair is the same arrangement for a
+     Safari that has never read a manifest. -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#F8F6F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="application-name" content="JUDECH">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JUDECH">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="167x167" href="/icons/apple-touch-icon-167.png">
+<link rel="mask-icon" href="/icons/icon.svg" color="#12876F">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/landing.css?v=20260914n">
+<link rel="stylesheet" href="css/landing.css?v=20260914p">
+<link rel="stylesheet" href="css/mobile.css?v=20260914p">
 </head>
-<body>
+<body class="page-catalog">
 
 <!-- ===================== top bar ===================== -->
 <div class="topbar site-topbar">
@@ -371,6 +392,8 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
     <div class="links">
       <button type="button" data-open-privacy>Privacy</button>
       <button type="button" data-open-siteterms>Terms of use</button>
+      <!-- revealed by js/pwa.js only where installing is actually possible -->
+      <button type="button" data-pwa-install hidden>Install the app</button>
     </div>
   </div>
 </footer>
@@ -876,10 +899,12 @@ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)
 
 <script src="js/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="js/theme.js?v=20260914n"></script>
-<script src="js/config.js?v=20260914n"></script>
-<script src="js/backend.js?v=20260914n"></script>
-<script src="js/pdf.js?v=20260914n"></script>
-<script src="js/landing.js?v=20260914n"></script>
+<script src="js/theme.js?v=20260914p"></script>
+<script src="js/config.js?v=20260914p"></script>
+<script src="js/backend.js?v=20260914p"></script>
+<script src="js/pdf.js?v=20260914p"></script>
+<script src="js/backstack.js?v=20260914p"></script>
+<script src="js/landing.js?v=20260914p"></script>
+<script src="js/pwa.js?v=20260914p" defer></script>
 </body>
 </html>

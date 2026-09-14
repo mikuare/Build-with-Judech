@@ -340,6 +340,108 @@ All of it is `js/theme.js` plus the tokens the stylesheet already had — the th
 (`no attribute` = follow the system, `data-theme="light"`, `data-theme="dark"`) were built
 into every colour block from the start, so nothing else needed changing.
 
+### The way back
+
+A project opens over the catalog. A package item opens over the project. The image attached
+to that item opens over *that*. Three layers deep, the only way out used to be a small × in
+the corner — and pressing the phone's Back button left the site altogether. Installed as an
+app there is no browser Back at all, so that × was the only door in the building. Worse, an
+image or a PDF attached to a package opened in a **new browser tab**, which on a phone means
+the buyer is somewhere else entirely with nothing pointing home.
+
+`js/backstack.js` is the fix, and both `landing.js` and `admin.js` use it. Every view that
+opens over another one registers itself:
+
+```js
+JudechBack.open({ key, el, close, backLabel })
+```
+
+and gets two things back. **One history entry**, so the phone's own Back gesture — or a
+swipe, or the browser button — closes that view and nothing else. And, when `backLabel`
+names the view it came from, **a labelled button drawn into its header**: "‹ EnviroSortPro"
+reads as a way home in a way that × never did. It sits above the heading rather than beside
+the ×, because it is not another way of closing this view — it names the one underneath and
+goes there.
+
+Three rules keep the two directions honest:
+
+* **Back pressed by the user** arrives as `popstate`: pop the top view, run its closer.
+* **Close pressed in the page** — the ×, the footer button, the backdrop, Escape, the back
+  button itself — goes through `dismiss()`, which runs the same closer *and* unwinds the
+  matching history entry, swallowing the `popstate` that causes so the view is not closed
+  twice. That closer carries the state each view has to let go of, so a swipe backwards
+  cannot leave a payment poll ticking behind it.
+* **The flow moving on by itself** — signed in, so here is the project; paid, so here are
+  the terms — calls `retire()` instead, and the view that follows takes the departing one's
+  place. One step forward on screen stays one press of Back to undo, rather than two.
+
+A view shown over another does not close the one beneath it: `veil()` hides it, it keeps its
+place in the stack, and `unveil()` brings it back. That is why the image viewer returns you
+to the file list you opened it from and not to the top of the page.
+
+And the attachments themselves: an image or a clip now opens **in the viewer, in the page**,
+titled with the file's own name and with the way back to the panel it came from. Several
+pictures under one item become one gallery, so *View* on the third photo opens at the third
+photo and the arrows walk the rest. Anything that genuinely needs the browser's own
+viewer — a PDF, a zip — still says **Open in a tab** rather than *View*, so the label tells
+you it is a door out before you press it.
+
+### Installing it, and the small screen
+
+All three pages are one installable app. `manifest.webmanifest` names it, gives it the
+`</>` mark at 192 and 512 (plus maskable copies, so Android's own shape does not crop the
+glyph), and lists three shortcuts — the simulator, the projects section, the dashboard —
+that a long-press on the home-screen icon opens directly.
+
+`sw.js` is the whole offline story, and its shape follows the shape of the site:
+
+* **Pages** are fetched from the network first and kept as they come back, because a
+  catalog or a dashboard is only worth reading when it is current. A page you have opened
+  before still opens with the network gone; one you have not falls back to `offline.html`,
+  which is served from your own device and says so.
+* **Our css, js and icons** are answered from the cache at once and refreshed behind the
+  page. The `?v=` on every asset URL means a new build asks for a URL the cache has never
+  seen, so there is no moment when a new page is wearing an old stylesheet.
+* **Supabase is never cached.** Sign-in, payments, messages, presence — every one of those
+  is somebody's live account state, and `isLiveData()` sends them straight past the worker.
+
+Bump `VERSION` in `sw.js` (and `ASSETV`, if the `?v=` changed) to retire everything cached
+under the old one. The new worker does *not* take over on its own: it waits, the page says
+"a newer version is ready", and only the **Reload** button in that notice hands it control
+— nobody loses a half-typed message to a refresh they did not ask for.
+
+`js/pwa.js` carries the four things that are visible. The install offer appears once and a
+"Not now" is remembered for a fortnight (`judech.pwa.snoozed`); it also waits its turn
+behind the chat greeting rather than stacking on top of it, and lifts the message button
+out of its way by however tall it actually is. iOS never fires `beforeinstallprompt`, so
+Safari gets the only thing that works there — the two-step *Share → Add to Home Screen*
+instruction, from the second visit on. A pill says when the connection has gone and when it
+is back. And because the on-page theme switch changes what is painted without changing what
+the system reports, the same file writes the current `--ground` into the `theme-color` tags
+so the bar above the page follows the switch.
+
+See **The way back** above for the history-aware back button that goes with all of this —
+in an installed app it is the only Back there is.
+
+`css/mobile.css` is loaded last by all three pages and only ever uses the custom properties
+both design systems already define, so one rule comes out warm on the catalog and cool in
+the simulator. It carries:
+
+* the safe-area insets that `viewport-fit=cover` makes the page responsible for — gutters,
+  the sticky header in an installed window, and everything pinned to the bottom edge;
+* **16px on every field below 900px.** Safari zooms the layout in whenever it focuses a
+  control smaller than that and never zooms back out. This is the one place `!important`
+  earns its keep: the pages set field sizes from rules carrying an id;
+* `min()` on the `auto-fit` grid tracks. `minmax(280px, 1fr)` is a promise a 320px screen
+  cannot keep, and it was the reason a phone could scroll sideways;
+* 44px touch targets under `pointer: coarse` only — a mouse does not need them, and the
+  desktop layouts were drawn for the size they are;
+* dialogs as bottom sheets below 640px, sized in `dvh` so the address bar sliding away does
+  not cut off the last line;
+* a tablet layer between 641 and 1024px, a landscape layer for phones under 520px tall, and
+  `display-mode: standalone` rules that pad for the notch and drop the install button —
+  an install button inside an installed app is a joke at the user's expense.
+
 ### The name on the page
 
 The public identity is **Build with JUDECH** — that is the wordmark in the top bar, the

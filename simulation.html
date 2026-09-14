@@ -2,17 +2,38 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- the page names the version of every asset, so it is always fetched fresh -->
 <meta http-equiv="cache-control" content="no-cache, must-revalidate">
 <title>EnviroSortPro — Automatic Waste Segregation Simulator</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>&#9851;</text></svg>">
+<!-- the .ico is the one every browser looks for at the site root whether or not
+     the page names an icon; the svg below is what a modern one actually draws -->
+<link rel="icon" href="/favicon.ico" sizes="32x32 16x16">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>&#9851;</text></svg>">
+<!-- ===== installable app =====
+     The manifest makes the site something you can keep on a home screen; the
+     two theme-colors hand the phone the right colour for the bar above the
+     page in either theme, and the apple-* pair is the same arrangement for a
+     Safari that has never read a manifest. -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#EDF1EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1211" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="application-name" content="JUDECH">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EnviroSortPro">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="167x167" href="/icons/apple-touch-icon-167.png">
+<link rel="mask-icon" href="/icons/icon.svg" color="#12876F">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="css/style.css?v=20260914n">
+<link rel="stylesheet" href="css/style.css?v=20260914p">
+<link rel="stylesheet" href="css/mobile.css?v=20260914p">
 </head>
-<body>
+<body class="page-sim">
 <div class="wrap">
 
 <header>
@@ -30,6 +51,7 @@
   </div>
   <div class="hdr-tools">
     <a class="btn" href="index.html">&larr; Back to projects</a>
+    <button class="btn" type="button" data-pwa-install hidden>Install app</button>
     <button class="btn" id="coverBtn" aria-pressed="false">Cover: on</button>
     <button class="btn" id="insertBtn">How it goes in: correct technique</button>
     <button class="btn" id="soundBtn" aria-pressed="true">Buzzer: on</button>
@@ -2299,6 +2321,7 @@
 <footer>Served locally. The simulation executes the same control flow as <span class="mono">EnviroSortPro/EnviroSortPro.ino</span> &mdash; same order, same delays, same flags.</footer>
 
 </div>
-<script src="js/app.js?v=20260914n"></script>
+<script src="js/app.js?v=20260914p"></script>
+<script src="js/pwa.js?v=20260914p" defer></script>
 </body>
 </html>
