@@ -96,6 +96,20 @@ button{font:inherit; color:inherit; cursor:pointer}
 .hero h1{font-size:clamp(34px,5.2vw,54px); line-height:1.06; margin-top:16px}
 .hero h1 em{font-style:normal; color:var(--accent)}
 .hero .lede{color:var(--ink-2); font-size:17px; margin-top:16px; max-width:50ch}
+/* the count-down under the headline while the dashboard gesture is being made —
+   silent for the first two taps, so a visitor who taps twice sees nothing */
+.door-hint{display:inline-block; margin-top:10px; padding:5px 13px; border-radius:999px;
+  background:var(--panel-2); border:1.5px solid var(--line); color:var(--ink-3);
+  font-family:"Nunito",sans-serif; font-size:12.5px; font-weight:800;
+  letter-spacing:.02em; opacity:0; transform:translateY(-4px);
+  transition:opacity .18s ease, transform .18s ease}
+.door-hint[data-open="true"]{opacity:1; transform:none}
+/* a mouse can still select the headline; a thumb tapping it five times only
+   ever gets a word highlight it did not ask for */
+@media (pointer:coarse){
+  .hero h1[data-tap-door]{-webkit-user-select:none; user-select:none}
+}
+@media (prefers-reduced-motion:reduce){ .door-hint{transition:none; transform:none} }
 .hero .cta{display:flex; flex-wrap:wrap; gap:11px; margin-top:26px}
 .hero-note{margin-top:16px; font-size:13.5px; color:var(--ink-3)}
 .hero-art{position:relative; isolation:isolate; min-width:0; padding-bottom:30px}

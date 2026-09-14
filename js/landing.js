@@ -4289,6 +4289,89 @@
     approveHelper();
   }
 
+  /* ===========================================================================
+     The way in to the dashboard
+     Installed as an app there is no address bar, so there is nowhere to type
+     /admin.html — and putting a Dashboard link in the header would hand the
+     door to every visitor. So the door is the headline itself: five taps on
+     "Turning Ideas Into Systems That Work." and it opens.
+
+     Nothing about it is advertised. The first two taps are silent, because a
+     visitor who taps a heading twice should see nothing happen; from the third
+     it counts down, so the person who knows the gesture can tell it is working.
+     Nothing is written to storage and no admin URL is in the page source — the
+     link is built here, at the moment it is asked for, and the next launch
+     starts from five taps again.
+     =========================================================================== */
+  (function adminDoor() {
+    var head = $('.hero h1');
+    if (!head) return;
+
+    var NEEDED = 5;
+    var WINDOW = 2500;          /* a gesture, not five taps over a lunch break */
+    var taps = 0, last = 0, hint = null, hintTimer = null;
+
+    function clearHint() {
+      clearTimeout(hintTimer);
+      if (hint) { hint.remove(); hint = null; }
+    }
+
+    function say(text) {
+      clearHint();
+      hint = document.createElement('span');
+      hint.className = 'door-hint';
+      hint.setAttribute('role', 'status');
+      hint.textContent = text;
+      head.insertAdjacentElement('afterend', hint);
+      requestAnimationFrame(function () { hint.dataset.open = 'true'; });
+      hintTimer = setTimeout(clearHint, WINDOW);
+    }
+
+    function reset() { taps = 0; clearHint(); }
+
+    head.addEventListener('click', function () {
+      var now = Date.now();
+      taps = (now - last > WINDOW) ? 1 : taps + 1;
+      last = now;
+
+      if (taps >= NEEDED) { reset(); open(); return; }
+      var left = NEEDED - taps;
+      if (left <= 2) say(left === 1 ? 'One more' : left + ' more');
+    });
+
+    /* five taps on a heading also select it word by word; css/landing.css turns
+       that off for touch only, where the highlight is purely in the way */
+    head.dataset.tapDoor = '1';
+
+    function open() {
+      openInfo({
+        title: 'Dashboard',
+        sub: 'Payments, packages, clients',
+        html: '<p>This is the private side of the site. Signing in still needs the ' +
+          'admin account &mdash; the gesture only shows you the door.</p>' +
+          '<p style="margin-top:16px; display:flex; gap:9px; flex-wrap:wrap">' +
+            '<a class="btn btn-sm btn-primary" href="admin.html" rel="nofollow">' +
+              'Go to the sign-in</a>' +
+          '</p>',
+        msg: 'Five taps on the headline opens this again.',
+        from: ''
+      });
+      /* and a quiet way back to it for the rest of this visit */
+      showFooterDoor();
+    }
+
+    function showFooterDoor() {
+      var links = $('footer.site .links');
+      if (!links || links.querySelector('[data-admin-door]')) return;
+      var a = document.createElement('a');
+      a.href = 'admin.html';
+      a.rel = 'nofollow';
+      a.dataset.adminDoor = '1';
+      a.textContent = 'Dashboard';
+      links.appendChild(a);
+    }
+  })();
+
   sellerDate.value = today();
   buyerDate.value = today();
 })();

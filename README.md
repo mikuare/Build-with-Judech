@@ -340,6 +340,39 @@ All of it is `js/theme.js` plus the tokens the stylesheet already had — the th
 (`no attribute` = follow the system, `data-theme="light"`, `data-theme="dark"`) were built
 into every colour block from the start, so nothing else needed changing.
 
+### Getting into the dashboard
+
+Installed as an app there is no address bar, so there is nowhere to type
+`/admin.html` — and a Dashboard link in the header would hand the door to every visitor.
+So the door is the headline itself: **five taps on "Turning Ideas Into Systems That Work."**
+and it opens.
+
+The first two taps are silent, because a visitor who taps a heading twice should see nothing
+happen. From the third it counts down — *2 more*, *One more* — so the person who knows the
+gesture can tell it is working. The taps have to be within two and a half seconds of each
+other: it is a gesture, not five taps over a lunch break.
+
+Three things keep it private rather than merely tucked away:
+
+* **Nothing is stored.** The gesture unlocks the door for this visit only; the next launch
+  starts from five taps again. That is the point of it.
+* **No admin URL is in the page source.** The link is built in JavaScript at the moment it is
+  asked for, so `admin.html` appears nowhere in the delivered HTML until the gesture is made.
+  `robots.txt` disallows it and the page itself is `noindex, nofollow` besides.
+* **The manifest no longer carries a Dashboard shortcut.** It used to, which meant anyone
+  long-pressing the app icon was offered the door — that defeats the gesture entirely.
+
+What opens is the ordinary info panel, so it closes with Escape, the backdrop, the × or the
+phone's Back button like every other view. It only *shows* the door: signing in still needs
+the admin account. The gesture is in the `adminDoor()` block at the foot of `js/landing.js`;
+change `NEEDED` or `WINDOW` there.
+
+One thing to know on a phone: `admin.html` offers both email-and-password and Continue with
+Google. In an installed app the Google route leaves the manifest's scope, which Android
+handles in an in-app browser and returns from cleanly, but iOS may finish the sign-in in
+Safari rather than back in the app. The email-and-password form works in the installed app
+either way.
+
 ### The way back
 
 A project opens over the catalog. A package item opens over the project. The image attached
